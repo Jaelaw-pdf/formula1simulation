@@ -469,7 +469,22 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 .dc.win{border-color:#ffd400;background:color-mix(in srgb,#ffd400 9%,transparent)}.dc.mine{outline:1px dashed var(--team)}
 .dp{font-family:var(--f-disp);font-size:18px}.dw{font-size:16px;margin-bottom:10px}.dw b{font-family:var(--f-disp);color:#ffd400}
 .dt{margin-top:10px;font-size:12px}.dt .me{color:var(--team);font-weight:700}
-@media (prefers-reduced-motion:reduce){.car .part.hl,.db i{animation:none}.tick .tk,.cast .live,.cast-m .new{animation:none}.tw{transition:none}.tw.gain,.tw.lose{animation:none}.pill.live::before{animation:none}}
+.pausebar.go{background:#062a14;border-color:var(--good)}
+.rsb{flex:1 1 120px;max-width:220px;height:5px;background:#0f3d22;border-radius:3px;overflow:hidden}.rsb i{display:block;height:100%;width:100%;background:var(--good);transform-origin:left;animation:rsb linear forwards}
+@keyframes rsb{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.snsseg{margin-bottom:10px}
+.ig,.yt{list-style:none;margin:0;padding:0;display:grid;gap:12px;font-size:13px}
+.ig li{border:1px solid var(--line);border-radius:8px;overflow:hidden;display:grid;gap:6px;padding-bottom:10px}
+.igh{display:flex;gap:6px;align-items:center;padding:8px 10px 0;font-size:12.5px}.igh .av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(45deg,#f9a825,#e1306c,#833ab4);flex:none}
+.ver{background:#3897f0;color:#fff;border-radius:50%;width:14px;height:14px;display:grid;place-items:center;font-size:9px}
+.igi{aspect-ratio:4/3;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;background:radial-gradient(circle at 30% 20%,var(--team),#050608 75%);position:relative}
+.igi b{font-family:var(--f-disp);font-weight:900;font-size:46px;line-height:1;text-shadow:0 2px 16px #000}.igi span{font-family:var(--f-disp);letter-spacing:.2em;font-size:11px}
+.igi .tg{position:absolute;top:8px;left:10px;font-size:9px;opacity:.75}
+.igm,.igc,.igr{padding:0 10px}.igr{font-size:12px;color:#c0c6cf}
+.yt li{display:grid;gap:5px}.yth{aspect-ratio:16/9;background:linear-gradient(135deg,#1a1d22,color-mix(in srgb,var(--team) 45%,#000));border-radius:8px;position:relative;display:grid;place-items:center}
+.yth .play{width:44px;height:30px;border-radius:8px;background:#f00;color:#fff;display:grid;place-items:center;font-size:13px}.yth .dur{position:absolute;right:6px;bottom:6px;background:#000c;font-size:11px;padding:1px 5px;border-radius:3px;font-family:var(--f-mono)}
+.ytt{font-weight:700;line-height:1.35}.ytm{font-size:11.5px}.ytr{font-size:12px;padding-left:8px;border-left:2px solid var(--line)}
+@media (prefers-reduced-motion:reduce){.rsb i{animation:none}.car .part.hl,.db i{animation:none}.tick .tk,.cast .live,.cast-m .new{animation:none}.tw{transition:none}.tw.gain,.tw.lose{animation:none}.pill.live::before{animation:none}}
 </style>
 </head>
 <body>
@@ -1531,7 +1546,7 @@ function qualiReact(){const wk=S.wk,tn=userTeam().name;const ud=userDrivers().ma
 function qReactHTML(){const wk=S.wk;if(!wk.qreact)wk.qreact=qualiReact();const q=wk.qreact;const good=['lockout','pole','front'].includes(q.tier);
  return `<div class="card react ${good?'cele':''}"><header>팀 반응 · 예선 종료</header><div class="body"><div class="rx-hero"><b>${esc(q.h)}</b><span class="muted">${esc(q.sub)}</span></div>
   <div class="rx-cols"><ul class="crew">${q.L.map(([w,t])=>`<li><span class="who">${esc(w)}</span><span>${esc(t)}</span></li>`).join('')}</ul>
-  <ul class="sns">${q.P.map(snsLi).join('')}</ul></div></div></div>`}
+  <div><h4>X 반응</h4><ul class="sns">${q.P.map(snsLi).join('')}</ul></div></div></div></div>`}
 function snsLi(p){return `<li><div class="sh"><span class="av">${esc(p.h[0][0])}</span><b>${esc(p.h[0])}</b><span class="muted">${esc(p.h[1])}</span></div><div class="st">${esc(p.t)}</div><div class="sm muted">💬 ${fmtK(p.c)} &nbsp; 🔁 ${fmtK(p.r)} &nbsp; ❤️ ${fmtK(p.l)}</div></li>`}
 
 /* ---- 결승 종료 리액션 ---- */
@@ -1588,7 +1603,8 @@ function raceReact(r,R){moodOf();const tn=userTeam().name;
  const scenes=[];if(tier==='onetwo'||tier==='win')scenes.push('체커기 순간 피트월 환호');if(gainer&&gainer.grid-gainer.pos>=3)scenes.push(`#${gainer.d.num}의 ${gainer.grid-gainer.pos}계단 상승`);if(fastPit)scenes.push(`${fastPit.toFixed(1)}초 피트 스톱`);if(myFL)scenes.push('패스티스트 랩');ev.filter(x=>/추월/.test(x)).slice(0,2).forEach(x=>scenes.push(x.replace(/^L(\d+) /,'$1랩 ')));if(!scenes.length)scenes.push('조용한 레이스 운영');
  const regrets=[];if(dnf.length)regrets.push(`리타이어 (${dnf.map(e=>'#'+e.d.num+' '+(e.reason||'')).join(', ')})`);fin.filter(e=>e.pos<e.grid===false&&e.pos-e.grid>=3).forEach(e=>regrets.push(`#${e.d.num} ${e.pos-e.grid}계단 하락`));if(tier==='pts'||tier==='none')regrets.push('선두권 대비 레이스 페이스');if(pitEv.some(x=>+((x.match(/([\d.]+)초/)||[])[1])>3.5))regrets.push('느린 피트 스톱 한 번');if(!regrets.length)regrets.push('딱히 없음 — "완벽했다" 의견 다수');
  const kw={onetwo:['원투','피트월','역사적','새벽알람'],win:['우승','체커기','샴페인','전략'],dpod:['더블포디움','상위권','꾸준함'],pod:['포디움','피트타이밍','샴페인'],pts:['포인트','꾸준함','업그레이드'],none:['노포인트','페이스','개발'],dnf:['리타이어','신뢰성','멘탈']}[tier].slice();if(myFL)kw.push('패스티스트랩');if(fastPit&&fastPit<2.6)kw.push('피트크루');
- return{tier,h:H[0],sub:H[1],L,P,thread,X,sum:{sat,scenes:scenes.slice(0,4),regrets:regrets.slice(0,3),kw},mood:[m0,S.mood],fans:[f0,S.fans],tp,res:mine.map(e=>({code:e.d.code,num:e.d.num,pos:posTxt(e),grid:e.grid}))}}
+ const ex=snsExtra(null,{tier,A,tp,tr:TR(r.track),fastPit,gainer,winner,fin});
+ return{...ex,tier,h:H[0],sub:H[1],L,P,thread,X,sum:{sat,scenes:scenes.slice(0,4),regrets:regrets.slice(0,3),kw},mood:[m0,S.mood],fans:[f0,S.fans],tp,res:mine.map(e=>({code:e.d.code,num:e.d.num,pos:posTxt(e),grid:e.grid}))}}
 function delta(a,b){const d=b-a;return `<b class="num">${b}</b> <span class="num" style="color:${d>0?'var(--good)':d<0?'var(--bad)':'var(--muted)'}">${d>0?'▲'+d:d<0?'▼'+(-d):'—'}</span>`}
 function raceReactHTML(r){const x=r.rx;if(!x)return '';const good=['onetwo','win','dpod','pod'].includes(x.tier);
  return `<div class="card react ${good?'cele':''}" style="margin-bottom:16px"><header>레이스 요약 · 팀 분위기 · 팬 반응</header><div class="body rx">
@@ -1600,7 +1616,7 @@ function raceReactHTML(r){const x=r.rx;if(!x)return '';const good=['onetwo','win
   <div class="rx-grid">
    <section><h4>차고 분위기</h4><ul class="crew">${x.L.map(([w,t])=>`<li><span class="who">${esc(w)}</span><span>${esc(t)}</span></li>`).join('')}</ul>
     <h4>전문가 평가</h4><ul class="crew">${x.X.map(e=>`<li><span class="who">${esc(e.n)} · <b class="grade">${e.g}</b></span><span>${esc(e.t)}</span></li>`).join('')}</ul></section>
-   <section><h4>SNS 타임라인</h4><ul class="sns">${x.P.map(snsLi).join('')}</ul></section>
+   <section><h4>SNS 반응</h4>${snsTabsHTML(x)}</section>
    <section><h4>커뮤니티</h4><div class="thr"><div class="tt">${esc(x.thread.title)} <span class="muted">[${x.thread.n}]</span></div>
     <ul>${x.thread.C.map(c=>`<li><div><b>${esc(c.u)}</b> <span class="muted">▲${c.v}</span></div><div>${esc(c.t)}</div>${c.re.map(q=>`<div class="re">↳ <b>${esc(q.u)}</b> ${esc(q.t)}</div>`).join('')}</li>`).join('')}</ul></div>
     <h4>분위기 요약</h4><dl class="sumd"><dt>많이 언급된 장면</dt><dd>${x.sum.scenes.map(esc).join(' · ')}</dd><dt>주요 아쉬움</dt><dd>${x.sum.regrets.map(esc).join(' · ')}</dd></dl></section>
@@ -1687,9 +1703,37 @@ function dotdHTML(r){const D=r.dotd;if(!D)return '';const tl=dotdTally();
   ${D.done?'':`<button class="btn" data-act="dotd" data-v="skip" style="margin-top:10px">투표 없이 결과 보기</button>`}
   ${tl.length?`<div class="dt muted">시즌 DOTD: ${tl.map(([id,n])=>`<span class="${S.drivers[id].team==='usr'?'me':''}">${esc(S.drivers[id].code)} ×${n}</span>`).join(' · ')}</div>`:''}</div></div>`}
 
+/* ============ SNS 플랫폼 확장 (Instagram · YouTube) ============ */
+function snsExtra(x,ctx){const ut=userTeam(),tn=ut.name,slug=(ut.slug||'team').replace(/-/g,'_');const {tier,A,tp,tr,fastPit,gainer,winner}=ctx;
+ const good=['onetwo','win','dpod','pod'].includes(tier);const tm={onetwo:3.2,win:2.6,dpod:2.2,pod:1.8,pts:1,none:.7,dnf:.9}[tier];const fk=.5+(S.fans||50)/100;
+ const n=(lo,hi)=>Math.round((lo+rnd()*(hi-lo))*tm*fk);const nk=shuffle(NICKS.concat(['체커기','피트스톱','탑스피드','헤어핀','시케인']));
+ const big={onetwo:'1·2',win:'P1',dpod:'P'+ctx.fin.map(e=>e.pos).join('·P'),pod:'P'+(A&&A.pos),pts:'+'+tp,none:'P'+(A&&A.pos||'—'),dnf:'DNF'}[tier];
+ const sub={onetwo:'ONE-TWO',win:'RACE WINNER',dpod:'DOUBLE PODIUM',pod:'PODIUM',pts:'POINTS',none:'RACE DAY',dnf:'TOUGH DAY'}[tier];
+ const IG=[{acc:`@${slug}_f1`,off:true,img:{big,sub,tag:tr.n.toUpperCase()},cap:good?`${tr.n}에서 쓴 또 하나의 기록. 함께해 준 모든 크루와 팬 여러분께 🙌 #${slug} #F1`:tier==='pts'?`+${tp}점. 한 걸음씩 앞으로. #${slug}`:`오늘은 우리 날이 아니었습니다. 다음 라운드에서 다시. #${slug}`,l:n(20000,90000),c:n(400,2500),cm:[[nk[0],good?'이 팀 진짜 미쳤다 🔥🔥':'괜찮아요 다음에 보여주세요 💪'],[nk[1],good?'창단 때부터 봤는데 감동…':'신뢰성 업그레이드 부탁드려요 🙏']]},
+  {acc:'@paddock_moments',img:{big:good?'🍾':'🛠️',sub:good?'CELEBRATION':'GARAGE',tag:tn.toUpperCase()},cap:good?`${tn} 차고 앞, 체커기 직후의 순간들 📸`:`${tn} 차고, 레이스 직후 디브리프 현장`,l:n(6000,30000),c:n(100,700),cm:[[nk[2],good?'크루 표정 보소 ㅠㅠ':'분위기 무겁다…'],[nk[3],'사진 퀄리티 최고']]}];
+ if(fastPit)IG.push({acc:'@pitstop_daily',img:{big:fastPit.toFixed(1)+'s',sub:'PIT STOP',tag:tn.toUpperCase()},cap:`${tn} 크루 ${fastPit.toFixed(1)}초 스톱. 슬로모션으로 보면 더 소름 ⏱️`,l:n(4000,20000),c:n(80,400),cm:[[nk[4],'휠건 소리 ASMR 원함'],[nk[5],'크루 훈련 효과 확실함']]});
+ const res=ctx.fin.length?ctx.fin.map(e=>`#${e.d.num} P${e.pos}`).join(' · '):'리타이어';
+ const YT=[{ch:'포뮬러 하이라이트 KR',t:`[하이라이트] ${tr.n} 그랑프리 결승 | ${tn} ${res}${good?' 🔥':''}`,v:n(80000,400000),l:n(2000,12000),d:'12:48',cm:[[nk[6],good?'체커기 순간 중계진 목소리 갈라진 거 레전드 ㅋㅋ':'하이라이트로 봐도 답답하다…'],[nk[7],gainer&&gainer.grid-gainer.pos>=3?`#${gainer.d.num} 추월 장면 몇 번째 돌려보는지 모르겠다`:'피트 타이밍 장면 다시 보고 싶다'],[nk[8],`${winner.name} 우승 축하. 다음엔 ${tn} 차례`]]},
+  {ch:'피트월 라디오',t:`${tn} 팀 라디오 모음 | ${tr.n} GP ${good?'(우승 무전 포함)':''}`,v:n(20000,120000),l:n(600,4000),d:'7:12',cm:[[nk[9],good?'엔지니어 목소리 떨리는 거 듣고 같이 울었다':'무전 들어보니 전략 판단은 맞았네'],[nk[10],'이런 영상 더 올려주세요']]}];
+ YT.forEach(v=>v.cm.forEach(c=>c.push(Math.round(v.l*(.02+rnd()*.08)))));return{IG,YT}}
+function snsTabsHTML(x){const tab=S.ui.snsTab||'x';const has=!!x.IG;const tabs=[['x','X'],['ig','Instagram'],['yt','YouTube']].filter(t=>has||t[0]==='x');
+ const seg=`<div class="seg snsseg">${tabs.map(([k,l])=>`<button data-act="snstab" data-v="${k}" aria-pressed="${tab===k||(!has&&k==='x')}">${l}</button>`).join('')}</div>`;
+ let body='';
+ if(tab==='ig'&&has)body=`<ul class="ig">${x.IG.map(p=>`<li><div class="igh"><span class="av">${esc(p.acc[1].toUpperCase())}</span><b>${esc(p.acc)}</b>${p.off?'<span class="ver">✓</span>':''}</div>
+  <div class="igi"><span class="tg">${esc(p.img.tag)}</span><b>${esc(String(p.img.big))}</b><span>${esc(p.img.sub)}</span></div>
+  <div class="igm">♥ <b>${fmtK(p.l)}</b> · 댓글 ${fmtK(p.c)}개</div><div class="igc"><b>${esc(p.acc.slice(1))}</b> ${esc(p.cap)}</div>
+  ${p.cm.map(([u,t])=>`<div class="igr"><b>${esc(u)}</b> ${esc(t)}</div>`).join('')}</li>`).join('')}</ul>`;
+ else if(tab==='yt'&&has)body=`<ul class="yt">${x.YT.map(v=>`<li><div class="yth"><span class="play">▶</span><span class="dur">${v.d}</span></div><div class="ytt">${esc(v.t)}</div><div class="muted ytm">${esc(v.ch)} · 조회수 ${fmtK(v.v)}회 · 👍 ${fmtK(v.l)}</div>
+  ${v.cm.map(([u,t,k])=>`<div class="ytr"><b>@${esc(u)}</b> ${esc(t)} <span class="muted">👍 ${fmtK(k||0)}</span></div>`).join('')}</li>`).join('')}</ul>`;
+ else body=`<ul class="sns">${x.P.map(snsLi).join('')}</ul>`;
+ return seg+body}
+
 /* ============ playback ============ */
-function play(){const R=S.wk&&S.wk.race;if(!R||R.done||R.red)return;R.pause=null;clearTimeout(timer);const el=performance.now()-mapAt;const left=mapW?Math.max(0,mapW.total-el):0;timer=setTimeout(tick,Math.max(SPEED[S.ui.speed]*.4,left));updateRace()}
-function pause(){clearTimeout(timer);timer=null;if(S&&S.wk&&S.wk.race)save();updateRace&&$('#tower')&&updateRace()}
+let resumeT=null,resumeMs=0;
+function clearResume(){clearTimeout(resumeT);resumeT=null}
+function armResume(ms){const R=S.wk&&S.wk.race;if(!R||R.done)return;clearResume();resumeMs=ms;resumeT=setTimeout(()=>{resumeT=null;const R=S.wk&&S.wk.race;if(R&&!R.done&&!R.red&&!R.ask&&!timer&&$('#tower'))play();else if($('#tower'))updateRace()},ms);updateRace()}
+function play(){clearResume();const R=S.wk&&S.wk.race;if(!R||R.done||R.red)return;R.pause=null;clearTimeout(timer);const el=performance.now()-mapAt;const left=mapW?Math.max(0,mapW.total-el):0;timer=setTimeout(tick,Math.max(SPEED[S.ui.speed]*.4,left));updateRace()}
+function pause(){clearResume();clearTimeout(timer);timer=null;if(S&&S.wk&&S.wk.race)save();updateRace&&$('#tower')&&updateRace()}
 function tick(){const R=S.wk.race;timer=null;stepLap();if(R.done){render();return}if(R.pause||R.red){save();updateRace();return}timer=setTimeout(tick,(mapW&&mapW.total)||SPEED[S.ui.speed]);updateRace()}
 function simToEnd(){const R=S.wk.race;userCars().forEach(c=>c.auto=true);const ap=S.ui.autoPause;S.ui.autoPause=false;let guard=0;while(!R.done&&guard++<300){if(R.red){userCars().forEach(c=>{(R.redTyre=R.redTyre||{})[c.id]=R.wet>.4?(R.wet>.8?'W':'I'):'M'});applyRed()}stepLap()}S.ui.autoPause=ap;clearInterval(timer);timer=null;save();render()}
 
@@ -1746,7 +1790,7 @@ function raceShellHTML(){
   <div class="pb"><button class="btn primary" id="playbtn" data-act="play">출발</button>
    <div class="seg">${[1,2,4].map(s=>`<button data-act="speed" data-v="${s}" aria-pressed="${S.ui.speed===s}">${s}x</button>`).join('')}</div>
    <button class="btn" data-act="step">+1랩</button><button class="btn" data-act="simend" title="남은 결정을 엔지니어에게 맡기고 끝까지 진행">끝까지</button>
-   <label class="chk"><input type="checkbox" id="autopause" ${S.ui.autoPause?'checked':''}>결정 지점 자동 정지</label></div></div>
+   <label class="chk"><input type="checkbox" id="autopause" ${S.ui.autoPause?'checked':''}>결정 지점 자동 정지</label><label class="chk"><input type="checkbox" id="autoresume" ${S.ui.autoResume!==false?'checked':''}>응답하면 자동 재개</label></div></div>
   ${castHTML()}<div id="pausebar" hidden></div>
   <div class="rg"><section class="card"><header>타이밍 타워<span class="sp"></span><div class="seg"><button data-act="gapmode" data-v="leader" aria-pressed="${S.ui.gapMode==='leader'}">리더</button><button data-act="gapmode" data-v="int" aria-pressed="${S.ui.gapMode==='int'}">앞차</button></div></header><div class="tower" id="tower"></div></section>
   <div class="rside"><div class="mapfeed">${mapHTML()}<section class="card"><header>무전 · 레이스 컨트롤</header><ol class="feed" id="feed"></ol></section></div><div class="tord" id="tord" hidden></div><div class="ctrls" id="ctrls"></div>
@@ -1831,6 +1875,7 @@ function updateRace(){
  const bar=$('#pausebar');
  if(R.red){bar.hidden=false;bar.className='pausebar red';bar.innerHTML=`<b>RED FLAG</b><span>${esc(R.red.why)} · 재출발 타이어를 고르세요</span>`+userCars().filter(c=>c.st==='run').map(c=>{const sel=(R.redTyre&&R.redTyre[c.id])||c.tyre;return `<span class="pitrow"><b style="font-family:var(--f-disp)">${cd(c)}</b>${['S','M','H','I','W'].map(x=>`<button data-act="redty" data-i="${c.id}" data-v="${x}" aria-pressed="${sel===x}" aria-label="${COMP[x].n}">${tyreHTML(x)}</button>`).join('')}</span>`}).join('')+`<button class="btn red" data-act="redgo">재출발</button>`}
  else if(R.ask){const A=R.ask;bar.hidden=false;bar.className='pausebar ask';bar.innerHTML=`<b>${esc(S.drivers[A.id].code)} 질문</b><q>${esc(A.q)}</q>`+A.opts.map(([v,l])=>`<button class="btn" data-act="ans" data-v="${v}">${esc(l)}</button>`).join('')+(timer?'':`<button class="btn primary" data-act="play">재개</button>`)}
+ else if(resumeT&&!timer){bar.hidden=false;bar.className='pausebar go';bar.innerHTML=`<b>응답 완료</b><span>곧 레이스가 자동으로 재개됩니다</span><span class="rsb"><i style="animation-duration:${resumeMs}ms"></i></span><button class="btn primary" data-act="resumenow">지금 재개</button><button class="btn" data-act="resumehold">잠깐, 더 결정할게</button>`}
  else if(R.pause&&!timer){bar.hidden=false;bar.className='pausebar';bar.innerHTML=`<b>결정 지점</b><span>LAP ${R.lap} · ${esc(R.pause.t)}</span><button class="btn primary" data-act="play">결정 후 재개</button>`+userCars().filter(c=>c.st==='run').map(c=>{const A=advise(c);return A&&A.rec?`<span class="rec"><b style="font-family:var(--f-disp)">${cd(c)}</b> ${esc(A.rec)}</span>`:''}).join('')}
  else bar.hidden=true;
  // team order
@@ -1995,6 +2040,7 @@ document.addEventListener('click',e=>{
   return;
  }
  const R=S.wk&&S.wk.race;const car=i&&R?R.cars.find(c=>c.id===i):null;
+ const held=!!(R&&!R.done&&R.lap>0&&!timer&&(R.pause||R.ask||R.red||resumeT));
  switch(a){
   case 'tab':go(v);break;
   case 'weekend':startWeekend();break;
@@ -2037,14 +2083,19 @@ document.addEventListener('click',e=>{
   case 'newseason':newSeason();break;
   case 'merge':merge(v);break;
   case 'dotd':dotdVote(v);break;
+  case 'snstab':S.ui.snsTab=v;save();render();break;
+  case 'resumenow':clearResume();play();break;
+  case 'resumehold':clearResume();updateRace();break;
   case 'copy':{const t=$('#exp').value;const done=()=>{$('#copied').textContent='복사했습니다'};try{navigator.clipboard.writeText(t).then(done,()=>{$('#exp').select();$('#copied').textContent='선택했습니다. Ctrl+C로 복사하세요'})}catch(err){$('#exp').select()}break}
   case 'import':{try{const o=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim()))));if(!o||!o.teams)throw 0;pause();S=o;save();go('overview')}catch(err){$('#imperr').textContent='코드를 읽지 못했습니다. 전체를 빠짐없이 붙여 넣었는지 확인하세요.'}break}
   case 'reset':if(!resetArm){resetArm=true;render()}else{resetArm=false;pause();try{localStorage.removeItem(KEY)}catch(err){}S=null;D=defaultDraft();rollProspects(D);render()}break;
  }
+ if(held&&S.ui.autoResume!==false){const ms={ans:900,redgo:1200,pit:2200,pitcancel:1800,dmsg:1600,tord:1600,planadj:2200}[a];if(ms)armResume(ms)}
 });
 document.addEventListener('change',e=>{
  const t=e.target;
  if(t.id==='autopause'){S.ui.autoPause=t.checked;save()}
+ if(t.id==='autoresume'){S.ui.autoResume=t.checked;save()}
  if(t.dataset&&t.dataset.act2==='auto'){const c=S.wk.race.cars.find(x=>x.id===t.dataset.i);c.auto=t.checked;if(c.auto)c.pitReq=null;updateRace()}
 });
 document.addEventListener('input',e=>{
