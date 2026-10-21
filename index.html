@@ -288,8 +288,60 @@ tr.me td{background:color-mix(in srgb,var(--team) 16%,transparent)}
 
 textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px solid var(--line-2);border-radius:4px;padding:8px;font-family:var(--f-mono);font-size:11px}
 
+.qgrid.wide{grid-template-columns:minmax(0,1fr) minmax(0,440px)}
+.qopt{display:grid;gap:4px}
+.qopt .seg{flex-wrap:wrap;justify-self:start}
+.plan .pc>.seg{justify-self:start}
+.qpred{font-size:12px;background:#000;border:1px solid var(--line);border-radius:4px;padding:6px 8px;display:flex;gap:10px;flex-wrap:wrap}
+.qpred b{font-family:var(--f-disp)}
+.brief{background:#000;border:1px solid var(--line-2);border-left:4px solid var(--team);border-radius:4px;padding:10px;display:grid;gap:8px}
+.lifes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.lifes>div{display:flex;gap:6px;align-items:center}
+.lifes span{display:grid;line-height:1.15}.lifes small{font-size:11px}
+.lifes b{font-family:var(--f-disp);font-size:18px}
+.bl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px}
+.arr{color:var(--dim);font-size:10px;margin:0 2px}
+.sopts{display:grid;gap:6px;margin-top:4px}
+.sopt{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:8px;align-items:center;text-align:left;padding:6px 8px;background:#000;border:1px solid var(--line);border-radius:4px;color:var(--fg);font-size:12px;cursor:pointer}
+.sopt b{font-family:var(--f-disp)}.sopt .sq{display:flex;align-items:center;flex-wrap:wrap}
+.sopt[aria-pressed="true"]{border-color:var(--team);box-shadow:inset 3px 0 0 var(--team)}
+.stints{display:flex;flex-wrap:wrap;gap:6px}
+.stn{display:flex;align-items:center;gap:6px;font-size:12px;background:#000;border:1px solid var(--line);border-radius:4px;padding:3px 8px 3px 4px}
+.stn.over{border-color:var(--bad);color:var(--bad)}
+.stops{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.stopadj{display:flex;align-items:center;gap:6px;font-size:12px}
+.btn.sm{padding:0 9px;font-size:13px;line-height:22px}
+.planl{font-size:12px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.planl .tyre{width:18px;height:18px;border-width:2.5px;font-size:9px}
+.adv{font-size:12px;background:#000;border-left:3px solid var(--team);padding:8px;border-radius:0 3px 3px 0;display:grid;gap:6px}
+.adv ul{margin:0;padding-left:16px;color:var(--muted);display:grid;gap:2px}
+.advo{display:flex;gap:6px;flex-wrap:wrap}
+.ao{display:flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:999px;padding:2px 8px 2px 2px;color:var(--fg);font-size:12px}
+.ao:disabled{opacity:1;cursor:default}
+.ao[aria-pressed="true"]{border-color:#fff}
+.ao .stay{font-family:var(--f-disp);font-weight:900;font-size:10px;padding:4px 6px;border-radius:999px;background:#2b2f37}
+.pausebar .rec{flex-basis:100%;font-size:12px;color:var(--muted)}
+.feed li.drv{background:color-mix(in srgb,var(--team) 14%,transparent)}
+.feed li.drv .t::before{content:attr(data-who) " · DRIVER";display:block;font-family:var(--f-disp);font-weight:700;font-size:10px;letter-spacing:.12em;color:var(--team)}
+.feed li.drv .t{font-style:italic}
+.feed li.opp .t::before{content:attr(data-who);display:block;font-family:var(--f-disp);font-weight:700;font-size:10px;letter-spacing:.12em;color:#c0c6cf}
+.feed li.opp .t{font-style:italic;color:#d6d9de}
+.feed li.rc .t::before,.feed li.radio .t::before{white-space:nowrap}
+.tmap{padding:6px 10px 10px;background:#000}
+#tmap{display:block;width:100%;height:auto;max-height:340px}
+.trk-o{fill:none;stroke:#3b414b;stroke-width:4.6;stroke-linejoin:round;stroke-linecap:round}
+.trk{fill:none;stroke:#0b0d10;stroke-width:2.6;stroke-linejoin:round}
+.sfl{stroke:#fff;stroke-width:.9}
+#tmap .dot{stroke:#000;stroke-width:.45}
+#tmap .me circle{stroke:#fff;stroke-width:.8}
+#tmap text{font-family:var(--f-disp);font-weight:900;font-size:3.3px;fill:#fff;paint-order:stroke;stroke:#000;stroke-width:.9px}
+#tmap .ldr{fill:#ffd400}
+#tmap .scc circle{fill:var(--flag-sc);stroke:#000;stroke-width:.4}#tmap .scc text{fill:#000;stroke:none;font-size:2.2px}
+.news{list-style:none;margin:0;padding:0;display:grid;gap:10px;font-size:13px}
+.news .tag{margin:0 6px 0 0}
+.qlog{list-style:none;margin:0;padding:0}
 @media (max-width:960px){
-  .rg,.qgrid,.ov{grid-template-columns:minmax(0,1fr)}
+  .rg,.qgrid,.qgrid.wide,.ov{grid-template-columns:minmax(0,1fr)}
   .ins{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:620px){
@@ -460,7 +512,7 @@ function createTeam(){
   ui:{tab:'overview',speed:1,autoPause:true,gapMode:'leader'}};
  const ut={id:'usr',user:true,name:d.name.trim()||'My Team',slug:slug(d.name),desc:d.desc,color:d.color,pu:d.pu,aero:sp.aero,power:sp.power,rel:sp.rel,crew:sp.crew,tyre:0,energy:0,puGain:0,puGrow:pu.grow,drivers:[]};
  S.teams.push(ut);
- d.drivers.forEach((x,i)=>{const a=drvStat(x);const id='U'+i;S.drivers[id]={id,code:(x.code||codeFrom(x.name)).toUpperCase().slice(0,3),name:x.name.trim()||('Driver '+(i+1)),num:+x.num||(i?2:1),team:'usr',skill:a.skill,growth:a.growth,cap:a.cap,sigma:a.sigma,arch:x.arch,role:a.n,pid:x.pid||null};ut.drivers.push(id)});
+ d.drivers.forEach((x,i)=>{const a=drvStat(x);const id='U'+i;S.drivers[id]={id,code:(x.code||codeFrom(x.name)).toUpperCase().slice(0,3),name:x.name.trim()||('Driver '+(i+1)),num:+x.num||(i?2:1),team:'usr',skill:a.skill,growth:a.growth,cap:a.cap,sigma:a.sigma,arch:x.arch,role:a.n,pid:x.pid||null,until:S.year};ut.drivers.push(id)});
  RIVALS.forEach(r=>{const t={id:r.id,name:r.name,color:r.color,perf:r.perf,rel:r.rel,drivers:[]};r.dr.forEach(([c,n,num,sk])=>{const id=r.id+'_'+c;S.drivers[id]={id,code:c,name:n,num,team:r.id,skill:sk,growth:0,cap:sk,sigma:.14+(92-sk)*.004};t.drivers.push(id)});S.teams.push(t)});
  addCommit({kind:'init',msg:'Initial commit: '+ut.name+' 창단',body:`파워유닛 ${pu.n}\n다운포스 ${sp.aero} · 출력 ${sp.power} · 신뢰성 ${sp.rel} · 피트 크루 Lv.${sp.crew}\n드라이버 ${userDrivers().map(x=>'#'+x.num+' '+x.name).join(', ')}\n시즌 ${S.year} · ${S.cal.length}라운드`});
  save();applyTheme();go('overview');
@@ -474,7 +526,7 @@ function standings(){
  Object.keys(S.drivers).forEach(id=>{dp[id]=0;wins[id]=0;pods[id]=0});S.teams.forEach(t=>tp[t.id]=0);
  const cum={};S.teams.forEach(t=>cum[t.id]=[]);
  S.results.forEach(r=>{r.cls.forEach(e=>{dp[e.id]+=e.pts;tp[S.drivers[e.id].team]+=e.pts;if(e.pos===1&&e.st==='run')wins[e.id]++;if(e.pos<=3&&e.st==='run')pods[e.id]++});S.teams.forEach(t=>cum[t.id].push(tp[t.id]))});
- const drv=Object.keys(dp).sort((a,b)=>dp[b]-dp[a]||wins[b]-wins[a]).map(id=>({id,pts:dp[id],wins:wins[id],pods:pods[id]}));
+ const drv=Object.keys(dp).filter(id=>S.drivers[id].team!=='ret'||dp[id]>0).sort((a,b)=>dp[b]-dp[a]||wins[b]-wins[a]).map(id=>({id,pts:dp[id],wins:wins[id],pods:pods[id]}));
  const tm=S.teams.map(t=>({id:t.id,pts:tp[t.id],wins:t.drivers.reduce((s,d)=>s+wins[d],0)})).sort((a,b)=>b.pts-a.pts||b.wins-a.wins);
  return{drv,tm,cum};
 }
@@ -584,24 +636,335 @@ function makeWeather(tr){
 }
 function startWeekend(){
  const tr=TR(S.cal[S.cur]);
- S.wk={round:S.cur+1,track:tr.id,phase:'quali',plans:{},quali:null,grid:null,startTyre:{},race:null,weather:makeWeather(tr)};
- userDrivers().forEach(d=>{S.wk.plans[d.id]='safe';S.wk.startTyre[d.id]='M'});
+ S.wk={round:S.cur+1,track:tr.id,phase:'quali',qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr)};
+ userDrivers().forEach(d=>{qsOf(d.id);S.wk.startTyre[d.id]='M'});
  save();go('race');
 }
 function carPace(id){const d=S.drivers[id],t=teamById(d.team);return{perf:perfOf(t),skill:d.skill,sigma:d.sigma,rel:t.rel}}
 function runQuali(){
- const tr=TR(S.wk.track);const ids=Object.keys(S.drivers);
- const lap=(id,evo)=>{const p=carPace(id);const d=S.drivers[id];let t=tr.base-1.6+(100-p.perf)*.06+(100-p.skill)*.035-evo;
-  let sg=p.sigma*.7, mis=.04;
-  if(d.team==='usr'){const pl=S.wk.plans[id];if(pl==='push'){t-=.07;sg*=1.5;mis=.08}else{mis=.025}}
-  t+=gauss()*sg; if(rnd()<mis)t+=.5+rnd()*.9; return t};
- const q={};ids.forEach(id=>q[id]={q1:lap(id,0),q2:null,q3:null});
- let o=ids.slice().sort((a,b)=>q[a].q1-q[b].q1);const n=o.length;const c1=n-7;
- o.slice(0,c1).forEach(id=>q[id].q2=lap(id,.25));let o2=o.slice(0,c1).sort((a,b)=>q[a].q2-q[b].q2);
- o2.slice(0,10).forEach(id=>q[id].q3=lap(id,.45));const o3=o2.slice(0,10).sort((a,b)=>q[a].q3-q[b].q3);
- const grid=[...o3,...o2.slice(10),...o.slice(c1)];
- S.wk.quali=q;S.wk.grid=grid;S.wk.phase='qres';save();render();
+ const wk=S.wk;const r=qualiSim(true);wk.quali=r.q;wk.grid=r.grid;const ud=userDrivers();const n=r.grid.length;const L=[];
+ if(wk.tow&&wk.tow!=='none'){const rc=S.drivers[wk.tow],gv=ud.find(d=>d.id!==wk.tow);if(rc&&gv)L.push({k:'radio',t:`토우 운영: ${gv.code} → ${rc.code} 슬립스트림 제공`})}
+ ud.forEach(d=>{const q=qsOf(d.id);L.push({k:'radio',t:`${d.code} 런 계획: ${{safe:'안정',std:'표준',push:'한계 공격'}[q.run]} · ${q.time==='early'?'초반 출격':'막판 출격'}${q.save?' · Q1 소프트 1세트 절약':''}`})});
+ L.push(...r.notes);wk.sets={};
+ ud.forEach(d=>{const q=qsOf(d.id),qq=r.q[d.id];const used=(q.save?1:2)+(qq.q2?2:0)+(qq.q3?2:0);wk.sets[d.id]={S:Math.max(0,8-used),M:3,H:2};L.push({k:'drv',w:d.code,t:qualiLine(r.grid.indexOf(d.id)+1,n)})});
+ wk.qlog=L;wk.strat={};ensureStrat();wk.phase='qres';save();render();
 }
+/* ============ 예선 전략 ============ */
+function qsOf(id){const wk=S.wk;wk.qs=wk.qs||{};if(!wk.qs[id])wk.qs[id]={run:'std',time:'late',save:false};return wk.qs[id]}
+function qualiSim(rec){
+ const wk=S.wk,tr=TR(wk.track);const ids=S.teams.flatMap(t=>t.drivers);const notes=[];const ud=userTeam().drivers;const tow=wk.tow||'none';
+ const lap=(id,evo,ses,alive)=>{const p=carPace(id);const d=S.drivers[id];let t=tr.base-1.6+(100-p.perf)*.06+(100-p.skill)*.035-evo;
+  let sg=p.sigma*.7,mis=.04;
+  if(d.team!=='usr'){t+=gauss()*sg;if(rnd()<mis)t+=.5+rnd()*.9;return t}
+  const q=qsOf(id);
+  if(q.run==='push'){t-=.07;sg*=1.5;mis=.08}else if(q.run==='safe'){t+=.03;sg*=.8;mis=.02}
+  if(q.time==='early')t+=.05;
+  else{t-=.04;if(rnd()<.06){t+=.3+rnd()*.3;if(rec)notes.push({k:'rc',t:`Q${ses} 막판 황색기 — ${d.code} 마지막 랩 무효, 이전 기록으로 남음`})}}
+  if(ses===1&&q.save)t+=.1;
+  const mate=ud.find(x=>x!==id);
+  if(tow!=='none'&&mate&&alive.has(mate)){if(tow===id)t-=.09;else if(tow===mate)t+=.04}
+  t+=gauss()*sg;
+  if(rnd()<mis){t+=.5+rnd()*.9;if(rec)notes.push({k:'drv',w:d.code,t:`Q${ses} ${['락업이 났어요','트랙 리밋에 걸렸어요','마지막 코너에서 뒤가 빠졌어요'][Math.floor(rnd()*3)]}, 랩 날렸어요`})}
+  return t};
+ const q={};const all=new Set(ids);ids.forEach(id=>q[id]={q1:lap(id,0,1,all),q2:null,q3:null});
+ const o=ids.slice().sort((a,b)=>q[a].q1-q[b].q1);const c1=o.length-7;
+ const s2=new Set(o.slice(0,c1));o.slice(0,c1).forEach(id=>q[id].q2=lap(id,.25,2,s2));const o2=o.slice(0,c1).sort((a,b)=>q[a].q2-q[b].q2);
+ const s3=new Set(o2.slice(0,10));o2.slice(0,10).forEach(id=>q[id].q3=lap(id,.45,3,s3));const o3=o2.slice(0,10).sort((a,b)=>q[a].q3-q[b].q3);
+ return{q,grid:[...o3,...o2.slice(10),...o.slice(c1)],notes};
+}
+function qualiPreview(){const ud=userTeam().drivers;const acc={};ud.forEach(id=>acc[id]={p:0,q3:0,q1:0,pole:0});const N=200;const n=S.teams.flatMap(t=>t.drivers).length;
+ for(let k=0;k<N;k++){const r=qualiSim(false);ud.forEach(id=>{const p=r.grid.indexOf(id)+1,a=acc[id];a.p+=p;if(p<=10)a.q3++;if(p>n-7)a.q1++;if(p===1)a.pole++})}
+ ud.forEach(id=>{const a=acc[id];a.p/=N;a.q3/=N;a.q1/=N;a.pole/=N});return acc}
+const pick=a=>a[Math.floor(rnd()*a.length)];
+function qualiLine(p,n){
+ if(p===1)return pick(['폴이다!!! 랩 완벽했어요!','폴 포지션! 오늘 차 정말 좋아요, 다들 고마워요']);
+ if(p<=3)return pick([`P${p}! 앞줄 근처예요, 내일 스타트로 보여줄게요`,`P${p}. 폴까지 조금 모자랐는데 레이스 페이스는 자신 있어요`]);
+ if(p<=10)return pick([`Q3 P${p}. 내일은 롱런으로 올라갈게요`,`P${p}, 마지막 섹터만 잘 탔으면 더 위였어요`]);
+ if(p<=n-7)return pick([`Q2 탈락, P${p}. 마지막 섹터에서 시간을 잃었어요`,`P${p}… 트래픽에 걸렸어요. 레이스에서 만회할게요`]);
+ return pick(['Q1에서 떨어졌어요… 그립이 하나도 없었어요','미안해요, 오늘은 랩을 못 맞췄어요']);
+}
+
+/* ============ 결승 전략 (기본 계획) ============ */
+function stintCum(tr,tm,laps){const T={};['S','M','H'].forEach(k=>{const C=COMP[k],w=tr.deg*tm/C.life;T[k]=[0,1].map(u=>{const a=[0];let s=0,we=u?.12:0;for(let n=0;n<=laps;n++){s+=C.off+C.deg*C.life*we+(we>1?(we-1)*C.life*.4:0);we+=w;a.push(s)}return a})});return T}
+function stratCtx(id){const wk=S.wk,tr=TR(wk.track),ut=userTeam();const tm=1-.05*(ut.tyre||0);const sets=(wk.sets&&wk.sets[id])||{S:2,M:3,H:2};
+ return{tr,tm,laps:tr.laps,sets,pit:tr.pit-.05-.12*ut.crew,cum:stintCum(tr,tm,tr.laps)}}
+const tyreLife=(k,x)=>Math.floor(COMP[k].life/(x.tr.deg*x.tm));
+function usedFlags(seq,sets){const c={S:0,M:0,H:0};return seq.map(k=>{c[k]++;return c[k]>sets[k]?1:0})}
+function planTime(seq,laps,x){const u=usedFlags(seq,x.sets);const b=[0,...laps,x.laps];let t=0;for(let i=0;i<seq.length;i++){const n=b[i+1]-b[i];if(n<1)return Infinity;t+=x.cum[seq[i]][u[i]][n]}return t+x.pit*(seq.length-1)}
+function bestFor(seq,x){const u=usedFlags(seq,x.sets),L=x.laps;const mx=seq.map((k,i)=>Math.floor((1.08-(u[i]?.12:0))*COMP[k].life/(x.tr.deg*x.tm)));let best=null;
+ if(seq.length===2){for(let p=1;p<L;p++){if(p>mx[0]||L-p>mx[1])continue;const t=planTime(seq,[p],x);if(!best||t<best.t)best={seq,laps:[p],t}}}
+ else for(let p=1;p<L-1&&p<=mx[0];p++)for(let q=p+1;q<L&&q-p<=mx[1];q++){if(L-q>mx[2])continue;const t=planTime(seq,[p,q],x);if(!best||t<best.t)best={seq,laps:[p,q],t}}
+ return best}
+function stratOptions(id){const x=stratCtx(id);const K=['S','M','H'];const seqs=[];
+ K.forEach(a=>K.forEach(b=>{if(a!==b)seqs.push([a,b])}));
+ K.forEach(a=>K.forEach(b=>K.forEach(c=>{if(new Set([a,b,c]).size>=2&&!(a===b&&b===c))seqs.push([a,b,c])})));
+ const all=seqs.map(s=>bestFor(s,x)).filter(Boolean).sort((a,b)=>a.t-b.t);const top=all.length?all[0].t:0;all.forEach(o=>o.d=o.t-top);return all}
+function setStrat(id,o){S.wk.strat=S.wk.strat||{};if(!o)return;S.wk.strat[id]={seq:o.seq.slice(),laps:o.laps.slice()};S.wk.startTyre[id]=o.seq[0]}
+function ensureStrat(){const wk=S.wk;wk.strat=wk.strat||{};userDrivers().forEach(d=>{if(!wk.strat[d.id]){const o=stratOptions(d.id);setStrat(d.id,o.find(x=>x.seq[0]===wk.startTyre[d.id])||o[0])}})}
+const seqHTML=seq=>seq.map(k=>tyreHTML(k)).join('<span class="arr">▸</span>');
+function stratPanelHTML(d){
+ const wk=S.wk,x=stratCtx(d.id),opts=stratOptions(d.id),cur=wk.strat[d.id],st=wk.startTyre[d.id];
+ const top=opts.length?opts[0].t:0;const sets=x.sets;
+ const forStart=opts.filter(o=>o.seq[0]===st);const seen=new Set();const list=[];
+ forStart.forEach(o=>{const key=o.seq.length;if(list.length<4&&(!seen.has(o.seq.join(''))))list.push(o),seen.add(o.seq.join(''))});
+ const curKey=cur.seq.join('');if(!list.some(o=>o.seq.join('')===curKey)){const c=opts.find(o=>o.seq.join('')===curKey);if(c)list.push(c)}
+ const ct=planTime(cur.seq,cur.laps,x);const b=[0,...cur.laps,x.laps];const u=usedFlags(cur.seq,sets);
+ const stints=cur.seq.map((k,i)=>{const n=b[i+1]-b[i];const life=Math.floor((1-(u[i]?.12:0))*COMP[k].life/(x.tr.deg*x.tm));const over=n>life;
+  return `<div class="stn${over?' over':''}">${tyreHTML(k)}<span>L${b[i]+1}–${b[i+1]} · ${n}랩${u[i]?' · 중고':''}${over?' · 수명 초과':''}</span></div>`});
+ const stops=cur.laps.map((l,k)=>`<div class="stopadj"><span class="lbl">박스 ${k+1}</span><button class="btn sm" data-act="stopadj" data-i="${d.id}" data-k="${k}" data-d="-1" aria-label="박스 ${k+1} 한 랩 앞당기기">−</button><b class="num">L${l}</b><button class="btn sm" data-act="stopadj" data-i="${d.id}" data-k="${k}" data-d="1" aria-label="박스 ${k+1} 한 랩 늦추기">+</button><span class="muted">→ ${COMP[cur.seq[k+1]].n}</span></div>`).join('');
+ return `<div class="pc"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:16px">P${wk.grid.indexOf(d.id)+1} · ${d.code}</b><span class="muted" style="font-size:12px">남은 신품 S${sets.S} · M${sets.M} · H${sets.H}</span></div>
+  <div><span class="lbl">출발 타이어</span><div class="pitrow" style="margin-top:4px">${['S','M','H'].map(c=>{const bo=opts.find(o=>o.seq[0]===c);return `<button data-act="stire" data-i="${d.id}" data-v="${c}" aria-pressed="${st===c}" aria-label="${COMP[c].n} 출발">${tyreHTML(c,'lg')}</button>`}).join('')}
+   <span class="muted" style="font-size:12px">${COMP[st].n} 출발 최선 ${forStart[0]?(forStart[0].d<.05?'= 전체 최선':'+'+forStart[0].d.toFixed(1)+'초'):'—'}${st==='S'&&sets.S<=0?' · 신품 없음':''}</span></div></div>
+  <div><span class="lbl">전략</span><div class="sopts">${list.map(o=>`<button class="sopt" data-act="stratpick" data-i="${d.id}" data-v="${o.seq.join('')}" aria-pressed="${o.seq.join('')===curKey}"><b>${o.seq.length-1}스톱</b><span class="sq">${seqHTML(o.seq)}</span><span class="num">${o.d<.05?'최선':'+'+o.d.toFixed(1)+'s'}</span></button>`).join('')}</div></div>
+  <div class="stints">${stints.join('')}</div>
+  <div class="stops">${stops}<span class="muted" style="font-size:12px">이 계획: 최선 대비 ${ct-top<.05?'±0.0':'+'+(ct-top).toFixed(1)}초</span></div></div>`;
+}
+function briefingHTML(){
+ const ud=userDrivers();const x=stratCtx(ud[0].id);const opts=stratOptions(ud[0].id);
+ const b1=opts.find(o=>o.seq.length===2),b2=opts.find(o=>o.seq.length===3);const best=opts[0];
+ const base=best?`<b>${best.seq.length-1}스톱</b> ${seqHTML(best.seq)} <span class="muted">박스 L${best.laps.join(' · L')}</span>`:'—';
+ const cmp=b1&&b2?(b1.t<=b2.t?`2스톱 최선은 ${(b2.t-b1.t).toFixed(1)}초 느림`:`1스톱 최선은 ${(b1.t-b2.t).toFixed(1)}초 느림`):'';
+ return `<div class="brief"><div class="lbl">전략 브리핑 · 엔지니어</div>
+  <div class="lifes">${['S','M','H'].map(k=>`<div>${tyreHTML(k,'lg')}<span><b class="num">${tyreLife(k,x)}랩</b><small class="muted">${k==='S'?'예선·짧은 스틴트':k==='M'?'균형':'롱런'} · 한계 약 ${Math.floor(tyreLife(k,x)*1.08)}랩</small></span></div>`).join('')}</div>
+  <div class="bl">기본 계획 ${base}</div>
+  <div class="muted" style="font-size:12px">${cmp}${cmp?' · ':''}피트 손실 약 ${x.tr.pit}초 · SC 중 약 10초. 추월 ${x.tr.ot<.6?'어려움 → 트랙 포지션 우선':x.tr.ot<1?'보통':'쉬움 → 2스톱도 고려'}.</div></div>`;
+}
+
+/* ============ 계획 실행 ============ */
+function planPit(c,R,tr){const P=c.plan;if(!P||P.off||R.wet>.3||c.tyre==='I'||c.tyre==='W'||P.idx>=P.laps.length)return aiPit(c,R,tr);
+ const L=R.lap,nx=P.laps[P.idx],ty=P.seq[P.idx+1];const f=R.flag&&R.flag.type;
+ if(L>=nx)return ty;if((f==='SC'||f==='VSC')&&nx-L<=8&&c.wear>.3)return ty;if(c.wear>1.05)return ty;return null}
+function planText(c,R){const P=c.plan;if(!P)return '';if(P.off)return '<span class="muted">기본 계획 해제 · 젖은 노면</span>';
+ const s=seqHTML(P.seq);if(P.idx>=P.laps.length)return `${s} <span class="muted">· 계획 완료</span>`;
+ const nx=P.laps[P.idx];return `${s} <span class="muted">· 다음 박스</span> <b class="num">L${nx}</b> <span class="muted">(${Math.max(0,nx-R.lap)}랩 뒤)</span>`}
+
+/* ============ 드라이버 무전 ============ */
+const RADIO={
+ pass:['{o} 잡았어요!','좋아, {o} 처리했어요. 다음 차 갭 알려줘요','배터리 타이밍 딱 맞았어요','바깥으로 돌아 나왔어요, 깔끔했어요'],
+ lost:['{o} 배터리가 훨씬 많았어요','트랙션이 안 걸려요, 못 막았어요','{o}한테 내줬어요… 다시 갈게요','방어할 배터리가 없었어요'],
+ wear:['리어 타이어 거의 다 됐어요','프론트 그레이닝 심해요. 언제 박스예요?','타이어 떨어지고 있어요, 랩타임 못 지켜요'],
+ cliff:['그립이 하나도 없어요! 박스, 박스!','타이어 끝났어요, 이대로는 위험해요'],
+ fresh:['새 타이어 느낌 좋아요, 밀어볼게요','그립 돌아왔어요'],
+ freshH:['하드라 아직 온도가 안 올라와요','하드 워밍업 중이에요, 두 랩만 기다려줘요'],
+ sc:['세이프티카? 박스해야 돼요?','SC다. 타이어 온도 유지할게요','계획 바꿀 거면 지금 알려줘요'],
+ vsc:['VSC 델타 맞추고 있어요','VSC예요, 박스 기회 아니에요?'],
+ rain:['빗방울 떨어져요, 3코너 미끄러워요','비 와요! 슬릭으로는 오래 못 버텨요'],
+ dry:['라인 마르고 있어요, 인터 과열돼요','드라이 라인 생겼어요, 슬릭 생각해요'],
+ close:['{o} 페이스 떨어졌어요, 잡을 수 있어요','{o}까지 얼마예요? 따라붙고 있어요'],
+ press:['뒤에 {o} 붙었어요','{o} 계속 들이대요, 배터리 아껴둘게요'],
+ lead:['선두예요? 좋아요, 집중할게요','앞에 아무도 없네요. 목표 랩타임 알려줘요'],
+ push:['이 페이스 오래는 못 가요','공격 모드인데 타이어가 금방 녹아요'],
+ bat:['배터리 바닥이에요','배터리 다 썼어요, 충전 좀 할게요'],
+ startG:['스타트 좋았어요! {d}계단 올라왔어요','1코너 안쪽이 비어 있었어요!'],
+ startL:['스타트 망했어요, 휠스핀','1코너에서 갇혔어요, 미안해요'],
+ mech:['파워 잃었어요… 차 세울게요','뭔가 터졌어요, 소리가 이상해요','기어가 안 들어가요!'],
+ crash:['미안해요… 벽에 박았어요','뒤가 갑자기 빠졌어요, 미안해요 팀'],
+ win:['우승이다!!! 다들 고마워요!','해냈어요! 이 팀 최고예요!'],
+ pod:['포디움! 다들 수고 많았어요','P{p}! 오늘 차 진짜 좋았어요'],
+ pts:['P{p}, 포인트 챙겼어요','P{p}. 다음엔 더 위로 갈게요'],
+ nopts:['P{p}… 오늘은 페이스가 없었어요','아쉽네요. 데이터 같이 봐요'],
+ pitplan:['오케이, 이번 랩 박스','카피, 들어갈게요'],
+ slowpit:['휠건 왜 그래요?! 몇 초 잃었어요?','피트에서 뭐가 걸렸어요?'],
+ red:['레드 플래그? 다들 괜찮은 거죠?','레드요? 타이어 뭘로 갈지 정해줘요'],
+};
+function dr(c,k,v,force){const R=S.wk.race;if(!c.user||c.st!=='run'&&!['mech','crash'].includes(k))return;if(!force&&c.radAt!=null&&R.lap-c.radAt<3)return;
+ let t=pick(RADIO[k]);for(const x in (v||{}))t=t.split('{'+x+'}').join(v[x]);c.radAt=R.lap;log('drv',t,0,cd(c))}
+
+/* ============ 라이브 트랙맵 ============ */
+const SHAPES={
+ aus:[[15,55],[12,40],[20,28],[34,20],[48,16],[60,10],[74,12],[86,20],[92,32],[88,44],[78,50],[66,56],[52,62],[38,64],[24,62]],
+ chn:[[15,64],[60,64],[74,58],[80,48],[74,40],[64,42],[62,52],[50,52],[42,44],[34,36],[22,34],[14,28],[18,18],[40,14],[70,12],[88,14],[92,24],[86,32],[90,44],[88,58],[78,68],[40,70]],
+ jpn:[[14,60],[42,62],[56,56],[50,48],[58,42],[50,34],[40,30],[30,22],[24,14],[34,10],[44,18],[56,28],[70,36],[84,40],[92,32],[86,22],[74,24],[66,40],[60,58],[50,68],[24,68]],
+ bhr:[[12,62],[56,62],[66,58],[62,50],[50,46],[44,36],[54,28],[70,30],[86,22],[92,30],[84,40],[76,44],[84,52],[88,62],[80,70],[30,72]],
+ sau:[[8,52],[30,56],[50,52],[70,56],[90,52],[95,44],[88,38],[70,36],[56,40],[44,34],[30,38],[18,32],[8,40]],
+ mia:[[10,58],[30,62],[54,64],[66,56],[60,48],[48,46],[40,38],[50,30],[64,32],[72,40],[86,42],[94,34],[88,22],[60,16],[30,14],[12,22],[6,40]],
+ can:[[10,50],[24,44],[40,46],[54,40],[70,42],[86,36],[94,40],[88,48],[70,54],[50,58],[30,58],[16,60]],
+ mon:[[20,62],[34,60],[40,50],[48,38],[60,28],[72,26],[78,34],[70,38],[64,46],[74,52],[86,56],[94,62],[84,70],[60,70],[46,68],[36,72],[24,70]],
+ esp:[[10,58],[60,60],[72,56],[70,46],[60,42],[70,34],[86,30],[92,20],[80,12],[60,14],[46,24],[36,20],[26,26],[30,36],[22,44],[12,48]],
+ aut:[[16,62],[58,62],[68,52],[76,28],[84,12],[92,18],[86,32],[92,46],[80,52],[62,46],[40,42],[24,50]],
+ gbr:[[20,56],[40,62],[52,56],[46,46],[56,38],[70,36],[84,24],[92,30],[86,40],[76,44],[70,54],[80,62],[70,70],[50,72],[30,68],[16,64]],
+ bel:[[20,64],[10,58],[18,50],[30,36],[44,18],[56,12],[66,18],[76,28],[90,34],[94,46],[82,52],[70,48],[60,56],[50,64],[40,70],[28,70]],
+ hun:[[12,58],[50,60],[60,52],[52,44],[64,36],[80,34],[90,26],[82,18],[64,20],[50,26],[38,20],[24,24],[30,34],[18,42]],
+ ned:[[20,60],[50,62],[60,54],[50,48],[40,42],[48,32],[62,30],[74,22],[88,24],[92,36],[84,46],[86,58],[74,66],[48,70],[24,68]],
+ ita:[[10,56],[60,58],[70,52],[66,46],[74,40],[86,30],[92,18],[84,10],[70,14],[56,24],[40,30],[24,26],[14,32],[6,44]],
+ mad:[[14,60],[44,62],[60,56],[70,44],[64,34],[52,34],[48,24],[60,14],[80,14],[92,24],[90,40],[80,52],[88,64],[70,70],[30,70]],
+ aze:[[60,64],[20,64],[10,58],[14,48],[24,46],[30,36],[22,28],[30,20],[44,22],[52,32],[66,30],[78,36],[86,30],[94,40],[92,54],[90,64]],
+ sgp:[[14,62],[40,62],[46,54],[40,46],[52,40],[66,42],[80,36],[90,24],[78,14],[60,18],[48,26],[30,22],[20,32],[26,42],[16,48]],
+ usa:[[40,68],[22,62],[20,52],[30,44],[24,34],[34,28],[30,18],[42,12],[54,20],[64,14],[90,10],[94,20],[84,30],[76,40],[86,50],[80,62],[62,60]],
+ mex:[[10,56],[70,58],[78,50],[72,42],[80,34],[90,26],[84,16],[66,20],[52,16],[40,24],[30,18],[20,28],[24,38],[14,44]],
+ bra:[[60,20],[40,18],[26,26],[30,36],[44,40],[50,52],[38,60],[24,58],[16,66],[30,74],[60,72],[80,64],[90,50],[86,36],[90,24],[80,16]],
+ lvg:[[10,62],[60,62],[70,56],[72,44],[86,40],[92,30],[88,14],[60,12],[20,14],[12,24],[24,32],[18,46]],
+ qat:[[12,58],[60,60],[72,54],[80,42],[92,36],[90,22],[78,16],[66,22],[54,18],[40,24],[30,16],[16,22],[20,36],[8,46]],
+ abu:[[20,62],[30,54],[24,44],[40,36],[60,30],[86,20],[92,30],[72,40],[64,50],[74,58],[86,64],[70,70],[44,70]],
+};
+function crPath(p){const n=p.length;let d=`M${p[0][0]},${p[0][1]}`;for(let i=0;i<n;i++){const p0=p[(i-1+n)%n],p1=p[i],p2=p[(i+1)%n],p3=p[(i+2)%n];
+ d+=`C${(p1[0]+(p2[0]-p0[0])/6).toFixed(2)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(2)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(2)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(2)} ${p2[0]},${p2[1]}`}return d+'Z'}
+let mapRAF=0,mapPrev=null,mapAt=0;
+function mapHTML(){const tr=TR(S.wk.track);const d=crPath(SHAPES[tr.id]||SHAPES.aus);
+ return `<section class="card"><header>라이브 트랙맵<span class="sp"></span><span class="muted" style="font-size:12px;font-weight:400">${esc(tr.p)} · 근사 레이아웃</span></header><div class="tmap"><svg id="tmap" viewBox="-6 -6 112 88" role="img" aria-label="${esc(tr.p)} 서킷 위 차량 위치"><path id="tpath" d="${d}" class="trk-o"/><path d="${d}" class="trk"/><g id="tsf"></g><g id="tdots"></g></svg></div></section>`}
+function mapInit(){const p=$('#tpath');if(!p)return;const a=p.getPointAtLength(0),b=p.getPointAtLength(1.5);const dx=b.x-a.x,dy=b.y-a.y,m=Math.hypot(dx,dy)||1,nx=-dy/m*3,ny=dx/m*3;
+ $('#tsf').innerHTML=`<line x1="${(a.x-nx).toFixed(2)}" y1="${(a.y-ny).toFixed(2)}" x2="${(a.x+nx).toFixed(2)}" y2="${(a.y+ny).toFixed(2)}" class="sfl"/>`;
+ if(!mapRAF)mapRAF=requestAnimationFrame(mapFrame)}
+function mapFrame(){const path=$('#tpath');if(!path||!S||!S.wk||!S.wk.race){mapRAF=0;return}
+ const R=S.wk.race,tr=TR(S.wk.track),len=path.getTotalLength();
+ const dur=SPEED[S.ui.speed]||850;const f=R.done?1:R.lap?clamp((performance.now()-mapAt)/dur,0,1):0;
+ const run=R.cars.filter(c=>c.st==='run');const Ti=c=>{const p=mapPrev&&mapPrev.get(c.id);return p==null?c.T:p+(c.T-p)*f};
+ const tt=new Map(run.map(c=>[c.id,Ti(c)]));let lead=Infinity;tt.forEach(v=>{if(v<lead)lead=v});
+ const ref=tr.base*1.02*(R.flag?(R.flag.type==='SC'?1.4:1.3):1);
+ const order=run.slice().sort((a,b)=>tt.get(a.id)-tt.get(b.id));
+ const at=pr=>path.getPointAtLength((((pr%1)+1)%1)*len);
+ let html='',top='';
+ order.forEach((c,i)=>{const pr=f-(tt.get(c.id)-lead)/ref;const pt=at(pr);let x=pt.x,y=pt.y;
+  if(c.pitNow===2){const q=at(pr+.003);const dx=q.x-x,dy=q.y-y,m=Math.hypot(dx,dy)||1;x+=-dy/m*3.4;y+=dx/m*3.4}
+  const col=teamById(c.team).color;const X=x.toFixed(2),Y=y.toFixed(2);
+  if(c.user)top+=`<g class="me"><circle cx="${X}" cy="${Y}" r="2.5" fill="${col}"/><text x="${(x+3.2).toFixed(2)}" y="${(y-2.4).toFixed(2)}">${esc(cd(c))} P${i+1}</text></g>`;
+  else html+=`<circle class="dot" cx="${X}" cy="${Y}" r="1.7" fill="${col}"><title>P${i+1} ${esc(S.drivers[c.id].name)}</title></circle>`+(i===0?`<text class="ldr" x="${(x+2.6).toFixed(2)}" y="${(y+4.6).toFixed(2)}">${esc(cd(c))}</text>`:'');
+ });
+ if(R.flag&&R.flag.type==='SC'&&order.length){const pt=at(f+.06);html+=`<g class="scc"><circle cx="${pt.x.toFixed(2)}" cy="${pt.y.toFixed(2)}" r="2.2"/><text x="${(pt.x-1.7).toFixed(2)}" y="${(pt.y+1).toFixed(2)}">SC</text></g>`}
+ $('#tdots').innerHTML=html+top;
+ mapRAF=requestAnimationFrame(mapFrame)}
+
+/* ============ 드라이버 성향 무전 ============ */
+const PERSONA={VER:'fiery',LEC:'emo',HAM:'hype',NOR:'self',PIA:'calm',ALO:'sly',RUS:'data',SAI:'data',ALB:'self',HUL:'calm',BOR:'hype',GAS:'emo',OCO:'fiery',STR:'calm',PER:'hype',BOT:'sly',ANT:'emo',HAD:'fiery',BEA:'hype',LAW:'fiery',LIN:'calm',COL:'hype',TSU:'fiery'};
+const PKEYS=['calm','hype','fiery','emo','self','sly','data'];
+function personaOf(d){if(PERSONA[d.code])return PERSONA[d.code];let h=0;for(const ch of d.id+d.name)h=(h*31+ch.charCodeAt(0))>>>0;return PKEYS[h%PKEYS.length]}
+const PNAME={calm:'침착형',hype:'열혈형',fiery:'다혈질',emo:'감정파',self:'자책형',sly:'능청형',data:'데이터형'};
+const PRADIO={
+ fiery:{lost:['이 타이어 완전 ***이에요!','*** 장난해요? 저걸 그냥 보내요?','왜 아무도 미리 말 안 해줬어요?! ***'],cliff:['타이어 완전 끝났어요, 이건 ***','이 차로 뭘 하라는 거예요!'],out:['*** !!! 믿을 수가 없네','끝났어요. ***'],win:['그래!!! 이거지!!!','심플리 러블리!'],pass:['잡았다. 다음.','봤죠? 그렇게 하는 거예요'],wear:['리어가 하나도 없어요! 언제 박스냐고요!'],slowpit:['*** 피트에서 뭐 한 거예요?!','이게 무슨 피트스톱이에요, ***'],press:['뒤에 {o}? 신경 안 써요. 앞만 봐요']},
+ emo:{lost:['NOOOOOOOOOOOOOOOOOOOOOO','아아아아아아아아아아아아아!!!','왜애애애애애애…'],cliff:['그립이 없어요… 진짜 하나도 없어요','이건 아니야, 이건 아니야'],out:['NOOOOOOOOOOOOOOOOOOOOOOOOOOOOO','아아아아… 미안해요 다들…'],win:['고마워요!!! 고마워요 다들!!!','이 순간을 위해 달렸어요!!!'],pass:['가자아아아!!!','예에에에스!!!'],startL:['NOOOO, 1코너에서 갇혔어!!!'],slowpit:['안 돼애애애애… 왜…']},
+ hype:{lost:['괜찮아, 아직 시간 많아요','다시 갈 거예요, 걱정 마요'],win:['GET IN THERE!!!','가자아아아!!! 이 팀 최고!!!'],pass:['좋아, 이 맛이지!','하나 더 가자!'],out:['…다음엔 더 강하게 돌아올게요'],pod:['포디움!!! 다들 사랑해요!!!']},
+ self:{lost:['제 실수예요, 브레이킹 늦었어요','하… 제가 바보같이 탔어요'],cliff:['타이어 제가 너무 쓴 것 같아요'],win:['믿을 수가 없어요! 진짜예요? 진짜?'],out:['제 잘못이에요. 정말 미안해요'],nopts:['오늘은 그냥 제가 느렸어요. 미안해요']},
+ calm:{lost:['알겠습니다. 다시 갑니다.','카피.'],cliff:['그립 줄었어요. 박스 타이밍만 알려주세요.'],win:['좋아요. 고마워요, 팀.'],pass:['처리했습니다.'],out:['차 세웁니다.'],sc:['카피. 델타 지킬게요.']},
+ sly:{lost:['그래, 먼저 가. 아직 안 끝났어','타이어 아껴뒀어요. 뒤에서 봐요'],pass:['나는 아직 여기 있어요','젊은 친구들은 배울 게 많네'],win:['나이 얘기는 이제 그만~'],cliff:['타이어 괜찮다고 할 줄 알았죠? 농담이에요, 끝났어요'],out:['엔진… 또? 믿을 수가 없네'],press:['{o}가 뒤에서 뭘 하는지 다 보여요']},
+ data:{lost:['델타 다시 확인해줘요. {o} 배터리 몇 퍼센트예요?'],cliff:['리어 온도 몇 도예요? 플랜 B 확인해줘요'],win:['좋아! 전략 완벽했어요'],pass:['처리. 다음 갭은요?'],out:['데이터 확인해줘요, 경고가 없었어요'],close:['{o}랑 섹터별 델타 줘요']},
+};
+const OPP={lost:['젠장!','막을 수가 없었어'],pass:['처리했어'],out:['차 세울게… 끝났어'],cliff:['타이어 끝났어, 박스!'],win:['우승이다!!!']};
+function dr(c,k,v,force){const R=S.wk.race;if(!c.user)return;if(c.st!=='run'&&!['mech','crash','out'].includes(k))return;if(!force&&c.radAt!=null&&R.lap-c.radAt<3)return;
+ const P=PRADIO[personaOf(S.drivers[c.id])];let arr=RADIO[k]||[];if(P&&P[k]&&(rnd()<.55||!arr.length))arr=P[k];if(!arr.length)return;
+ let t=pick(arr);for(const x in (v||{}))t=t.split('{'+x+'}').join(v[x]);c.radAt=R.lap;log('drv',t,0,cd(c))}
+function opp(c,k,v,force){const R=S.wk.race;if(c.user)return;if(!force&&R.oppAt!=null&&R.lap-R.oppAt<2)return;
+ const d=S.drivers[c.id];const P=PRADIO[personaOf(d)];const arr=(P&&P[k])||OPP[k];if(!arr)return;
+ let t=pick(arr);for(const x in (v||{}))t=t.split('{'+x+'}').join(v[x]);R.oppAt=R.lap;log('opp',t,0,d.code+' · '+teamById(d.team).name)}
+
+/* ============ 엔지니어 조언 ============ */
+function prefix(k,w0,n,wpl){const C=COMP[k];const a=[0];let s=0,w=w0;for(let i=0;i<n;i++){s+=C.off+C.deg*C.life*w+(w>1?(w-1)*C.life*.4:0);w+=wpl;a.push(s)}return a}
+function remBest(c,R,tr,first,w0,boxNow){
+ const rem=R.laps-R.lap;const wpl=k=>tr.deg*c.tm/COMP[k].life;const pit=tr.pit-.05-.12*c.crew;
+ const used=new Set(c.used);if(boxNow)used.add(first);const wet=c.used.includes('I')||c.used.includes('W');
+ const ok=seq=>wet||new Set([...used,...seq]).size>=2;
+ const P0=prefix(first,w0,rem,wpl(first));const F={};['S','M','H'].forEach(k=>F[k]=prefix(k,0,rem,wpl(k)));
+ let best={t:Infinity,seq:[first],laps:[]};
+ if(ok([first]))best={t:P0[rem],seq:[first],laps:[]};
+ ['S','M','H'].forEach(a=>{if(!ok([first,a]))return;for(let p=1;p<rem;p++){const t=P0[p]+pit+F[a][rem-p];if(t<best.t)best={t,seq:[first,a],laps:[R.lap+p]}}});
+ if(rem>20)['S','M','H'].forEach(a=>['S','M','H'].forEach(b=>{if(!ok([first,a,b]))return;for(let p=2;p<rem-4;p++)for(let q=p+4;q<rem;q++){const t=P0[p]+2*pit+F[a][q-p]+F[b][rem-q];if(t<best.t)best={t,seq:[first,a,b],laps:[R.lap+p,R.lap+q]}}}));
+ return best}
+function advise(c){
+ const R=S.wk.race,tr=TR(S.wk.track);if(!R||c.st!=='run'||R.done||!R.lap)return null;
+ const f=R.flag&&R.flag.type;const key=[R.lap,f,c.tyre,c.stops,Math.round(R.wet*10)].join('|');if(c._adv&&c._adv.key===key)return c._adv;
+ const rem=R.laps-R.lap;const W=S.wk.weather;const rainIn=W.rain&&R.lap<W.start?W.start-R.lap:99;
+ const out={key,opts:[],why:[],rec:'',act:null};c._adv=out;if(rem<2){out.rec='끝까지 밀어붙이세요. 피트는 손해입니다.';return out}
+ const order=R.cars.filter(x=>x.st==='run').sort((a,b)=>a.T-b.T);const i=order.indexOf(c);const a=order[i-1],b=order[i+1];
+ if(R.wet>.4&&c.tyre!=='I'&&c.tyre!=='W'){out.rec=`추천: 인터 박스 — 노면 젖음 ${Math.round(R.wet*100)}%, 슬릭으로는 랩당 수 초씩 잃고 사고 위험이 큽니다.`;out.act='I';return out}
+ if(R.wet>.8&&c.tyre==='I'){out.rec='추천: 웨트 박스 검토 — 폭우 구간입니다. 인터는 물을 다 못 뺍니다.';out.act='W';return out}
+ if((c.tyre==='I'||c.tyre==='W')&&R.wet<.25){const k=rem>22?'M':'S';out.rec=`추천: ${COMP[k].n} 박스 — 라인이 말랐습니다. 인터가 과열되며 랩당 1초 이상 느려지는 구간입니다.`;out.act=k;return out}
+ if(c.tyre==='I'||c.tyre==='W'){out.rec='추천: 스테이 아웃 — 아직 젖은 노면입니다. 레이더를 보며 크로스오버를 기다리세요.';return out}
+ const loss=pitLoss(R,tr)-2.5+2.45-.12*c.crew;const normal=tr.pit-.05-.12*c.crew;
+ const stay=remBest(c,R,tr,c.tyre,c.wear,false);
+ out.opts.push({k:null,label:'스테이 아웃',t:stay.t,plan:stay});
+ ['S','M','H'].forEach(k=>{if(k===c.tyre&&c.wear<.15)return;const sets=c.sets||{S:9,M:9,H:9};const w0=sets[k]>0?0:.12;const bst=remBest(c,R,tr,k,w0,true);
+  out.opts.push({k,label:COMP[k].n+' 박스',t:bst.t+loss,plan:bst,used:w0>0})});
+ // 상황 판단
+ let bonus={};const pitKs=out.opts.filter(o=>o.k);const bestFresh=pitKs.slice().sort((x,y)=>x.t-y.t)[0];
+ if(f)out.why.push(`${f==='SC'?'세이프티카':'VSC'} 중 피트 손실 약 ${loss.toFixed(1)}초 (평소 ${normal.toFixed(1)}초) → 박스 비용이 싸집니다.`);
+ if(rainIn<=6){out.why.push(`레이더상 ${rainIn}랩 안에 비 가능성 → 슬릭 교체는 보류하는 편이 안전합니다.`);pitKs.forEach(o=>o.t+=6)}
+ if(a&&!f&&bestFresh){const gap=c.T-a.T;const ac=COMP[a.tyre];const k=bestFresh.k;const gainLap=ac.off+ac.deg*ac.life*a.wear-COMP[k].off-(k==='H'?.35:0);
+  if(gap<3&&a.wear>c.wear-.15&&a.tyre!=='I'&&a.tyre!=='W'){if(gainLap*2>gap+.4){out.why.push(`언더컷 성립: ${nm(a)}와 ${gap.toFixed(1)}초, 새 타이어로 첫 두 랩에 약 ${(gainLap*2).toFixed(1)}초 이득 예상.`);pitKs.forEach(o=>o.t-=1.5)}
+   else out.why.push(`${nm(a)}와 ${gap.toFixed(1)}초 — 언더컷 이득 약 ${(gainLap*2).toFixed(1)}초로 부족합니다.`)}}
+ if(b&&!f){const gap=b.T-c.T;if(gap<loss*.25&&b.wear>.5&&b.tyre!=='I'&&b.tyre!=='W'){out.why.push(`뒤 ${nm(b)}(${gap.toFixed(1)}초, 마모 ${Math.round(b.wear*100)}%)가 언더컷을 노릴 수 있습니다 → 먼저 박스하면 커버.`);pitKs.forEach(o=>o.t-=1)}}
+ if(c.wear>.95)out.why.push(`마모 ${Math.round(c.wear*100)}% — 절벽 구간입니다. 랩당 손실이 빠르게 커집니다.`);
+ const pr=projRejoin(c,R,tr);
+ if(pr.ahead&&!f){const g=pr.T-pr.ahead.T;if(g<1.2){out.why.push(`지금 박스하면 P${pr.p}, ${nm(pr.ahead)} 바로 뒤 ${g.toFixed(1)}초로 복귀 → 더티 에어 트래픽.`);pitKs.forEach(o=>o.t+=1.2*tr.ot<1?1.5:.8)}}
+ if(tr.ot<.6&&!f)out.why.push('추월이 어려운 서킷 → 트랙 포지션 가치가 큽니다.');
+ const P=c.plan;if(P&&!P.off&&P.idx<P.laps.length)out.why.push(`기본 계획: L${P.laps[P.idx]} ${COMP[P.seq[P.idx+1]].n} (${P.laps[P.idx]-R.lap>0?P.laps[P.idx]-R.lap+'랩 뒤':'지금'})`);
+ out.opts.sort((x,y)=>x.t-y.t);const st0=out.opts.find(o=>!o.k).t;out.opts.forEach(o=>o.d=o.t-st0);
+ const best=out.opts[0];out.act=best.k;
+ const rest=best.plan.laps.length?` 이후 L${best.plan.laps.join('·L')} ${best.plan.seq.slice(1).map(x=>COMP[x].n).join('→')}`:' 이후 끝까지';
+ out.rec=best.k?`추천: ${best.label} — 스테이 대비 약 ${(-best.d).toFixed(1)}초 이득.${rest}`:`추천: 스테이 아웃 — 가장 가까운 박스 옵션보다 ${(out.opts[1]?out.opts[1].d:0).toFixed(1)}초 유리.${rest}`;
+ if(Math.abs((out.opts[1]||best).t-best.t)<.8)out.rec+=' (차이가 작아 드라이버 판단에 맡겨도 됩니다)';
+ return out}
+function adviceHTML(c){const A=advise(c);if(!A)return '';
+ return `<div class="adv"><b>${esc(A.rec)}</b>${A.opts.length?`<div class="advo">${A.opts.map(o=>`<button class="ao" ${o.k?`data-act="pit" data-i="${c.id}" data-v="${o.k}"`:'disabled'} aria-pressed="${o.k&&c.pitReq===o.k}">${o.k?tyreHTML(o.k):'<span class="stay">STAY</span>'}<span class="num">${Math.abs(o.d)<.05?'±0.0':(o.d>0?'+':'−')+Math.abs(o.d).toFixed(1)}s</span></button>`).join('')}</div>`:''}${A.why.length?`<ul>${A.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}</div>`}
+
+/* ============ 여름 휴식기 · 계약 · 이적 시장 ============ */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function summerDue(){return !S.wk&&S.cal.length>=6&&S.cur===Math.floor(S.cal.length/2)&&!(S.summer&&S.summer.year===S.year&&S.summer.done)}
+function teamRank(st,id){return st.tm.findIndex(x=>x.id===id)+1}
+function mkSummer(){
+ if(S.summer&&S.summer.year===S.year)return S.summer;
+ const st=standings();const tpos=teamRank(st,'usr');const rivals=S.teams.filter(t=>!t.user);
+ const dpos=id=>st.drv.findIndex(x=>x.id===id)+1;
+ const deals={};userDrivers().forEach(d=>{const share=(st.drv.find(x=>x.id===d.id)||{pts:0}).pts;
+  const ask=Math.max(1,Math.round((d.skill-78)*.45+share/40));const base=clamp(.62+(tpos<=4?.18:tpos<=7?.06:-.12)-(d.skill>=90?.12:0),.2,.95);
+  deals[d.id]={ask,c1:+base.toFixed(2),c2:+clamp(base-.1,.1,.9).toFixed(2),state:null,tries:0}});
+ const pool=shuffle(rivals.flatMap(t=>t.drivers.map(id=>S.drivers[id])).filter(d=>d.skill<91)).slice(0,3);
+ const signedP=new Set(Object.values(S.drivers).filter(d=>d.team!=='ret').map(d=>d.code));
+ const pros=shuffle(PROSPECTS.filter(p=>!signedP.has(p.code))).slice(0,3);
+ const market=[...pool.map(d=>{const r=teamRank(st,d.team);return{kind:'riv',id:d.id,name:d.name,code:d.code,from:teamById(d.team).name,skill:d.skill,cost:Math.max(3,Math.round(4+(d.skill-80)*.8)),chance:+clamp(.3+(r-tpos)*.07,.08,.85).toFixed(2)}}),
+  ...pros.map(p=>({kind:'pro',pid:p.id,name:p.name,code:p.code,from:p.cat+' · '+p.org,skill:p.skill,cap:p.cap,cost:Math.max(1,p.cost),chance:.85}))];
+ const news=[];const others=shuffle(rivals.flatMap(t=>t.drivers.map(id=>S.drivers[id])).filter(d=>!pool.includes(d)));
+ const r1=others.find(d=>d.skill<91)||others[0];const pf=d=>teamById(d.team).perf;const r2=others.find(d=>d!==r1&&d.team!==r1.team&&d.skill<91&&Math.abs(d.skill-r1.skill)<4&&Math.abs(pf(d)-pf(r1))<4);
+ news.push({t:'재계약',x:`${teamById(others[2].team).name} · ${others[2].name} 재계약, ${S.year+2}년까지 연장`});
+ news.push({t:'재계약',x:`${teamById(others[3].team).name} · ${others[3].name} 옵션 행사, 내년 잔류 확정`});
+ pool.forEach(d=>news.push({t:'시장',x:`${teamById(d.team).name} · ${d.name} 재계약 협상 난항, 이적 시장에 나올 수 있음`}));
+ let move=null;if(r2){move=[r1.id,r2.id,rnd()<.55];news.push({t:'루머',x:`${teamById(r1.team).name}–${teamById(r2.team).name} · ${r1.name} ↔ ${r2.name} 맞교환 검토설`})}
+ news.push({t:'관찰',x:`${teamById(others[4].team).name} · ${pros[0]?pros[0].name+'('+pros[0].cat+')':'주니어 드라이버'}에게 FP1 기회 검토`});
+ const best=st.drv[0];if(best)news.push({t:'챔피언십',x:`후반기 시작 시점 선두 ${S.drivers[best.id].name} ${best.pts}점 · 컨스트럭터 선두 ${teamById(st.tm[0].id).name}`});
+ S.summer={year:S.year,done:false,deals,market,news,move,sign:[]};save();return S.summer}
+function freeSlots(sm){return userDrivers().filter(d=>sm.deals[d.id]&&sm.deals[d.id].state==='leave'&&!sm.sign.some(s=>s.slot===d.id))}
+function summerHTML(){
+ const sm=mkSummer();const st=standings();const tpos=teamRank(st,'usr');
+ const dcard=d=>{const D=sm.deals[d.id];const s=st.drv.find(x=>x.id===d.id)||{pts:0};const p=st.drv.findIndex(x=>x.id===d.id)+1;
+  const stTxt={yes1:'1년 재계약 완료',yes2:'2년 재계약 완료',leave:'시즌 후 결별',no:'제안 거절됨'}[D.state]||'';
+  const rep=sm.sign.find(x=>x.slot===d.id);
+  return `<div class="pc"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:16px">#${d.num} ${esc(d.name)}</b><span class="pill">${PNAME[personaOf(d)]}</span></div>
+  <div class="muted" style="font-size:12px">드라이버 P${p} · ${s.pts}점 · 능력 ${d.skill.toFixed(1)} · 계약 ${(d.until||S.year)}년 말 만료</div>
+  ${stTxt?`<div><b style="color:${D.state==='no'?'var(--bad)':D.state==='leave'?'var(--warn)':'var(--good)'}">${stTxt}</b>${rep?` → 후임 ${esc(rep.name)}`:''}</div>`:''}
+  ${!D.state||D.state==='no'?`<div class="row-flex">
+   ${D.state==='no'&&D.tries<2?`<button class="btn" data-act="renew" data-i="${d.id}" data-v="1" data-up="1" ${S.budget<D.ask+2?'disabled':''}>조건 올려 재제안 · 예산 ${D.ask+2} · 수락 ${Math.round(Math.min(.95,D.c1+.25)*100)}%</button>`:''}
+   ${!D.state?`<button class="btn primary" data-act="renew" data-i="${d.id}" data-v="1" ${S.budget<D.ask?'disabled':''}>1년 재계약 · 예산 ${D.ask} · 수락 ${Math.round(D.c1*100)}%</button>
+   <button class="btn" data-act="renew" data-i="${d.id}" data-v="2" ${S.budget<D.ask+1?'disabled':''}>2년 재계약 · 예산 ${D.ask+1} · 수락 ${Math.round(D.c2*100)}%</button>`:''}
+   <button class="btn" data-act="leave" data-i="${d.id}">시즌 후 결별</button></div>`:''}
+  </div>`};
+ const free=freeSlots(sm);
+ const mrow=(m,i)=>`<div class="pr"><span class="lbl" style="min-width:52px">${m.kind==='riv'?'F1':'유망주'}</span><div style="min-width:0"><div class="t">${esc(m.name)} <span class="muted" style="font-weight:400">${esc(m.from)}</span></div><small>능력 ${m.skill.toFixed?m.skill.toFixed(1):m.skill}${m.cap?' · 상한 '+m.cap:''} · ${PNAME[personaOf({id:m.id||m.pid,name:m.name,code:m.code})]}${m.failed?' · 협상 결렬':''}${m.done?' · 내년 합류 합의':''}</small></div>
+  ${m.done||m.failed?'<span></span>':`<button class="btn ${free.length?'primary':''}" data-act="signc" data-v="${i}" ${!free.length||S.budget<m.cost?'disabled':''}>영입 제안 · ${m.cost} · ${Math.round(m.chance*100)}%</button>`}</div>`;
+ const allSet=userDrivers().every(d=>{const D=sm.deals[d.id];return D.state&&D.state!=='no'||D.state==='leave'})&&!free.length;
+ return `<div class="next" style="margin-bottom:16px"><div><div class="rd">SUMMER BREAK · ${S.year}</div><h3>여름 휴식기 · 공장 셧다운</h3><div class="muted">전반기 ${S.cur}라운드 종료 · 컨스트럭터 P${tpos} · 예산 ${S.budget}</div></div>
+  <div style="display:grid;gap:4px;justify-items:end"><button class="btn red big" data-act="summerdone" ${allSet?'':'disabled'}>후반기 시작</button>${allSet?'':'<small class="muted">두 드라이버의 계약을 정리하면 시작할 수 있습니다</small>'}</div></div>
+ <div class="qgrid wide"><div style="display:grid;gap:16px;min-width:0">
+  <div class="card"><header>드라이버 계약</header><div class="body plan">${userDrivers().map(dcard).join('')}
+   <div class="muted" style="font-size:12px">재계약 수락 확률은 팀 순위와 드라이버 몸값에 따라 달라집니다. 결별을 고르면 이적 시장에서 후임을 영입해야 후반기를 시작할 수 있습니다. 이적은 다음 시즌부터 적용됩니다.</div></div></div>
+  <div class="card prs"><header>이적 시장${free.length?` · 빈 시트 ${free.length}`:''}</header>${sm.market.map(mrow).join('')}</div></div>
+  <div class="card"><header>패독 동향 · 가상 시즌 루머</header><div class="body"><ul class="news">${sm.news.map(n=>`<li><span class="tag">${esc(n.t)}</span> ${esc(n.x)}</li>`).join('')}</ul></div></div></div>`;
+}
+function summerAct(a,b){const sm=S.summer;const i=b.dataset.i;
+ if(a==='renew'){const D=sm.deals[i];const yrs=+b.dataset.v;const up=!!b.dataset.up;const cost=D.ask+(up?2:yrs-1);const ch=up?Math.min(.95,D.c1+.25):yrs===2?D.c2:D.c1;if(S.budget<cost)return;D.tries++;
+  if(rnd()<ch){S.budget-=cost;D.state=yrs===2?'yes2':'yes1';D.years=yrs}else D.state='no'}
+ else if(a==='leave'){sm.deals[i].state='leave'}
+ else if(a==='signc'){const m=sm.market[+b.dataset.v];const fs=freeSlots(sm);if(!fs.length||S.budget<m.cost)return;
+  if(rnd()<m.chance){S.budget-=m.cost;m.done=true;sm.sign.push({slot:fs[0].id,...m})}else m.failed=true}
+ else if(a==='summerdone'){sm.done=true;const parts=userDrivers().map(d=>{const D=sm.deals[d.id];const s=sm.sign.find(x=>x.slot===d.id);return `${d.code}: ${D.state==='leave'?'결별 → '+(s?s.name:'?'):D.years+'년 재계약'}`});
+  addCommit({kind:'init',msg:`Summer break: 계약 정리 (${parts.join(', ')})`,body:sm.news.map(n=>`[${n.t}] ${n.x}`).join('\n')})}
+ save();render()}
+function applySummer(){const sm=S.summer;if(!sm||sm.applied||sm.year!==S.year-1)return [];sm.applied=true;const ut=userTeam();const log=[];
+ Object.entries(sm.deals).forEach(([id,D])=>{const d=S.drivers[id];if(D.state==='yes1'||D.state==='yes2')d.until=(d.until||sm.year)+D.years});
+ sm.sign.forEach(s=>{const old=S.drivers[s.slot];const k=ut.drivers.indexOf(s.slot);if(k<0)return;
+  if(s.kind==='riv'){const r=S.drivers[s.id];const rt=teamById(r.team);rt.drivers[rt.drivers.indexOf(r.id)]=old.id;old.team=rt.id;r.team='usr';r.until=S.year+1;r.role='이적 영입';ut.drivers[k]=r.id;log.push(`${r.name} 합류 · ${old.name} → ${rt.name}`)}
+  else{const p=prospect(s.pid);let id='U'+Object.keys(S.drivers).length;while(S.drivers[id])id+='x';const taken=new Set(S.teams.flatMap(t=>t.drivers.map(x=>S.drivers[x].num)));let n=p.num;while(taken.has(n))n=n%99+1;
+   S.drivers[id]={id,code:p.code,name:p.name,num:n,team:'usr',skill:p.skill,growth:p.growth,cap:p.cap,sigma:p.sigma,role:p.cat+' 출신',pid:p.id,until:S.year+1};old.team='ret';ut.drivers[k]=id;log.push(`${p.name} 데뷔 · ${old.name} 팀 떠남`)}});
+ if(sm.move&&sm.move[2]){const a=S.drivers[sm.move[0]],b=S.drivers[sm.move[1]];if(a&&b&&a.team!=='usr'&&b.team!=='usr'&&a.team!==b.team&&a.team!=='ret'&&b.team!=='ret'){const ta=teamById(a.team),tb=teamById(b.team);ta.drivers[ta.drivers.indexOf(a.id)]=b.id;tb.drivers[tb.drivers.indexOf(b.id)]=a.id;const x=a.team;a.team=b.team;b.team=x;log.push(`이적 확정: ${a.name} → ${tb.name}, ${b.name} → ${ta.name}`)}}
+ else if(sm.move)log.push('맞교환 루머는 무산');
+ return log}
 
 /* ============ race engine ============ */
 function aiStart(i,tr){if(tr.deg>=1.2)return i<10?(rnd()<.6?'M':'H'):(rnd()<.5?'H':'M');return i<10?(rnd()<.65?'M':'S'):(rnd()<.45?'H':(rnd()<.5?'M':'S'))}
@@ -611,12 +974,14 @@ function initRace(){
   return{id,team:t.id,user:u,grid:i+1,T:i*.22,tyre:ty,wear:0,age:0,used:[ty],stints:[{c:ty,from:0}],stops:0,st:'run',reason:'',outLap:0,
    mode:'std',en:'auto',bat:3,pitReq:null,auto:false,pitAt:.78+rnd()*.2,last:null,best:Infinity,hist:[i+1],w85:false,
    perf:perfOf(t),skill:d.skill,sigma:d.sigma,rel:t.rel,crew:u?ut.crew:2,tm:u?1-.05*ut.tyre:1,batR:u?1+.2*ut.energy:1}});
- wk.race={lap:0,laps:tr.laps,cars,flag:null,wet:0,restart:false,standing:true,feed:[],done:false,pause:null,red:null,redUsed:false,wetAlert:false,events:[],prevPos:{}};
+ cars.filter(c=>c.user).forEach(c=>{const p=wk.strat&&wk.strat[c.id];c.plan=p&&p.seq[0]===c.tyre?{seq:p.seq.slice(),laps:p.laps.slice(),idx:0,off:false}:null;c.sets=Object.assign({S:2,M:3,H:2},wk.sets&&wk.sets[c.id]);if(c.sets[c.tyre]>0)c.sets[c.tyre]--;else c.wear=.12});
+ mapPrev=null;
+ wk.race={lap:0,laps:tr.laps,cars,oppAt:null,flag:null,wet:0,restart:false,standing:true,feed:[],done:false,pause:null,red:null,redUsed:false,wetAlert:false,events:[],prevPos:{}};
  wk.phase='race';
  log('rc',`${tr.n} 그랑프리 · ${tr.laps}랩 · 포메이션 랩 완료. 출발 준비.`);
  save();
 }
-function log(kind,text,imp){const R=S.wk.race;R.feed.unshift({l:R.lap,k:kind,t:text});if(R.feed.length>80)R.feed.length=80;if(imp)R.events.push('L'+R.lap+' '+text)}
+function log(kind,text,imp,who){const R=S.wk.race;R.feed.unshift({l:R.lap,k:kind,t:text,w:who});if(R.feed.length>80)R.feed.length=80;if(imp)R.events.push('L'+R.lap+' '+text)}
 const nm=c=>S.drivers[c.id].name.split(' ').slice(-1)[0];
 const cd=c=>S.drivers[c.id].code;
 function wearPerLap(c,tr){if(c.tyre==='I'||c.tyre==='W')return 1/COMP[c.tyre].life;return tr.deg*c.tm*(c.mode==='push'?1.35:c.mode==='save'?.75:1)/COMP[c.tyre].life}
@@ -651,31 +1016,37 @@ function aiPit(c,R,tr){
 }
 function doPit(c,ty,R,tr){
  const st=stopTime(c),loss=pitLoss(R,tr)-2.5+st;c.T+=loss;
- c.tyre=ty;c.wear=0;c.age=0;c.stops++;if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap});c.pitReq=null;c.w85=false;c.pitAt=.78+rnd()*.2;c.pitNow=2;
- if(c.user){log('radio',`${cd(c)} 박스 완료 · ${st.toFixed(1)}초 · ${COMP[ty].n}${st>4?' · 휠건 지연':''}`,1)}
+ c.tyre=ty;c.wear=0;c.age=0;c.stops++;if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap});c.pitReq=null;c.w85=false;c.w100=false;c.pitAt=.78+rnd()*.2;c.pitNow=2;
+ if(c.user){log('radio',`${cd(c)} 박스 완료 · ${st.toFixed(1)}초 · ${COMP[ty].n}${st>4?' · 휠건 지연':''}`,1);
+  if(c.sets&&'SMH'.includes(ty)){if(c.sets[ty]>0)c.sets[ty]--;else{c.wear=.12;log('radio',`${cd(c)} 새 ${COMP[ty].n} 세트가 없어 중고 세트 장착`)}}
+  if(st>4)dr(c,'slowpit',{},1);
+  const P=c.plan;if(P&&!P.off){if(ty==='I'||ty==='W'){P.off=true;log('radio',`${cd(c)} 젖은 노면 · 기본 계획 해제`)}else if(P.idx<P.laps.length){const dl=R.lap-P.laps[P.idx];P.idx++;for(let j=P.idx;j<P.laps.length;j++)P.laps[j]=clamp(P.laps[j]+dl,R.lap+2,R.laps-1);if(P.idx<P.seq.length)P.seq[P.idx]=ty}}
+  c.planPend=false}
  else if(st>5)log('rc',`${nm(c)} 피트 스톱 지연 (${st.toFixed(1)}초)`);
 }
 function retire(c,why,R){c.st='out';c.outLap=R.lap;c.reason=why==='crash'?'사고':'기계 결함';
  log(c.user?'radio':'rc',c.user?`${cd(c)} 리타이어 — ${c.reason}. 차를 세웁니다.`:`${nm(c)} 리타이어 (${c.reason})`,c.user);
- if(c.user)R.pause={k:'dnf',t:`${cd(c)} 리타이어 (${c.reason})`};
+ if(c.user){dr(c,why==='crash'?'crash':(rnd()<.5?'out':'mech'),{},1);R.pause={k:'dnf',t:`${cd(c)} 리타이어 (${c.reason})`}}
+ else if(rnd()<.5)opp(c,'out',{},0);
 }
 function trigger(type,dur,R,why){
- if(type==='RED'){R.red={why};R.redUsed=true;log('rc',`레드 플래그 — ${why}. 전 차량 피트레인 정지.`,1);R.pause={k:'red',t:'레드 플래그 · 타이어 무상 교체 선택'};R.flag=null;return}
+ if(type==='RED'){R.red={why};R.redUsed=true;log('rc',`레드 플래그 — ${why}. 전 차량 피트레인 정지.`,1);userCars().forEach(c=>{if(c.st==='run'&&rnd()<.6)dr(c,'red',{},1)});R.pause={k:'red',t:'레드 플래그 · 타이어 무상 교체 선택'};R.flag=null;return}
  if(R.flag&&R.flag.type==='SC')return;
  R.flag={type,end:R.lap+dur};
- log('rc',type==='SC'?`세이프티카 출동 — ${why}`:`버추얼 세이프티카 — ${why}`,1);
+ log('rc',type==='SC'?`세이프티카 출동 — ${why}`:`버추얼 세이프티카 — ${why}`,1);userCars().forEach(c=>{if(c.st==='run'&&rnd()<.6)dr(c,type==='SC'?'sc':'vsc',{},1)});
  if(S.ui.autoPause)R.pause={k:type,t:type==='SC'?'세이프티카 · 피트 결정':'VSC · 피트 결정'};
 }
 function stepLap(){
  const wk=S.wk,R=wk.race,tr=TR(wk.track),W=wk.weather;if(!R||R.done||R.red)return;
+ mapPrev=new Map(R.cars.map(c=>[c.id,c.T]));mapAt=performance.now();
  R.lap++;const L=R.lap;
  if(R.flag&&L>R.flag.end){log('rc',R.flag.type==='SC'?'세이프티카 이번 랩 들어옵니다 · 재출발':'VSC 종료 · 그린 플래그');if(R.flag.type==='SC')R.restart=true;R.flag=null}
  const raining=W.rain&&L>=W.start&&L<W.start+W.dur;const pw=R.wet;
  R.wet=clamp(R.wet+(raining?.2*W.inten:-.09),0,1);
- if(raining&&L===W.start)log('rc','비가 내리기 시작합니다',1);
+ if(raining&&L===W.start){log('rc','비가 내리기 시작합니다',1);const uc=userCars().filter(c=>c.st==='run');if(uc.length)dr(pick(uc),'rain',{},1)}
  if(pw<.35&&R.wet>=.35&&!R.wetAlert){R.wetAlert=true;log('radio','노면이 젖었습니다. 인터미디어트 크로스오버 구간.');if(S.ui.autoPause)R.pause={k:'rain',t:'비 · 타이어 크로스오버 결정'}}
  if(pw>.8!==R.wet>.8&&R.wet>.8)log('radio','폭우 · 웨트 타이어 고려');
- if(pw>.3&&R.wet<=.3){log('radio','트랙이 마르고 있습니다. 슬릭 타이밍을 보세요.');R.wetAlert=false;if(S.ui.autoPause&&userCars().some(c=>c.st==='run'&&(c.tyre==='I'||c.tyre==='W')))R.pause={k:'dry',t:'노면 건조 · 슬릭 전환 결정'}}
+ if(pw>.3&&R.wet<=.3){log('radio','트랙이 마르고 있습니다. 슬릭 타이밍을 보세요.');userCars().forEach(c=>{if(c.st==='run'&&(c.tyre==='I'||c.tyre==='W'))dr(c,'dry',{},1)});R.wetAlert=false;if(S.ui.autoPause&&userCars().some(c=>c.st==='run'&&(c.tyre==='I'||c.tyre==='W')))R.pause={k:'dry',t:'노면 건조 · 슬릭 전환 결정'}}
  const run=R.cars.filter(c=>c.st==='run').sort((a,b)=>a.T-b.T);
  const prevT=new Map(run.map(c=>[c.id,c.T]));
  const prevPos=new Map(run.map((c,i)=>[c.id,i+1]));
@@ -694,7 +1065,8 @@ function stepLap(){
     if(atk){p+=.2*tr.ot;b.bat-=1}if(def){p-=.12;a.bat-=.5}
     p=clamp(p*(R.wet>.3?1.1:1),.03,.9);
     if(rnd()<p){if(b._n>=a._n)b._n=a._n-.05-rnd()*.15;a._n=Math.max(a._n,b._n+.12);run[i-1]=b;run[i]=a;
-     if(b.user)log('radio',`${cd(b)} → ${nm(a)} 추월! P${i}`,1);else if(a.user)log('radio',`${cd(a)} ← ${nm(b)}에게 추월 허용 · P${i+1}`);}
+     if(b.user){log('radio',`${cd(b)} → ${nm(a)} 추월! P${i}`,1);if(rnd()<.6)dr(b,'pass',{o:nm(a)});if(!a.user&&rnd()<.35)opp(a,'lost',{o:nm(b)})}else if(a.user){log('radio',`${cd(a)} ← ${nm(b)}에게 추월 허용 · P${i+1}`);if(rnd()<.6)dr(a,'lost',{o:nm(b)});if(rnd()<.25)opp(b,'pass',{o:nm(a)})}
+     else if(i<=3&&rnd()<.25)opp(a,'lost',{o:nm(b)});}
     else b._n=a._n+.2+rnd()*.3;
    }
   }
@@ -717,11 +1089,20 @@ function stepLap(){
  else if(!R.flag&&!R.red&&L>2&&L<R.laps-1&&rnd()<tr.sc/R.laps*.45){rnd()<.5?trigger('SC',3+Math.floor(rnd()*2),R,'트랙 위 파편'):trigger('VSC',2,R,'트랙 위 파편')}
  // pits
  if(!R.red){
-  run.forEach(c=>{if(c.st!=='run')return;if(c.pitNow)c.pitNow--;const want=c.user&&!c.auto?c.pitReq:aiPit(c,R,tr);if(want&&L<R.laps)doPit(c,want,R,tr)});
+  run.forEach(c=>{if(c.st!=='run')return;if(c.pitNow)c.pitNow--;const want=c.user?(c.auto?planPit(c,R,tr):c.pitReq):aiPit(c,R,tr);if(want&&L<R.laps)doPit(c,want,R,tr)});
+  run.forEach(c=>{if(!c.user&&c.st==='run'&&c.wear>1.05&&!c.cl){c.cl=1;if(rnd()<.3)opp(c,'cliff')}if(c.wear<.5)c.cl=0});
  }
  // user alerts
+ const order0=R.cars.filter(c=>c.st==='run').sort((a,b)=>a.T-b.T);
  userCars().forEach(c=>{if(c.st!=='run')return;const rem=R.laps-L;
-  if(c.tyre!=='I'&&c.tyre!=='W'&&c.wear>=.85&&!c.w85&&!c.auto){c.w85=true;log('radio',`${cd(c)} 타이어 마모 ${Math.round(c.wear*100)}% · 피트 창 열림`);if(S.ui.autoPause&&!R.pause)R.pause={k:'tyre',t:`${cd(c)} 타이어 ${Math.round(c.wear*100)}% · 피트 결정`}}
+  const P=c.plan;if(!c.auto&&P&&!P.off&&P.idx<P.laps.length&&!c.pitReq&&R.wet<=.3&&c.tyre!=='I'&&c.tyre!=='W'&&rem>1){const nx=P.laps[P.idx];if(L>=nx-1){c.pitReq=P.seq[P.idx+1];c.planPend=true;log('radio',`${cd(c)} 엔지니어: 계획대로 다음 랩 박스 · ${COMP[c.pitReq].n} 준비`);dr(c,'pitplan',{},1);if(S.ui.autoPause&&!R.pause)R.pause={k:'plan',t:`${cd(c)} 계획 피트 L${L+1} · ${COMP[c.pitReq].n} (취소하면 2랩 연장)`}}}
+  const ord=order0;const pi=ord.indexOf(c);
+  if(L===1){const d=c.grid-(pi+1);if(d>=2)dr(c,'startG',{d},1);else if(d<=-2)dr(c,'startL',{},1)}
+  if(c.pitNow===1&&c.stops)dr(c,c.tyre==='H'?'freshH':'fresh');
+  if(c.tyre!=='I'&&c.tyre!=='W'&&c.wear>1&&!c.w100){c.w100=true;dr(c,'cliff',{},1)}
+  if(rnd()<.14&&L>1){const a=ord[pi-1],b=ord[pi+1];
+   if(pi===0&&L%9===0)dr(c,'lead');else if(a&&c.T-a.T<1.4&&c.last&&a.last&&c.last<a.last-.15)dr(c,'close',{o:nm(a)});else if(b&&b.T-c.T<.8)dr(c,'press',{o:nm(b)});else if(c.bat<.6)dr(c,'bat');else if(c.mode==='push'&&c.wear>.5)dr(c,'push')}
+  if(c.tyre!=='I'&&c.tyre!=='W'&&c.wear>=.85&&!c.w85&&!c.auto){c.w85=true;log('radio',`${cd(c)} 타이어 마모 ${Math.round(c.wear*100)}% · 피트 창 열림`);dr(c,'wear',{},1);if(P&&!P.off&&P.idx<P.laps.length)log('radio',`${cd(c)} 엔지니어: 카피. 계획 박스는 L${P.laps[P.idx]}`);if(S.ui.autoPause&&!R.pause)R.pause={k:'tyre',t:`${cd(c)} 타이어 ${Math.round(c.wear*100)}% · 피트 결정`}}
   if(needsSecond(c)&&[12,6,3,1].includes(rem)){log('radio',`${cd(c)} 규정 체크: 두 번째 컴파운드를 아직 쓰지 않았습니다 (남은 ${rem}랩)`);if(rem<=3&&S.ui.autoPause&&!c.auto)R.pause={k:'rule',t:`${cd(c)} 두 컴파운드 의무 미충족`}}
  });
  // positions
@@ -738,9 +1119,10 @@ function applyRed(){
  run.forEach((c,i)=>{let ty;
   if(c.user){ty=R.redTyre&&R.redTyre[c.id]||c.tyre}
   else{if(R.wet>.8)ty='W';else if(R.wet>.4)ty='I';else{const o=rem>28?'H':rem>12?'M':'S';ty=needsSecond(c)&&c.used.includes(o)?(o==='S'?'M':'S'):o}}
-  if(ty!==c.tyre||c.wear>.05){c.tyre=ty;c.wear=0;c.age=0;if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap})}
+  if(ty!==c.tyre||c.wear>.05){c.tyre=ty;c.wear=0;c.age=0;if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap});
+   const P=c.user&&c.plan;if(P&&!P.off){if(ty==='I'||ty==='W')P.off=true;else if(P.idx<P.laps.length&&P.laps[P.idx]-R.lap<=12){const dl=R.lap-P.laps[P.idx];P.idx++;for(let j=P.idx;j<P.laps.length;j++)P.laps[j]=clamp(P.laps[j]+dl,R.lap+2,R.laps-1);if(P.idx<P.seq.length)P.seq[P.idx]=ty;log('radio',`${cd(c)} 레드 플래그 중 교체를 계획 박스로 처리`)}}c.pitReq=null;c.planPend=false}
   c.T=run[0].T+i*.8;c.bat=4;c.w85=false});
- log('rc','레드 플래그 해제 · 스탠딩 재출발',1);
+ log('rc','레드 플래그 해제 · 스탠딩 재출발',1);mapPrev=null;
  R.red=null;R.redTyre=null;R.standing=true;R.pause=null;save();
 }
 function finishRace(){
@@ -753,6 +1135,8 @@ function finishRace(){
   let gap='';if(c.st==='run'){if(i===0){gap=fmtLap(c.T)}else{const g=c.T-lead.T;const lp=tr.base*1.02;gap=g>lp?'+'+Math.floor(g/lp)+' LAP':'+'+g.toFixed(3)}}else gap=c.st==='dsq'?'DSQ':'DNF';
   return{id:c.id,pos,grid:c.grid,pts,st:c.st,gap,stops:c.stops,strat:c.stints.map(s=>s.c+(s.from?'('+s.from+')':'')).join(' → '),best:c.best,reason:c.reason}});
  log('rc',`체커기 · ${S.drivers[lead.id].name} 우승`);
+ if(!lead.user)opp(lead,'win',{},1);
+ cls.forEach(e=>{const c=R.cars.find(x=>x.id===e.id);if(!c.user||e.st!=='run')return;const p=e.pos;R.lap=R.laps;c.radAt=null;dr(c,p===1?'win':p<=3?'pod':p<=10?'pts':'nopts',{p},1)});
  const ut=userTeam();const mine=cls.filter(e=>S.drivers[e.id].team==='usr');const tp=mine.reduce((s,e)=>s+e.pts,0);
  const pod=mine.some(e=>e.st==='run'&&e.pos<=3);const earn=5+Math.round(tp*.25)+(pod?2:0);S.budget+=earn;
  S.results.push({round:S.cur+1,track:tr.id,cls,earn});
@@ -778,6 +1162,7 @@ function simToEnd(){const R=S.wk.race;userCars().forEach(c=>c.auto=true);const a
 /* ============ race view ============ */
 function viewRace(m){
  if(S.cur>=S.cal.length&&!S.wk){m.innerHTML=releaseHTML();return}
+ if(summerDue()){m.innerHTML=summerHTML();return}
  if(!S.wk){const tr=TR(S.cal[S.cur]);m.innerHTML=`<div class="next"><div><div class="rd">ROUND ${S.cur+1} · ${S.year}</div><h3>${esc(tr.n)} 그랑프리</h3><div class="muted">${esc(tr.p)} · ${tr.laps}랩</div></div><button class="btn red big" data-act="weekend">주말 시작</button></div>`;return}
  const wk=S.wk,tr=TR(wk.track);
  const head=`<div class="raceh"><div><div class="rd">ROUND ${wk.round} · ${S.year}</div><h2>${esc(tr.n)} 그랑프리</h2><div class="muted">${esc(tr.p)} · ${tr.laps}랩${tr.st?' · 스트리트 서킷':''}</div></div>
@@ -788,27 +1173,36 @@ function viewRace(m){
  if(wk.phase==='done'){m.innerHTML=head+resultHTML();return}
 }
 function qualiPlanHTML(){
- const wk=S.wk;
- return `<div class="qgrid"><div class="card"><header>예선 런 계획</header><div class="body plan">
-  ${userDrivers().map(d=>`<div class="pc"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:16px">#${d.num} ${esc(d.name)}</b><span class="muted">능력 ${d.skill.toFixed(1)}</span></div>
-   <div class="seg"><button data-act="qplan" data-i="${d.id}" data-v="safe" aria-pressed="${wk.plans[d.id]==='safe'}">안정 런</button><button data-act="qplan" data-i="${d.id}" data-v="push" aria-pressed="${wk.plans[d.id]==='push'}">한계 공격</button></div>
-   <small class="muted">${wk.plans[d.id]==='push'?'평균 −0.07초, 대신 실수·기록 삭제 확률 8%':'편차를 줄이고 실수 확률 2.5%'}</small></div>`).join('')}
-  <div class="muted" style="font-size:12px">24대 · Q1 하위 7대 탈락 · Q2 하위 7대 탈락 · Q3 10대</div>
+ const wk=S.wk,tr=TR(wk.track);const ud=userDrivers();const pv=qualiPreview();const n=S.teams.flatMap(t=>t.drivers).length;
+ const segq=(d,k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="qs" data-i="${d.id}" data-k="${k}" data-v="${v}" aria-pressed="${String(qsOf(d.id)[k])===v}">${l}</button>`).join('')}</div>`;
+ const desc=q=>[{safe:'안정: +0.03초, 실수 2%',std:'표준: 실수 4%',push:'한계 공격: −0.07초, 편차↑, 실수 8%'}[q.run],q.time==='early'?'초반 출격: 노면 덜 익음 +0.05초, 황색기 위험 없음':'막판 출격: 노면 최상 −0.04초, 황색기로 랩 무효 6%',q.save?'Q1을 1세트로: Q1 +0.10초, 결승용 신품 소프트 +1':'Q1 신품 2세트'].join(' · ');
+ return `<div class="qgrid wide"><div class="card"><header>예선 전략</header><div class="body plan">
+  ${ud.map(d=>{const q=qsOf(d.id),p=pv[d.id];return `<div class="pc"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:16px">#${d.num} ${esc(d.name)}</b><span class="muted">능력 ${d.skill.toFixed(1)}</span></div>
+   <div class="qopt"><span class="lbl">런 강도</span>${segq(d,'run',[['safe','안정'],['std','표준'],['push','한계 공격']])}</div>
+   <div class="qopt"><span class="lbl">출격 타이밍</span>${segq(d,'time',[['early','초반 출격'],['late','막판 출격']])}</div>
+   <div class="qopt"><span class="lbl">Q1 타이어</span>${segq(d,'save',[['false','신품 2세트'],['true','1세트 절약']])}</div>
+   <small class="muted">${desc(q)}</small>
+   <div class="qpred"><span>예상 평균 <b>P${p.p.toFixed(1)}</b></span><span>폴 <b>${Math.round(p.pole*100)}%</b></span><span>Q3 <b>${Math.round(p.q3*100)}%</b></span><span>Q1 탈락 <b>${Math.round(p.q1*100)}%</b></span></div></div>`}).join('')}
+  <div class="pc"><span class="lbl">팀 토우 (슬립스트림)</span><div class="seg"><button data-act="qtow" data-v="none" aria-pressed="${(wk.tow||'none')==='none'}">없음</button>${ud.map(d=>`<button data-act="qtow" data-v="${d.id}" aria-pressed="${wk.tow===d.id}">${d.code} 받기</button>`).join('')}</div>
+   <small class="muted">받는 차 −0.09초, 끌어주는 차 +0.04초. 두 대가 같은 세션에 있을 때만 적용.</small></div>
+  <div class="muted" style="font-size:12px">${n}대 · Q1 하위 7대 탈락 · Q2 하위 7대 탈락 · Q3 10대 · 예상치는 200회 시뮬레이션</div>
   <button class="btn red big" data-act="runq">예선 시작</button></div></div>
   <div class="card"><header>주말 정보</header><div class="body"><div class="fc">
-   <div><span class="lbl">결승 비</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round(clamp(TR(wk.track).sc+.3,0,.95)*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${TR(wk.track).st?15:9}%</b></div></div>
-   <p class="muted" style="font-size:12px;margin:10px 0 0">추월 난이도 ${TR(wk.track).ot<.6?'높음':TR(wk.track).ot<1?'보통':'낮음'} · 타이어 마모 ${TR(wk.track).deg>=1.2?'높음':TR(wk.track).deg<.9?'낮음':'보통'} · 피트 손실 약 ${TR(wk.track).pit}초</p></div></div></div>`;
+   <div><span class="lbl">결승 비</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round(clamp(tr.sc+.3,0,.95)*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${tr.st?15:9}%</b></div></div>
+   <p class="muted" style="font-size:12px;margin:10px 0 0">추월 난이도 ${tr.ot<.6?'높음 → 예선 순위 비중 큼':tr.ot<1?'보통':'낮음'} · 타이어 마모 ${tr.deg>=1.2?'높음':tr.deg<.9?'낮음':'보통'} · 피트 손실 약 ${tr.pit}초</p></div></div></div>`;
 }
 function gridHTML(){
- const wk=S.wk,q=wk.quali;
- const rows=wk.grid.map((id,i)=>{const d=S.drivers[id],t=teamById(d.team);const qq=q[id];const out=i>=17?'Q1':i>=10?'Q2':'';
-  return `<tr class="${t.user?'me':''} ${i===9||i===16?'cut':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${t.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(d.name)}</span></td><td class="num">${fmtLap(qq.q1)}</td><td class="num">${qq.q2?fmtLap(qq.q2):''}</td><td class="num">${qq.q3?fmtLap(qq.q3):''}</td><td class="muted">${out?out+' 탈락':''}</td></tr>`}).join('');
- return `<div class="qgrid"><div class="card"><header>예선 결과 · 결승 그리드</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>Q1</th><th>Q2</th><th>Q3</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>
- <div class="card"><header>결승 준비</header><div class="body plan">
-  <div class="fc"><div><span class="lbl">비 (레이더)</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round(clamp(TR(wk.track).sc+.3,0,.95)*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${TR(wk.track).st?15:9}%</b></div></div>
-  ${userDrivers().map(d=>`<div class="pc"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:16px">P${wk.grid.indexOf(d.id)+1} · ${d.code}</b><span class="muted">출발 타이어</span></div>
-   <div class="pitrow">${['S','M','H'].map(c=>`<button data-act="stire" data-i="${d.id}" data-v="${c}" aria-pressed="${wk.startTyre[d.id]===c}" aria-label="${COMP[c].n}">${tyreHTML(c,'lg')}</button>`).join('')}<span class="muted" style="font-size:12px">${COMP[wk.startTyre[d.id]].n} · 수명 약 ${Math.round(COMP[wk.startTyre[d.id]].life/TR(wk.track).deg)}랩</span></div></div>`).join('')}
-  <div class="muted" style="font-size:12px">건조 레이스는 두 컴파운드 사용 의무. 인터·웨트를 쓰면 면제.</div>
+ const wk=S.wk,q=wk.quali,tr=TR(wk.track);if(!wk.strat||!Object.keys(wk.strat).length)ensureStrat();
+ const rows=wk.grid.map((id,i)=>{const d=S.drivers[id],t=teamById(d.team);const qq=q[id];const n=wk.grid.length;const out=i>=n-7?'Q1':i>=10?'Q2':'';
+  return `<tr class="${t.user?'me':''} ${i===9||i===n-8?'cut':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${t.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(d.name)}</span></td><td class="num">${fmtLap(qq.q1)}</td><td class="num">${qq.q2?fmtLap(qq.q2):''}</td><td class="num">${qq.q3?fmtLap(qq.q3):''}</td><td class="muted">${out?out+' 탈락':''}</td></tr>`}).join('');
+ const ql=(wk.qlog||[]).map(x=>`<li class="${x.k}"><span class="l">Q</span><span class="t" data-who="${esc(x.w||'')}">${esc(x.t)}</span></li>`).join('');
+ return `<div class="qgrid wide"><div style="display:grid;gap:16px;min-width:0"><div class="card"><header>예선 결과 · 결승 그리드</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>Q1</th><th>Q2</th><th>Q3</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>
+  ${ql?`<div class="card"><header>예선 무전 · 세션 노트</header><ol class="feed qlog">${ql}</ol></div>`:''}</div>
+ <div class="card"><header>결승 전략</header><div class="body plan">
+  <div class="fc"><div><span class="lbl">비 (레이더)</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round(clamp(tr.sc+.3,0,.95)*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${tr.st?15:9}%</b></div></div>
+  ${briefingHTML()}
+  ${userDrivers().map(d=>stratPanelHTML(d)).join('')}
+  <div class="muted" style="font-size:12px">건조 레이스는 두 컴파운드 사용 의무. 인터·웨트를 쓰면 면제. 레이스 중 계획 랩이 오면 엔지니어가 박스를 준비합니다(취소 시 2랩 연장).</div>
   <button class="btn red big" data-act="start">결승 출발</button></div></div></div>`;
 }
 function raceShellHTML(){
@@ -821,7 +1215,7 @@ function raceShellHTML(){
    <label class="chk"><input type="checkbox" id="autopause" ${S.ui.autoPause?'checked':''}>결정 지점 자동 정지</label></div></div>
   <div id="pausebar" hidden></div>
   <div class="rg"><section class="card"><header>타이밍 타워<span class="sp"></span><div class="seg"><button data-act="gapmode" data-v="leader" aria-pressed="${S.ui.gapMode==='leader'}">리더</button><button data-act="gapmode" data-v="int" aria-pressed="${S.ui.gapMode==='int'}">앞차</button></div></header><div class="tower" id="tower"></div></section>
-  <div class="rside"><div class="ctrls" id="ctrls"></div>
+  <div class="rside">${mapHTML()}<div class="ctrls" id="ctrls"></div>
    <section class="card"><header>순위 변화 · 랩 차트</header><canvas id="lapchart" aria-label="랩별 순위 변화 차트"></canvas></section>
    <section class="card"><header>무전 · 레이스 컨트롤</header><ol class="feed" id="feed"></ol></section></div></div>`;
 }
@@ -837,10 +1231,11 @@ function buildRace(){
   <div class="ln"><span class="lbl">페이스</span><div class="seg" data-f="mode">${[['save','보존'],['std','표준'],['push','공격']].map(([v,l])=>`<button data-act="mode" data-i="${c.id}" data-v="${v}">${l}</button>`).join('')}</div></div>
   <div class="ln"><span class="lbl">에너지</span><div class="seg" data-f="en">${[['save','방어'],['auto','자동'],['full','전력']].map(([v,l])=>`<button data-act="en" data-i="${c.id}" data-v="${v}">${l}</button>`).join('')}</div></div>
   <div class="ln"><span class="lbl">피트</span><div class="pitrow" data-f="pit">${['S','M','H','I','W'].map(x=>`<button data-act="pit" data-i="${c.id}" data-v="${x}" aria-label="${COMP[x].n}로 피트">${tyreHTML(x)}</button>`).join('')}</div></div>
+  <div class="ln"><span class="lbl">계획</span><span class="planl" data-f="plan"></span></div>
   <div class="proj" data-f="proj"></div>
   <label class="chk"><input type="checkbox" data-act2="auto" data-i="${c.id}">엔지니어에게 피트 위임</label>
   <div class="eng" data-f="eng"></div></div>`}).join('');
- sizeChart();
+ sizeChart();mapInit();
 }
 function gapText(c,order,idx,tr){
  if(c.st!=='run')return c.reason?'OUT':'OUT';
@@ -900,7 +1295,7 @@ function updateRace(){
  // pause bar
  const bar=$('#pausebar');
  if(R.red){bar.hidden=false;bar.className='pausebar red';bar.innerHTML=`<b>RED FLAG</b><span>${esc(R.red.why)} · 재출발 타이어를 고르세요</span>`+userCars().filter(c=>c.st==='run').map(c=>{const sel=(R.redTyre&&R.redTyre[c.id])||c.tyre;return `<span class="pitrow"><b style="font-family:var(--f-disp)">${cd(c)}</b>${['S','M','H','I','W'].map(x=>`<button data-act="redty" data-i="${c.id}" data-v="${x}" aria-pressed="${sel===x}" aria-label="${COMP[x].n}">${tyreHTML(x)}</button>`).join('')}</span>`}).join('')+`<button class="btn red" data-act="redgo">재출발</button>`}
- else if(R.pause&&!timer){bar.hidden=false;bar.className='pausebar';bar.innerHTML=`<b>결정 지점</b><span>LAP ${R.lap} · ${esc(R.pause.t)}</span><button class="btn primary" data-act="play">결정 후 재개</button>`}
+ else if(R.pause&&!timer){bar.hidden=false;bar.className='pausebar';bar.innerHTML=`<b>결정 지점</b><span>LAP ${R.lap} · ${esc(R.pause.t)}</span><button class="btn primary" data-act="play">결정 후 재개</button>`+userCars().filter(c=>c.st==='run').map(c=>{const A=advise(c);return A&&A.rec?`<span class="rec"><b style="font-family:var(--f-disp)">${cd(c)}</b> ${esc(A.rec)}</span>`:''}).join('')}
  else bar.hidden=true;
  // controls
  userCars().forEach(c=>{const el=$(`.cc[data-car="${c.id}"]`);if(!el)return;
@@ -920,9 +1315,10 @@ function updateRace(){
   const pr=projRejoin(c,R,tr);
   q('proj').innerHTML=c.st!=='run'?'':c.auto?'엔지니어가 피트 타이밍을 판단합니다':c.pitReq?`<b style="color:var(--warn)">이번 랩 끝 박스 · ${COMP[c.pitReq].n}</b> · 예상 복귀 P${pr.p}${pr.ahead?' ('+nm(pr.ahead)+' 뒤)':''} <button class="btn" style="padding:0 8px;font-size:12px" data-act="pitcancel" data-i="${c.id}">취소</button>`:`지금 피트 시 손실 ${pr.loss.toFixed(1)}초 · 예상 복귀 P${pr.p}${pr.behind?' · '+nm(pr.behind)+' 앞 '+(pr.behind.T-pr.T).toFixed(1)+'s':''}`;
   const ab=el.querySelector('[data-act2="auto"]');ab.checked=c.auto;
-  q('eng').textContent=engineerLine(c,R,tr);
+  const P=c.plan;q('plan').innerHTML=c.st!=='run'?'':P?planText(c,R)+(P&&!P.off&&P.idx<P.laps.length&&!R.done?` <button class="btn sm" data-act="planadj" data-i="${c.id}" data-d="-1" aria-label="계획 박스 한 랩 앞당기기">−</button><button class="btn sm" data-act="planadj" data-i="${c.id}" data-d="1" aria-label="계획 박스 한 랩 늦추기">+</button>`:''):'<span class="muted">계획 없음</span>';
+  if(!timer&&R.lap&&!R.done&&c.st==='run'&&!R.red){q('eng').className='';q('eng').innerHTML=adviceHTML(c)}else{q('eng').className='eng';q('eng').textContent=engineerLine(c,R,tr)}
  });
- $('#feed').innerHTML=R.feed.slice(0,40).map(x=>`<li class="${x.k}"><span class="l">L${x.l}</span><span class="t">${esc(x.t)}</span></li>`).join('');
+ $('#feed').innerHTML=R.feed.slice(0,40).map(x=>`<li class="${x.k}"><span class="l">L${x.l}</span><span class="t" data-who="${esc(x.w||'')}">${esc(x.t)}</span></li>`).join('');
  drawChart();
 }
 let chartW=0;
@@ -964,7 +1360,8 @@ function newSeason(){
  S.seasons.push({year:S.year,pos,pts:st.tm.find(x=>x.id==='usr').pts});
  S.year++;S.cur=0;S.results=[];S.wk=null;
  S.teams.forEach(t=>{if(!t.user)t.perf=clamp(t.perf-1.5+gauss()*1.2,72,95)});
- addCommit({kind:'init',msg:`season-${S.year} 브랜치 시작`,body:`v${S.year-1}.0 릴리스 · 컨스트럭터 P${pos}`});
+ const moves=applySummer();
+ addCommit({kind:'init',msg:`season-${S.year} 브랜치 시작`,body:`v${S.year-1}.0 릴리스 · 컨스트럭터 P${pos}`+(moves.length?'\n'+moves.join('\n'):'')});
  save();go('overview');
 }
 
@@ -1057,9 +1454,14 @@ document.addEventListener('click',e=>{
  switch(a){
   case 'tab':go(v);break;
   case 'weekend':startWeekend();break;
-  case 'qplan':S.wk.plans[i]=v;save();render();break;
+  case 'qs':{const q=qsOf(i);const k=b.dataset.k;q[k]=k==='save'?v==='true':v;save();render();break}
+  case 'qtow':S.wk.tow=v;save();render();break;
+  case 'stratpick':{const o=stratOptions(i).find(x=>x.seq.join('')===v);if(o)setStrat(i,o);save();render();break}
+  case 'stopadj':{const p=S.wk.strat[i];const k=+b.dataset.k,L=TR(S.wk.track).laps;const lo=k?p.laps[k-1]+1:1,hi=k<p.laps.length-1?p.laps[k+1]-1:L-1;p.laps[k]=clamp(p.laps[k]+(+b.dataset.d),lo,hi);save();render();break}
+  case 'planadj':{const P=car.plan;if(!P||P.idx>=P.laps.length)break;const lo=Math.max(R.lap+1,P.idx?1:1),hi=P.idx<P.laps.length-1?P.laps[P.idx+1]-1:R.laps-1;P.laps[P.idx]=clamp(P.laps[P.idx]+(+b.dataset.d),lo,hi);if(car.planPend){car.pitReq=null;car.planPend=false}updateRace();break}
+  case 'renew':case 'leave':case 'signc':case 'summerdone':summerAct(a,b);break;
   case 'runq':runQuali();break;
-  case 'stire':S.wk.startTyre[i]=v;save();render();break;
+  case 'stire':{S.wk.startTyre[i]=v;const o=stratOptions(i).find(x=>x.seq[0]===v);if(o)setStrat(i,o);save();render();break}
   case 'start':initRace();render();break;
   case 'play':play();break;
   case 'pause':pause();break;
@@ -1068,10 +1470,10 @@ document.addEventListener('click',e=>{
   case 'simend':simToEnd();break;
   case 'mode':car.mode=v;updateRace();break;
   case 'en':car.en=v;updateRace();break;
-  case 'pit':if(car.st!=='run')break;car.pitReq=car.pitReq===v?null:v;if(car.pitReq&&car.pitReq===car.tyre&&car.wear<.05)car.pitReq=null;
+  case 'pit':if(car.st!=='run'||car.auto)break;car.planPend=false;car.pitReq=car.pitReq===v?null:v;if(car.pitReq&&car.pitReq===car.tyre&&car.wear<.05)car.pitReq=null;
    if(car.pitReq){const dry=['S','M','H'];if(dry.includes(v)&&!car.used.includes('I')&&!car.used.includes('W')&&car.used.every(x=>x===v)&&R.laps-R.lap<15)log('radio',`${cd(car)} 엔지니어: ${COMP[v].n}만 쓰면 두 컴파운드 규정 위반입니다. 다른 컴파운드를 권합니다.`);else log('radio',`${cd(car)} 이번 랩 박스, ${COMP[v].n} 준비`)}
    updateRace();break;
-  case 'pitcancel':car.pitReq=null;updateRace();break;
+  case 'pitcancel':if(car.planPend&&car.plan&&car.plan.idx<car.plan.laps.length){car.plan.laps[car.plan.idx]=Math.min(R.laps-1,R.lap+2);log('radio',`${cd(car)} 계획 박스 연기 → L${car.plan.laps[car.plan.idx]}`)}car.pitReq=null;car.planPend=false;updateRace();break;
   case 'gapmode':S.ui.gapMode=v;$$('[data-act="gapmode"]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===v));updateRace();break;
   case 'redty':R.redTyre=R.redTyre||{};R.redTyre[i]=v;updateRace();break;
   case 'redgo':applyRed();updateRace();break;
