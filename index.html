@@ -185,7 +185,7 @@ tr.me td{background:color-mix(in srgb,var(--team) 16%,transparent)}
 .rside{display:grid;gap:16px;min-width:0}
 
 .tower{position:relative;background:#000;border-radius:0 0 6px 6px}
-.tw{position:absolute;left:0;right:0;height:30px;display:grid;grid-template-columns:30px 18px 5px minmax(0,1fr) 76px 46px 18px;gap:6px;align-items:center;padding:0 8px 0 6px;transition:transform .45s cubic-bezier(.3,.7,.2,1),background .3s;font-size:13px;border-bottom:1px solid #15171b}
+.tw{position:absolute;left:0;right:0;height:30px;display:grid;grid-template-columns:30px 18px 5px minmax(0,1fr) 72px 66px 18px;gap:6px;align-items:center;padding:0 8px 0 6px;transition:transform .45s cubic-bezier(.3,.7,.2,1),background .3s;font-size:13px;border-bottom:1px solid #15171b}
 .tw .p{font-family:var(--f-disp);font-weight:900;font-size:15px;text-align:center;background:#fff;color:#000;border-radius:2px;line-height:22px}
 .tw .ch{font-size:10px;text-align:center;font-family:var(--f-mono)}
 .tw .ch.up{color:var(--good)}.tw .ch.dn{color:var(--bad)}
@@ -227,6 +227,8 @@ tr.me td{background:color-mix(in srgb,var(--team) 16%,transparent)}
 .pitrow button{background:var(--panel-2);border:1px solid var(--line-2);border-radius:999px;padding:2px;line-height:0}
 .pitrow button[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px #fff}
 .pitrow button:disabled{opacity:.3}
+.pitrow .stayb{font-family:var(--f-disp);font-weight:900;font-size:10px;letter-spacing:.06em;line-height:1;padding:6px 9px;color:var(--fg)}
+.tw .ty .ps{min-width:15px;height:15px;display:inline-grid;place-items:center;font-family:var(--f-mono);font-size:9.5px;border:1px solid #6b7280;border-radius:3px;color:#d6d9de}.tw .ty .ps.z{opacity:.35}
 .proj{font-size:12px;color:var(--muted)}
 .eng{font-size:12px;background:#000;border-left:3px solid var(--team);padding:6px 8px;border-radius:0 3px 3px 0}
 .cc.dead::after{content:attr(data-out);position:absolute;inset:0;display:grid;place-items:center;background:rgba(8,9,11,.82);font-family:var(--f-disp);font-weight:900;font-size:20px;letter-spacing:.08em;border-radius:4px}
@@ -991,10 +993,36 @@ const PRADIO={
  sly:{lost:['그래, 먼저 가. 아직 안 끝났어','타이어 아껴뒀어요. 뒤에서 봐요'],pass:['나는 아직 여기 있어요','젊은 친구들은 배울 게 많네'],win:['나이 얘기는 이제 그만~'],cliff:['타이어 괜찮다고 할 줄 알았죠? 농담이에요, 끝났어요'],out:['엔진… 또? 믿을 수가 없네'],press:['{o}가 뒤에서 뭘 하는지 다 보여요']},
  data:{lost:['델타 다시 확인해줘요. {o} 배터리 몇 퍼센트예요?'],cliff:['리어 온도 몇 도예요? 플랜 B 확인해줘요'],win:['좋아! 전략 완벽했어요'],pass:['처리. 다음 갭은요?'],out:['데이터 확인해줘요, 경고가 없었어요'],close:['{o}랑 섹터별 델타 줘요']},
 };
+const RADIO_X={
+ pass:['{o} 끝났어요. 다음!','레이트 브레이킹 먹혔어요!','{o} 타이어 다 됐더라고요, 쉽게 갔어요','출구 트랙션으로 붙어서 직선에서 넘었어요','안쪽 비워줬어요, 고마워요 {o}','하나 더 잡았어요. 앞차 갭 줘요','배터리 남겨둔 보람 있네요'],
+ lost:['{o} 직선에서 너무 빨라요','더티 에어 때문에 프론트가 다 날아갔어요','미안해요, 출구에서 미끄러졌어요','{o} 배터리 아껴뒀었나 봐요','방어 라인 잡았는데 바깥으로 돌아갔어요','괜찮아요, 다시 잡을 수 있어요'],
+ wear:['리어가 계속 돌아요, 트랙션이 없어요','프론트 왼쪽이 말을 안 들어요','랩당 0.3초씩 빠지는 느낌이에요','그레이닝 올라와요, 박스 창 언제 열려요?','이 페이스면 다섯 랩 정도 남았어요'],
+ cliff:['완전히 미끄러져요! 이러다 스핀해요','타이어 절벽이에요, 지금 넣어줘요!','브레이킹 때마다 락업 나요!'],
+ fresh:['오, 그립 좋네요. 밀게요','타이어 바로 올라왔어요','새 타이어로 섹터 1부터 공격할게요','이 타이어 느낌 좋아요, 언더컷 되겠어요'],
+ freshH:['하드는 아직 차가워요, 조심할게요','하드 그립 올라오는 중이에요, 한 랩만 더'],
+ sc:['세이프티카예요, 지금 들어가면 몇 위로 나와요?','SC! 타이어 온도 떨어지지 않게 위빙할게요','이거 기회 아니에요? 빨리 결정해줘요'],
+ vsc:['VSC 델타 플러스 유지 중','VSC 끝나면 바로 알려줘요'],
+ rain:['비 세게 와요! 앞이 안 보여요','12코너 물 고였어요','빗방울 굵어지고 있어요, 인터 준비해줘요'],
+ dry:['라인 완전히 말랐어요','인터가 다 녹아요, 슬릭 가요'],
+ close:['{o} 1초 안이에요, 다음 랩 공격할게요','{o} 타이어 힘들어 보여요','{o} 계속 실수해요, 기회 와요','갭 줄어들고 있죠? 이 페이스 유지할게요'],
+ press:['{o} 미러에 꽉 찼어요','{o} 계속 옆으로 들어와요, 막을게요','{o} 직선이 빨라요, 배터리 남겨둘게요','뒤에 {o} 얼마나 붙었어요?'],
+ lead:['앞에 아무도 없어요. 깨끗한 공기 최고','선두 갭 얼마예요?','리듬 좋아요, 이대로 갈게요'],
+ push:['한계까지 밀고 있어요','공격 모드 좋아요, 근데 리어가 뜨거워요','이 페이스 몇 랩 더 필요해요?'],
+ bat:['배터리 다 썼어요, 직선에서 약해요','충전 모드로 한 랩 돌게요'],
+ startG:['스타트 완벽했어요!','바깥으로 돌아서 {d}대 잡았어요!','1랩 깔끔했어요'],
+ startL:['앞차가 막혀서 뒤로 밀렸어요','1코너 접촉 피하느라 늦었어요'],
+ pitplan:['박스, 카피. 엔트리 조심할게요','오케이 들어가요. 복귀 위치 알려줘요','들어갈게요, 타이어 준비됐죠?'],
+ slowpit:['뭐였어요? 차 오래 서 있었는데','피트 몇 초였어요? 느낌이 길었어요'],
+ blue:['블루 플래그인데 백마커가 안 비켜요!','백마커 처리 중이에요, 시간 좀 잃었어요','트래픽 걸렸어요, 갭 손해 봤어요'],
+ chat:['3코너 바람 세게 불어요','브레이크 밸런스 앞으로 한 클릭 옮길게요','엔진 브레이크 조금 더 줘도 돼요?','앞차 갭 알려줘요','연석 타면 차가 튀어요','8코너 진입에서 언더스티어 있어요','섹터 2가 느린 것 같은데 어디서 잃어요?','온도 괜찮아요? 브레이크 냄새 나요','트랙 그립 올라오고 있어요','{o} 페이스 어때요?','물 좀 마실게요, 직선 길어서 다행','미러로 보니까 뒤가 멀어졌네요','리듬 찾았어요','6코너 바깥에 데브리 있어요, 조심하세요','디프 세팅 한 단계 올릴게요','타이어 온도 너무 높으면 말해줘요'],
+};
+Object.entries(RADIO_X).forEach(([k,a])=>{RADIO[k]=(RADIO[k]||[]).concat(a)});
+
 const OPP={lost:['젠장!','막을 수가 없었어'],pass:['처리했어'],out:['차 세울게… 끝났어'],cliff:['타이어 끝났어, 박스!'],win:['우승이다!!!']};
+const RECENT={};function pickNR(key,arr,keep){if(!arr||!arr.length)return '';const r=RECENT[key]||(RECENT[key]=[]);keep=keep==null?Math.min(arr.length-1,Math.ceil(arr.length*.6)):keep;let c=arr.filter(x=>!r.includes(x));if(!c.length)c=arr;const t=c[Math.floor(rnd()*c.length)];r.push(t);while(r.length>keep)r.shift();return t}
 function dr(c,k,v,force){const R=S.wk.race;if(!c.user)return;if(c.st!=='run'&&!['mech','crash','out'].includes(k))return;if(!force&&c.radAt!=null&&R.lap-c.radAt<3)return;
  const P=PRADIO[personaOf(S.drivers[c.id])];let arr=RADIO[k]||[];if(P&&P[k]&&(rnd()<.55||!arr.length))arr=P[k];if(!arr.length)return;
- let t=pick(arr);for(const x in (v||{}))t=t.split('{'+x+'}').join(v[x]);c.radAt=R.lap;log('drv',t,0,cd(c))}
+ let t=pickNR('d:'+k,arr);for(const x in (v||{}))t=t.split('{'+x+'}').join(v[x]);c.radAt=R.lap;log('drv',t,0,cd(c))}
 function opp(c,k,v,force){const R=S.wk.race;if(c.user)return;if(!force&&R.oppAt!=null&&R.lap-R.oppAt<2)return;
  const d=S.drivers[c.id];const P=PRADIO[personaOf(d)];const arr=(P&&P[k])||OPP[k];if(!arr)return;
  let t=pick(arr);for(const x in (v||{}))t=t.split('{'+x+'}').join(v[x]);R.oppAt=R.lap;log('opp',t,0,d.code+' · '+teamById(d.team).name)}
@@ -1046,7 +1074,7 @@ function advise(c){
  if(Math.abs((out.opts[1]||best).t-best.t)<.8)out.rec+=' (차이가 작아 드라이버 판단에 맡겨도 됩니다)';
  return out}
 function adviceHTML(c){const A=advise(c);if(!A)return '';
- return `<div class="adv"><b>${esc(A.rec)}</b>${A.opts.length?`<div class="advo">${A.opts.map(o=>`<button class="ao" ${o.k?`data-act="pit" data-i="${c.id}" data-v="${o.k}"`:'disabled'} aria-pressed="${o.k&&c.pitReq===o.k}">${o.k?tyreHTML(o.k):'<span class="stay">STAY</span>'}<span class="num">${Math.abs(o.d)<.05?'±0.0':(o.d>0?'+':'−')+Math.abs(o.d).toFixed(1)}s</span></button>`).join('')}</div>`:''}${A.why.length?`<ul>${A.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}</div>`}
+ return `<div class="adv"><b>${esc(A.rec)}</b>${A.opts.length?`<div class="advo">${A.opts.map(o=>`<button class="ao" ${o.k?`data-act="pit" data-i="${c.id}" data-v="${o.k}"`:`data-act="stayout" data-i="${c.id}"`} aria-pressed="${o.k&&c.pitReq===o.k}">${o.k?tyreHTML(o.k):'<span class="stay">STAY</span>'}<span class="num">${Math.abs(o.d)<.05?'±0.0':(o.d>0?'+':'−')+Math.abs(o.d).toFixed(1)}s</span></button>`).join('')}</div>`:''}${A.why.length?`<ul>${A.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}</div>`}
 
 /* ============ 여름 휴식기 · 계약 · 이적 시장 ============ */
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -1449,14 +1477,12 @@ function stepLap(){
   if(c.pitNow===1&&c.stops)dr(c,c.tyre==='H'?'freshH':'fresh');
   if(c.tyre!=='I'&&c.tyre!=='W'&&c.wear>1&&!c.w100){c.w100=true;dr(c,'cliff',{},1)}
   if(rnd()<.14&&L>1){const a=ord[pi-1],b=ord[pi+1];
-   if(pi===0&&L%9===0)dr(c,'lead');else if(a&&c.T-a.T<1.4&&c.last&&a.last&&c.last<a.last-.15)dr(c,'close',{o:nm(a)});else if(b&&b.T-c.T<.8)dr(c,'press',{o:nm(b)});else if(c.bat<.6)dr(c,'bat');else if(c.mode==='push'&&c.wear>.5)dr(c,'push')}
+   if(pi===0&&L%9===0)dr(c,'lead');else if(a&&c.T-a.T<1.4&&c.last&&a.last&&c.last<a.last-.15)dr(c,'close',{o:nm(a)});else if(b&&b.T-c.T<.8)dr(c,'press',{o:nm(b)});else if(c.bat<.6)dr(c,'bat');else if(c.mode==='push'&&c.wear>.5)dr(c,'push');else if(rnd()<.35&&ord.some(x=>x.T-c.T>TR(S.wk.track).base))dr(c,'blue');else dr(c,'chat',{o:a?nm(a):'앞차'})}
   if(!R.ask&&!c.auto&&L>2&&rem>3&&!R.flag){
    const mate=userCars().find(x=>x!==c&&x.st==='run');
    if(mate&&pi>0&&ord[pi-1]===mate){const g=c.T-mate.T;if(g<1.2&&c.last&&mate.last&&c.last<mate.last-.12)c.fc=(c.fc||0)+1;else c.fc=0;
     if(c.fc>=2&&!R.swap)askQ(c,'swapreq',`${cd(mate)}보다 빨라요. 보내줄 수 있어요?`,[['swap','자리 바꾸기'],['hold','순서 유지'],['free','자유 경쟁']])}
    else if(c.tyre!=='I'&&c.tyre!=='W'&&c.wear>.92&&!c.pitReq&&(!c.plan||c.plan.off||c.plan.idx>=c.plan.laps.length||c.plan.laps[c.plan.idx]-L>=3))askQ(c,'tyre','타이어 한계예요. 지금 들어가요?',[['boxnow','지금 박스'],['two','2랩 더'],['plan','계획대로']]);
-   else{const bb=ord[pi+1];if(bb&&!bb.user&&bb.T-c.T<.7){c.pc=(c.pc||0)+1;if(c.pc>=3)askQ(c,'defend',`뒤에 ${nm(bb)}, 계속 붙어 있어요. 방어할까요, 타이어 아낄까요?`,[['defend','방어'],['save','타이어 관리']])}else c.pc=0;
-    const aa=ord[pi-1];if(aa&&!aa.user&&c.T-aa.T<1&&c.bat>=2.5){c.ac=(c.ac||0)+1;if(c.ac>=3)askQ(c,'attack',`앞에 ${nm(aa)} 잡을 수 있어요. 배터리 다 써도 돼요?`,[['go','배터리 전부'],['wait','기다려']])}else c.ac=0}
   }
   if(c.boost>0)c.boost--;
   if(c.tyre!=='I'&&c.tyre!=='W'&&c.wear>=.85&&!c.w85&&!c.auto){c.w85=true;log('radio',`${cd(c)} 타이어 마모 ${Math.round(c.wear*100)}% · 피트 창 열림`);dr(c,'wear',{},1);if(P&&!P.off&&P.idx<P.laps.length)log('radio',`${cd(c)} 엔지니어: 카피. 계획 박스는 L${P.laps[P.idx]}`);if(S.ui.autoPause&&!R.pause)R.pause={k:'tyre',t:`${cd(c)} 타이어 ${Math.round(c.wear*100)}% · 피트 결정`}}
@@ -1524,31 +1550,67 @@ function moodWord(m){return m>=90?'축제 분위기':m>=75?'들뜬 분위기':m>
 
 /* ---- 라이브 중계 스트립 ---- */
 function castPush(R,who,t){(R.cast=R.cast||[]).unshift({l:R.lap,w:who,t});if(R.cast.length>12)R.cast.length=12}
+const CL={
+ start:['라이츠 아웃! {gp} 그랑프리 출발합니다! {lead}, 1코너를 선두로 빠져나갑니다!','신호등 꺼집니다! 스물두 대가 일제히 튀어나갑니다! 선두는 {lead}!','출발했습니다! 1코너 들어갑니다, 접촉 없이 깔끔하게! {lead} 선두!'],
+ startA:['{tn} 두 대 스타트 어땠는지 리플레이로 봐야겠어요. 1랩은 늘 접촉 위험이 커요.','DRS가 없으니까 1랩에서 자리 잡는 게 정말 중요해요.','첫 랩 순위가 오늘 전략 선택지를 상당 부분 결정할 거예요.'],
+ red:['레드 플래그! 레드 플래그입니다! 경기가 중단됩니다!','빨간 깃발 나왔습니다! 모든 차가 피트레인으로 들어옵니다!'],
+ redA:['타이어를 자유롭게 바꿀 수 있어서 전략판이 완전히 리셋돼요.','앞서 피트를 마친 팀은 억울하겠어요. 공짜 피트 스톱이 생긴 거니까요.','재출발이 스탠딩이라 스타트 한 번 더 보게 됩니다!'],
+ vsc:['버추얼 세이프티카 상황입니다.','VSC 발령! 모두 델타 타임 지켜야 합니다.'],
+ vscA:['VSC 피트는 손실이 절반 정도라서, 여기서 들어가느냐가 승부처일 수 있어요.','VSC는 언제 끝날지 몰라서 도박이에요. 피트 입구 직전 판단이 중요합니다.'],
+ sc:['세이프티카 출동합니다!','세이프티카! 경기가 정리됩니다!','SC 보드 나왔습니다!'],
+ scA:['간격이 전부 사라집니다. 저렴한 피트 스톱 기회예요. 누가 먼저 들어가느냐!','선두 입장에선 쌓아둔 갭이 사라져서 속상하겠어요.','재출발 때 타이어 온도 싸움이 볼만할 거예요.'],
+ pass:['{t}! 깔끔하게 들어갑니다!','{t}! 브레이킹 끝까지 버텼어요!','아, {t}! 추월 모드 배터리를 아껴둔 효과죠!','{t}! 바깥에서 돌아 나왔어요, 이게 됩니까!','{t}! 직선 끝에서 깔끔하게 정리합니다!','{t}! 몇 랩 동안 노리더니 결국 해냈어요!','{t}! 관중석이 들썩입니다!'],
+ passA:['DRS가 없으니까 배터리를 언제 쓰느냐가 전부예요.','앞차 타이어가 이미 무너지고 있었어요. 기다린 보람이 있네요.','방어 라인을 한 번 잡았는데 아웃사이드로 돌아나갔어요. 멋진 장면입니다.','코너 탈출 트랙션 차이가 확 보였어요.','이런 추월이 나와야 레이스가 재밌죠!','타이어 나이 차이가 열 랩 가까이 나요. 당연한 결과입니다.'],
+ lost:['{t}. 막아내지 못했습니다!','{t}. 결국 내주고 맙니다.','{t}. 버티고 버텼지만 여기까지네요.'],
+ lostA:['타이어 상태 차이가 너무 컸어요. 지키기 어려운 상황이었습니다.','배터리를 먼저 써버린 게 아쉽네요. 다시 1초 안으로 붙을 수 있을지 봐야죠.','더티 에어 속에서 오래 싸우다 보니 타이어가 먼저 지쳤어요.'],
+ pit:['피트 스톱! {t}','박스로 들어왔습니다! {t}','{t}. 크루 손이 바쁩니다!'],
+ pitFast:['{s}초! 크루 훌륭합니다. 이 정도면 시즌 베스트급이에요.','{s}초! 눈 깜짝할 새 끝났어요!','{s}초, 완벽한 스톱입니다. 크루 연습량이 보여요.'],
+ pitSlow:['아, {s}초는 조금 아쉬워요. 휠건에서 시간이 걸렸어요.','{s}초… 리어 쪽에서 뭔가 걸렸네요. 순위 손실 있겠어요.'],
+ pitA:['언더컷이 통할지, 다음 두세 랩 섹터 타임을 봐야 합니다.','복귀 위치가 중요해요. 트래픽 속으로 나오면 손해가 커요.','이제 상대 팀이 오버컷으로 대응할지가 관건이에요.'],
+ dnf:['아… {t}','이런, {t}'],
+ dnfA:['팀 입장에선 정말 뼈아픈 장면입니다. 포인트 계산이 완전히 달라져요.','신뢰성 문제는 시즌 내내 따라다니는 숙제예요.','드라이버가 무사한 게 다행입니다.'],
+ ord:['팀 오더가 나왔습니다. {t}'],
+ ordA:['팀 전체 포인트를 보면 합리적인 선택이에요. 드라이버 반응이 궁금하네요.','팬들 사이에서 논쟁이 좀 있겠는데요.'],
+ lead:['{lap}랩, {lead} 선두, 2위와 {g}초 차이입니다.','선두 {lead}, 리듬이 아주 좋습니다. 갭 {g}초.','{lead}가 앞에서 페이스를 조절하고 있어요. 2위와 {g}초.','{lap}랩째, 여전히 {lead}가 레이스를 이끕니다.'],
+ my:['{tn}의 {me}, 현재 P{p}. {tyre} 타이어로 {age}랩째입니다.','{me}, P{p}에서 달리고 있습니다. 앞차와 {ga}초.','{tn} {me}, 꾸준히 P{p} 지키고 있어요.','{me}의 랩타임 보시죠, 앞차보다 {d}초 빨라요!','{me}, P{p}. 뒤에서 {bh}가 따라오고 있습니다.'],
+ battle:['P{p} 싸움 보시죠! {a}와 {b}, 간격 {g}초!','{a}가 {b} 바로 뒤에 붙었습니다! {g}초 차이!','지금 가장 뜨거운 곳은 P{p}입니다. {a}와 {b}!'],
+ tyreTalk:['남은 차들 대부분 {comp} 타이어네요.','아직 피트를 안 한 차가 {n}대나 있어요. 원스톱 노리는 팀이 많습니다.','두 번째 스틴트 컴파운드 선택이 팀마다 갈렸어요.'],
+ rem:['남은 랩 {rem}! 이제 진짜 마지막 승부입니다!','{rem}랩 남았습니다! 배터리 아껴둔 드라이버가 웃게 됩니다!','파이널 랩까지 {rem}랩!'],
+ remA:['남은 랩은 {rem}랩입니다.','레이스 중반, {rem}랩 남겨두고 있습니다.','{rem}랩 남았는데 아직 변수가 많아요.'],
+ fill:['지금 타이어 마모 곡선 보면 피트 창이 서서히 열리고 있어요.','더티 에어 때문에 1초 안으로 붙기가 쉽지 않은 서킷이에요.','에너지를 언제 몰아 쓰느냐, 여기서 갈립니다.','피트월 무전이 조용한 걸 보면 계획대로 가고 있다는 뜻이에요.','아직 레이스 절반의 이야기가 남아 있어요.','트랙 온도가 올라가면서 소프트가 더 빨리 무너지고 있어요.','이 서킷은 언더컷 효과가 큰 편이에요. 2초 정도는 봐야 합니다.','바람 방향이 바뀌었어요. 마지막 섹터 랩타임이 흔들려요.','온보드 보시면 스티어링 수정이 많아졌어요. 그립이 떨어졌다는 신호죠.','백마커 처리도 은근히 시간을 많이 잡아먹어요.','팀마다 다른 전략을 들고 나와서 순위표가 계속 섞일 거예요.','지금 랩타임이 예선 페이스보다 2초 정도 느린데, 타이어 관리 중이라는 뜻이에요.'],
+ fin:['체커기! {lead}가 {gp} 그랑프리를 제패합니다!','{lead} 결승선 통과! 오늘의 승자입니다!']};
 function castLap(R){
- if(R._castLap===R.lap)return;R._castLap=R.lap;const tn=userTeam().name;
+ if(R._castLap===R.lap)return;R._castLap=R.lap;const tn=userTeam().name,gp=TR(S.wk.track).n;
  const run=R.cars.filter(c=>c.st==='run').sort((a,b)=>a.T-b.T);if(!run.length)return;
- const ev=R.feed.filter(x=>x.l===R.lap);const rem=R.laps-R.lap;
+ const P=(k,v)=>{let t=pickNR('c:'+k,CL[k]);for(const x in v||{})t=t.split('{'+x+'}').join(v[x]);return t};
+ const ev=R.feed.filter(x=>x.l===R.lap);const rem=R.laps-R.lap;const lead=run[0];
+ if(R.lap===1){castPush(R,CASTER,P('start',{gp,lead:nm(lead)}));castPush(R,ANALYST,P('startA',{tn}));return}
+ if(rem===0){castPush(R,CASTER,P('fin',{lead:nm(lead),gp}));return}
  const f=ev.find(x=>x.k==='rc'&&/레드|세이프티|SC|VSC|리타이어|사고/.test(x.t))||ev.find(x=>/추월|박스 완료|리타이어|접촉|팀 오더/.test(x.t))||ev.find(x=>x.k==='rc');
- if(R.lap===1){castPush(R,CASTER,`라이츠 아웃! ${TR(S.wk.track).n} 그랑프리 출발합니다! ${nm(run[0])}, 1코너를 선두로 빠져나갑니다!`);castPush(R,ANALYST,`${tn} 두 대 스타트 어땠는지 리플레이로 봐야겠어요. 1랩은 늘 접촉 위험이 커요.`);return}
- if(rem===0)return;
  if(f){const t=f.t;let a,b;
-  if(/레드/.test(t)){a=`레드 플래그! 레드 플래그입니다! 경기가 중단됩니다!`;b='타이어를 자유롭게 바꿀 수 있어서 전략판이 완전히 리셋돼요. 피트월이 바빠지겠네요.'}
-  else if(/VSC/.test(t)){a=`버추얼 세이프티카 상황입니다. ${t}`;b='VSC 피트는 손실이 절반 정도라서, 여기서 들어가느냐가 승부처일 수 있어요.'}
-  else if(/세이프티|SC/.test(t)){a=`세이프티카 출동합니다! ${t}`;b='간격이 전부 사라집니다. 저렴한 피트 스톱 기회예요. 누가 먼저 들어가느냐!'}
-  else if(/추월 허용/.test(t)){a=`${t}. 막아내지 못했습니다!`;b=pick(['타이어 상태 차이가 너무 컸어요. 지키기 어려운 상황이었습니다.','배터리를 먼저 써버린 게 아쉽네요. 다시 1초 안으로 붙을 수 있을지 봐야죠.'])}
-  else if(/추월/.test(t)){a=pick([`${t}! 깔끔하게 들어갑니다!`,`${t}! 브레이킹 끝까지 버텼어요!`,`아, ${t}! 이건 추월 모드 배터리를 아껴둔 효과죠!`]);b=pick(['DRS가 없으니까 배터리를 언제 쓰느냐가 전부예요.','앞차 타이어가 이미 무너지고 있었어요. 기다린 보람이 있네요.','방어 라인을 한 번 잡았는데 아웃사이드로 돌아나갔어요. 멋진 장면입니다.'])}
-  else if(/박스 완료/.test(t)){const s=(t.match(/([\d.]+)초/)||[])[1];a=`피트 스톱! ${t}`;b=s&&+s<2.6?`${s}초! 크루 훌륭합니다. 이 정도면 시즌 베스트급이에요.`:s&&+s>3.5?`아, ${s}초는 조금 아쉬워요. 휠건에서 시간이 걸렸어요.`:'언더컷이 통할지, 다음 두세 랩 섹터 타임을 봐야 합니다.'}
-  else if(/리타이어/.test(t)){a=`아… ${t}`;b='팀 입장에선 정말 뼈아픈 장면입니다. 포인트 계산이 완전히 달라져요.'}
-  else if(/팀 오더/.test(t)){a=`팀 오더가 나왔습니다. ${t}`;b='팀 전체 포인트를 보면 합리적인 선택이에요. 드라이버 반응이 궁금하네요.'}
+  if(/레드/.test(t)){a=P('red');b=P('redA')}
+  else if(/VSC/.test(t)){a=P('vsc')+' '+t;b=P('vscA')}
+  else if(/재출발|들어옵니다|해제|종료/.test(t)){a=pickNR('c:rs',['세이프티카 이번 랩 들어갑니다! 재출발 준비!','그린 플래그 직전입니다! 선두가 타이밍을 쥐고 있어요!','레이스 재개 임박! 다들 타이어 데우느라 바쁩니다!']);b=pickNR('c:rsA',['재출발 첫 두 코너가 오늘 가장 위험한 순간이에요.','타이어 워밍업이 잘 된 차가 재출발에서 이득을 봅니다.','선두는 최대한 늦게 가속해서 뒤차 슬립스트림을 막으려 할 거예요.'])}
+  else if(/세이프티|SC/.test(t)){a=P('sc')+' '+t;b=P('scA')}
+  else if(/추월 허용/.test(t)){a=P('lost',{t});b=P('lostA')}
+  else if(/추월/.test(t)){a=P('pass',{t});b=P('passA')}
+  else if(/박스 완료/.test(t)){const s=(t.match(/([\d.]+)초/)||[])[1];a=P('pit',{t});b=s&&+s<2.6?P('pitFast',{s}):s&&+s>3.5?P('pitSlow',{s}):P('pitA')}
+  else if(/리타이어/.test(t)){a=P('dnf',{t});b=P('dnfA')}
+  else if(/팀 오더/.test(t)){a=P('ord',{t});b=P('ordA')}
   else{a=t;b=null}
-  castPush(R,CASTER,a);if(b)castPush(R,ANALYST,b);return}
- if(R.lap%3===0||rem<=3){const u=userCars().filter(c=>c.st==='run').map(c=>({c,p:run.indexOf(c)+1})).sort((x,y)=>x.p-y.p);
-  const lead=run[0],g2=run[1]?(run[1].T-lead.T).toFixed(1):null;
-  const opts=[`${R.lap}랩, ${nm(lead)} 선두${g2?`, 2위와 ${g2}초 차이`:''}입니다.`,
-   u.length?`${tn}의 ${cd(u[0].c)}, 현재 P${u[0].p}. ${COMP[u[0].c.tyre]?COMP[u[0].c.tyre].n:''} 타이어로 달리고 있습니다.`:`${tn} 두 대 모두 레이스를 마쳤습니다.`,
-   rem<=3?`남은 랩 ${rem}! 이제 진짜 마지막 승부입니다!`:`남은 랩은 ${rem}랩입니다.`];
-  castPush(R,CASTER,pick(opts));
-  if(rnd()<.6)castPush(R,ANALYST,pick(['지금 타이어 마모 곡선 보면 피트 창이 서서히 열리고 있어요.','더티 에어 때문에 1초 안으로 붙기가 쉽지 않은 서킷이에요.','에너지를 언제 몰아 쓰느냐, 여기서 갈립니다.','피트월 무전이 조용한 걸 보면 계획대로 가고 있다는 뜻이에요.',rem<=3?'배터리 남겨둔 드라이버가 웃게 됩니다!':'아직 레이스 절반의 이야기가 남아 있어요.']))}
+  castPush(R,CASTER,a);if(b&&rnd()<.85)castPush(R,ANALYST,b);return}
+ if(R.lap%2===0||rem<=3){
+  const u=userCars().filter(c=>c.st==='run').map(c=>({c,p:run.indexOf(c)+1})).sort((x,y)=>x.p-y.p);
+  let best=null;for(let i=1;i<Math.min(run.length,12);i++){const g=run[i].T-run[i-1].T;if(g<1.2&&(!best||g<best.g))best={i,g}}
+  const opts=[];
+  opts.push(()=>P('lead',{lap:R.lap,lead:nm(lead),g:run[1]?(run[1].T-lead.T).toFixed(1):'—'}));
+  if(u.length){const m=u[Math.floor(rnd()*u.length)];const ahead=run[m.p-2],behind=run[m.p];
+   opts.push(()=>P('my',{tn,me:cd(m.c),p:m.p,tyre:COMP[m.c.tyre]?COMP[m.c.tyre].n:'',age:m.c.age,ga:ahead?(m.c.T-ahead.T).toFixed(1):'—',d:ahead&&m.c.last&&ahead.last?Math.max(.1,ahead.last-m.c.last).toFixed(1):'0.2',bh:behind?nm(behind):'아무도 없이'}))}
+  if(best)opts.push(()=>P('battle',{p:best.i,a:nm(run[best.i]),b:nm(run[best.i-1]),g:best.g.toFixed(1)}));
+  const nostop=run.filter(c=>!c.stops).length;const cnt={};run.forEach(c=>cnt[c.tyre]=(cnt[c.tyre]||0)+1);const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  if(R.lap>5)opts.push(()=>P('tyreTalk',{comp:COMP[top[0]]?COMP[top[0]].n:'',n:nostop}));
+  castPush(R,CASTER,rem<=3?P('rem',{rem}):pick(opts)());
+  if(rnd()<.65)castPush(R,ANALYST,rnd()<.25?P('remA',{rem}):P('fill'))}
 }
 function castHTML(){return `<div class="cast" id="cast"><div class="cast-l"><span class="live">LIVE</span><b>생중계</b></div><div class="cast-m" id="castm"><span class="muted">그리드에 차들이 정렬하고 있습니다…</span></div><div class="cast-r"><div class="tick" id="ctick"></div></div></div>`}
 function castUpdate(){const R=S.wk&&S.wk.race;const m=$('#castm');if(!R||!m)return;castLap(R);
@@ -1838,9 +1900,9 @@ function buildRace(){
   <div class="ln"><span class="lbl">배터리</span><span class="bat" data-f="bat"></span><span class="num muted" style="font-size:11px" data-f="last"></span></div>
   <div class="ln"><span class="lbl">페이스</span><div class="seg" data-f="mode">${[['save','보존'],['std','표준'],['push','공격']].map(([v,l])=>`<button data-act="mode" data-i="${c.id}" data-v="${v}">${l}</button>`).join('')}</div></div>
   <div class="ln"><span class="lbl">에너지</span><div class="seg" data-f="en">${[['save','방어'],['auto','자동'],['full','전력']].map(([v,l])=>`<button data-act="en" data-i="${c.id}" data-v="${v}">${l}</button>`).join('')}</div></div>
-  <div class="ln"><span class="lbl">피트</span><div class="pitrow" data-f="pit">${['S','M','H','I','W'].map(x=>`<button data-act="pit" data-i="${c.id}" data-v="${x}" aria-label="${COMP[x].n}로 피트">${tyreHTML(x)}</button>`).join('')}</div></div>
+  <div class="ln"><span class="lbl">피트</span><div class="pitrow" data-f="pit">${['S','M','H','I','W'].map(x=>`<button data-act="pit" data-i="${c.id}" data-v="${x}" aria-label="${COMP[x].n}로 피트">${tyreHTML(x)}</button>`).join('')}<button class="stayb" data-act="stayout" data-i="${c.id}" aria-label="스테이 아웃">STAY</button></div></div>
   <div class="ln"><span class="lbl">계획</span><span class="planl" data-f="plan"></span></div>
-  <div class="ln"><span class="lbl">무전</span><div class="dm"><select aria-label="${esc(d.code)}에게 보낼 무전">${Object.entries(DLAB).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select><button class="btn sm" data-act="dmsg" data-i="${c.id}">보내기</button><button class="btn sm" data-act="tyreask" data-i="${c.id}" title="드라이버에게 타이어 상태를 묻습니다">🛞 타이어 어때?</button></div></div>
+  <div class="ln"><span class="lbl">무전</span><div class="dm"><select aria-label="${esc(d.code)}에게 보낼 무전">${Object.entries(DLAB).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select><button class="btn sm" data-act="dmsg" data-i="${c.id}">보내기</button></div></div>
   <div class="proj" data-f="proj"></div>
   <label class="chk"><input type="checkbox" data-act2="auto" data-i="${c.id}">엔지니어에게 피트 위임</label>
   <div class="eng" data-f="eng"></div></div>`}).join('');
@@ -1890,7 +1952,7 @@ function updateRace(){
   if(prev&&c.st==='run'&&prev!==pos&&R.lap){el.classList.remove('gain','lose');void el.offsetWidth;el.classList.add(pos<prev?'gain':'lose')}
   el.classList.toggle('out',c.st!=='run');el.classList.toggle('pitting',c.pitNow===2);
   el.querySelector('.g').textContent=gapText(c,order,i,tr);
-  el.querySelector('.ty').innerHTML=c.st==='run'?tyreHTML(c.tyre)+`<em>${c.age}</em>`:'';
+  el.querySelector('.ty').innerHTML=c.st==='run'?`<span class="ps${c.stops?'':' z'}" title="피트 스톱 ${c.stops}회">${c.stops}</span>`+tyreHTML(c.tyre)+`<em>${c.age}</em>`:'';
   el.querySelector('.pt').textContent=c.stops||'';
  });
  R.prevPos={};
@@ -2094,7 +2156,7 @@ document.addEventListener('click',e=>{
   case 'tord':teamOrder(v);break;
   case 'dmsg':{const sel=b.parentElement.querySelector('select');if(car&&sel)dirMsg(car,sel.value);break}
   case 'ans':answer(v);break;
-  case 'tyreask':if(car)dirMsg(car,'tyrechk');break;
+  case 'stayout':if(car&&car.st==='run'&&!car.auto)dirMsg(car,'stay');break;
   case 'stire':{S.wk.startTyre[i]=v;const o=stratOptions(i).find(x=>x.seq[0]===v);if(o)setStrat(i,o);save();render();break}
   case 'start':initRace();render();break;
   case 'play':play();break;
@@ -2122,7 +2184,7 @@ document.addEventListener('click',e=>{
   case 'import':{try{const o=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim()))));if(!o||!o.teams)throw 0;pause();S=o;save();go('overview')}catch(err){$('#imperr').textContent='코드를 읽지 못했습니다. 전체를 빠짐없이 붙여 넣었는지 확인하세요.'}break}
   case 'reset':if(!resetArm){resetArm=true;render()}else{resetArm=false;pause();try{localStorage.removeItem(KEY)}catch(err){}S=null;D=defaultDraft();rollProspects(D);render()}break;
  }
- if(held&&S.ui.autoResume!==false){const ms={ans:900,redgo:1200,pit:2200,pitcancel:1800,dmsg:1600,tord:1600,planadj:2200}[a];if(ms)armResume(ms)}
+ if(held&&S.ui.autoResume!==false){const ms={ans:900,redgo:1200,stayout:2200,pit:2200,pitcancel:1800,dmsg:1600,tord:1600,planadj:2200}[a];if(ms)armResume(ms)}
 });
 document.addEventListener('change',e=>{
  const t=e.target;
