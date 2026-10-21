@@ -437,7 +437,39 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 .sumd{margin:0;font-size:13px}.sumd dt{color:var(--muted);font-size:11px;margin-top:6px}.sumd dd{margin:2px 0 0}
 @media (max-width:1100px){.rx-grid{grid-template-columns:1fr}.rx-kpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:620px){.rx-cols{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.tick .tk,.cast .live,.cast-m .new{animation:none}.tw{transition:none}.tw.gain,.tw.lose{animation:none}.pill.live::before{animation:none}}
+.dev .devg{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:22px;align-items:start}
+.carw{display:grid;gap:8px;justify-items:center}.car{width:100%;max-width:210px;height:auto;background:radial-gradient(circle at 50% 45%,#15181d,#000 70%);border-radius:8px;padding:6px}
+.car .part *{stroke:#000;stroke-width:1;transition:filter .25s}
+.car .part.hl *,.car .part.hv *{stroke:#fff;stroke-width:1.6;filter:drop-shadow(0 0 4px var(--team))}
+.car .part.hl{animation:partglow 1.4s ease-in-out 3}
+@keyframes partglow{50%{opacity:.55}}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.specs{display:grid;gap:10px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px 12px;background:var(--panel-2,#15171b);border-radius:4px}
+.kpis>div{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 6px}.kpis .lbl{width:100%}.kpis b{font-family:var(--f-disp);font-size:22px}.kpis small{width:100%;font-size:11px}
+.up{color:var(--good);font-size:12px;font-weight:700}
+.sb{padding:6px 8px;border-radius:4px}.sb.hl{background:color-mix(in srgb,var(--team) 14%,transparent)}
+.sbt{display:flex;gap:8px;align-items:baseline;font-size:13px}.sbt span:first-child{flex:1;min-width:0}.sbt .lv{font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.sbb{position:relative;height:8px;background:#1d2026;border-radius:4px;overflow:hidden;margin-top:5px}
+.sbb i{position:absolute;left:0;top:0;bottom:0;background:#4a505a}.sbb i.g{background:var(--team);box-shadow:0 0 8px var(--team)}
+.pips{display:flex;gap:3px;margin:5px 0 4px}.pips i{width:18px;height:5px;border-radius:2px;background:#2a2e35}.pips i.on{background:var(--team)}.pips i.nx{background:transparent;outline:1px dashed var(--team)}
+.prs .pr .pill{font-size:10px;font-weight:400;margin-left:6px;vertical-align:1px}
+.mrep{margin-bottom:16px;border-color:var(--team);box-shadow:0 0 0 1px color-mix(in srgb,var(--team) 40%,transparent),0 0 24px color-mix(in srgb,var(--team) 18%,transparent)}
+.mrep .mt{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}.mrep .mt b{font-family:var(--f-disp);font-size:20px}
+.mrow{display:flex;flex-wrap:wrap;gap:12px 26px}.mrow .num{font-size:16px}.mrow s{color:var(--muted)}.mrow b{color:var(--good)}
+.pipe{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;padding:0;font-size:12px}
+.pipe li{padding:4px 10px;border-radius:12px;border:1px solid var(--line)}.pipe li.ok{border-color:var(--good);color:var(--good)}.pipe li.ok::before{content:"✓ "}
+.pipe li.now{background:var(--team);color:var(--team-ink,#fff);border-color:var(--team)}
+@media (max-width:760px){.dev .devg{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+.dotd{border-color:color-mix(in srgb,#ffd400 40%,var(--line))}.dotd header{letter-spacing:.14em}
+.dl{display:grid;gap:6px}.dc{display:grid;grid-template-columns:5px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:4px}
+.dc .stripe{height:100%;min-height:32px;width:5px;border-radius:2px}.dn{display:grid;gap:2px;min-width:0}.dn small{font-size:11.5px}
+.db{height:6px;background:#1d2026;border-radius:3px;overflow:hidden;margin-top:4px}.db i{display:block;height:100%;animation:grow .9s ease-out}
+@keyframes grow{from{width:0!important}}
+.dc.win{border-color:#ffd400;background:color-mix(in srgb,#ffd400 9%,transparent)}.dc.mine{outline:1px dashed var(--team)}
+.dp{font-family:var(--f-disp);font-size:18px}.dw{font-size:16px;margin-bottom:10px}.dw b{font-family:var(--f-disp);color:#ffd400}
+.dt{margin-top:10px;font-size:12px}.dt .me{color:var(--team);font-weight:700}
+@media (prefers-reduced-motion:reduce){.car .part.hl,.db i{animation:none}.tick .tk,.cast .live,.cast-m .new{animation:none}.tw{transition:none}.tw.gain,.tw.lose{animation:none}.pill.live::before{animation:none}}
 </style>
 </head>
 <body>
@@ -1241,6 +1273,8 @@ function initRace(){
  wk.race={lap:0,laps:tr.laps,cars,oppAt:null,flag:null,wet:0,restart:false,standing:true,feed:[],done:false,pause:null,red:null,redUsed:false,wetAlert:false,events:[],prevPos:{}};
  wk.phase='race';
  log('rc',`${tr.n} 그랑프리 · ${tr.laps}랩 · 포메이션 랩 완료. 출발 준비.`);
+ if(S.pending&&S.pending.length){S.pending.forEach(p=>log('crew',`신규 파츠 장착: ${p.t} v${p.lv}${p.dp>0?` · 랩당 약 −${(p.dp*.06).toFixed(3)}초 예상`:''}`,1,CREW_N.aero));S.pending=[]}
+ S.lastMerge=null;
  save();
 }
 function log(kind,text,imp,who){const R=S.wk.race;R.feed.unshift({l:R.lap,k:kind,t:text,w:who});if(R.feed.length>80)R.feed.length=80;if(imp)R.events.push('L'+R.lap+' '+text)}
@@ -1417,7 +1451,7 @@ function finishRace(){
  cls.forEach(e=>{const c=R.cars.find(x=>x.id===e.id);if(!c.user||e.st!=='run')return;const p=e.pos;R.lap=R.laps;c.radAt=null;dr(c,p===1?'win':p<=3?'pod':p<=10?'pts':'nopts',{p},1)});
  const ut=userTeam();const mine=cls.filter(e=>S.drivers[e.id].team==='usr');const tp=mine.reduce((s,e)=>s+e.pts,0);
  const pod=mine.some(e=>e.st==='run'&&e.pos<=3);const earn=5+Math.round(tp*.25)+(pod?2:0);S.budget+=earn;
- S.results.push({round:S.cur+1,track:tr.id,cls,earn});S.results[S.results.length-1].rx=raceReact(S.results[S.results.length-1],R);
+ S.results.push({round:S.cur+1,track:tr.id,cls,earn});S.results[S.results.length-1].rx=raceReact(S.results[S.results.length-1],R);S.results[S.results.length-1].dotd=buildDotd(S.results[S.results.length-1]);
  const desc=mine.map(e=>`#${S.drivers[e.id].num} ${e.st==='run'?'P'+e.pos:e.st==='dsq'?'DSQ':'DNF'}`).join(', ');
  const tags=[];if(mine.some(e=>e.pos===1&&e.st==='run'))tags.push('win');else if(pod)tags.push('pod');if(mine.some(e=>e.st!=='run'))tags.push('dnf');
  S.cur++;
@@ -1571,6 +1605,87 @@ function raceReactHTML(r){const x=r.rx;if(!x)return '';const good=['onetwo','win
     <ul>${x.thread.C.map(c=>`<li><div><b>${esc(c.u)}</b> <span class="muted">▲${c.v}</span></div><div>${esc(c.t)}</div>${c.re.map(q=>`<div class="re">↳ <b>${esc(q.u)}</b> ${esc(q.t)}</div>`).join('')}</li>`).join('')}</ul></div>
     <h4>분위기 요약</h4><dl class="sumd"><dt>많이 언급된 장면</dt><dd>${x.sum.scenes.map(esc).join(' · ')}</dd><dt>주요 아쉬움</dt><dd>${x.sum.regrets.map(esc).join(' · ')}</dd></dl></section>
   </div></div></div>`}
+
+/* ============ 차량 개발 시각화 ============ */
+const UPGX={aero:{parts:['fw','rw','floor'],where:'프론트 윙 · 리어 윙 · 플로어',stat:'다운포스',inc:2,perf:.55},
+ power:{parts:['eng'],where:'파워유닛 (엔진 커버 아래)',stat:'출력',inc:2,perf:.45},
+ rel:{parts:['pod'],where:'사이드포드 냉각 · 유압 라인',stat:'신뢰성',inc:4,perf:0},
+ crew:{parts:['hub'],where:'휠 너트 · 피트 장비',stat:'피트 크루',inc:1,perf:0},
+ tyre:{parts:['tyre'],where:'타이어 (열 관리 소프트웨어)',stat:'마모',inc:1,perf:0},
+ energy:{parts:['bat'],where:'배터리 · ERS 회생',stat:'배터리 회복',inc:1,perf:0}};
+function devStats(t){t=t||userTeam();const L=id=>lvl(id);
+ const cur={aero:t.aero,power:t.power+(t.puGain||0),rel:t.rel,crew:t.crew,tyre:t.tyre||0,energy:t.energy||0};
+ const base={aero:t.aero-2*L('aero'),power:t.power-2*L('power')+(t.puGain||0),rel:t.rel-4*L('rel'),crew:t.crew-L('crew'),tyre:0,energy:0};
+ const pf=x=>x.aero*.55+x.power*.45;return{cur,base,perf:pf(cur),perf0:pf(base)}}
+function gridRank(perf){return S.teams.filter(t=>!t.user&&perfOf(t)>perf).length+1}
+function upgPreview(id){const ut=userTeam();const {cur,perf}=devStats();const u=UPGX[id];const nx={...cur};nx[id]+=u.inc;
+ const p2=nx.aero*.55+nx.power*.45;const dp=p2-perf;const laps=S.cal[S.cur]?TR(S.cal[S.cur]).laps:57;
+ const fx={aero:`다운포스 ${cur.aero} → ${nx.aero}`,power:`출력 ${cur.power.toFixed(1)} → ${nx.power.toFixed(1)}`,rel:`신뢰성 ${cur.rel} → ${nx.rel} · 기계 고장 확률 약 −${(4*.12).toFixed(1)}%p`,crew:`정지 시간 −0.12초 (현재 Lv.${cur.crew} → ${nx.crew})`,tyre:`타이어 마모 ${cur.tyre?'−'+cur.tyre*5:0}% → −${nx.tyre*5}%`,energy:`배터리 회복 +${cur.energy*20}% → +${nx.energy*20}%`}[id];
+ return{fx,dp,lap:dp*.06,race:dp*.06*laps,r0:gridRank(perf),r1:gridRank(p2),laps}}
+function carSVG(hl){const L=id=>lvl(id),M=id=>UPG.find(u=>u.id===id).max;
+ const f=id=>{const l=L(id);return l?`fill="var(--team)" fill-opacity="${(.3+.7*l/M(id)).toFixed(2)}"`:'fill="#23272e"'};
+ const cls=id=>`class="part${hl===id?' hl':''}" data-part="${id}"`;
+ return `<svg class="car" viewBox="0 0 140 300" role="img" aria-label="차량 상면도: 업그레이드된 부품이 팀 컬러로 표시됩니다">
+ <g ${cls('aero')}><path ${f('aero')} d="M32 72 L46 70 L48 236 L30 246 L26 200 Z M108 72 L94 70 L92 236 L110 246 L114 200 Z"/><rect ${f('aero')} x="14" y="12" width="112" height="14" rx="3"/><rect ${f('aero')} x="26" y="268" width="88" height="16" rx="3"/></g>
+ <path d="M62 24 Q70 8 78 24 L82 110 L58 110 Z" fill="#30353d" stroke="#000" stroke-width="1"/>
+ <g ${cls('rel')}><rect ${f('rel')} x="38" y="112" width="20" height="78" rx="8"/><rect ${f('rel')} x="82" y="112" width="20" height="78" rx="8"/></g>
+ <g ${cls('power')}><path ${f('power')} d="M56 150 L84 150 L80 250 L60 250 Z"/></g>
+ <ellipse cx="70" cy="128" rx="11" ry="18" fill="#0b0d10" stroke="#555" stroke-width="1.2"/>
+ <g ${cls('energy')}><rect ${f('energy')} x="60" y="140" width="20" height="9" rx="2" stroke="#000" stroke-width=".8"/></g>
+ <g ${cls('tyre')}><rect ${f('tyre')} x="10" y="46" width="20" height="40" rx="6"/><rect ${f('tyre')} x="110" y="46" width="20" height="40" rx="6"/><rect ${f('tyre')} x="6" y="212" width="24" height="46" rx="7"/><rect ${f('tyre')} x="110" y="212" width="24" height="46" rx="7"/></g>
+ <g ${cls('crew')}><circle ${f('crew')} cx="20" cy="66" r="4.5"/><circle ${f('crew')} cx="120" cy="66" r="4.5"/><circle ${f('crew')} cx="18" cy="235" r="5"/><circle ${f('crew')} cx="122" cy="235" r="5"/></g>
+ </svg>`}
+function devPanelHTML(){const ut=userTeam(),{cur,base,perf,perf0}=devStats();const r0=gridRank(perf0),r1=gridRank(perf);const hl=S.lastMerge&&S.lastMerge.id;
+ const bar=(lab,v,b,mn,mx,fmt,id)=>{const p=x=>clamp((x-mn)/(mx-mn)*100,0,100);const d=v-b;return `<div class="sb${hl===id?' hl':''}" data-part="${id}"><div class="sbt"><span>${lab}</span><b class="num">${fmt(v)}</b>${d>0?`<span class="up num">+${fmt(d)}</span>`:''}<span class="lv">Lv.${lvl(id)}/${UPG.find(u=>u.id===id).max}</span></div><div class="sbb"><i style="width:${p(b)}%"></i><i class="g" style="left:${p(b)}%;width:${p(v)-p(b)}%"></i></div></div>`};
+ const gain=(perf-perf0)*.06;
+ return `<div class="card dev"><header>차량 개발 현황<span class="sp"></span><span class="muted" style="font-size:12px;font-weight:400">팀 컬러가 진할수록 개발이 많이 된 부품</span></header><div class="body devg">
+  <div class="carw">${carSVG(hl)}<div class="legend"><span><i style="background:#23272e"></i>기본 사양</span><span><i style="background:var(--team);opacity:.45"></i>개발 초기</span><span><i style="background:var(--team)"></i>개발 완료</span></div></div>
+  <div class="specs">
+   <div class="kpis"><div><span class="lbl">차량 성능</span><b class="num">${perf.toFixed(1)}</b>${perf>perf0?`<span class="up num">+${(perf-perf0).toFixed(1)}</span>`:''}</div>
+    <div><span class="lbl">그리드 내 차량 순위</span><b class="num">P${r1}</b>${r1<r0?`<span class="up num">▲${r0-r1}</span>`:''}<small class="muted">창단 사양 P${r0}</small></div>
+    <div><span class="lbl">누적 랩타임 이득</span><b class="num">${gain>0?'−'+gain.toFixed(3):'0.000'}초</b><small class="muted">랩당</small></div></div>
+   ${bar('다운포스 · 윙·플로어',cur.aero,base.aero,65,100,x=>Math.round(x),'aero')}
+   ${bar('출력 · 파워유닛',cur.power,base.power,65,100,x=>x.toFixed(1),'power')}
+   ${bar('신뢰성 · 냉각',cur.rel,base.rel,70,120,x=>Math.round(x),'rel')}
+   ${bar('피트 크루 · 휠 너트',cur.crew,base.crew,0,10,x=>'Lv.'+Math.round(x),'crew')}
+   ${bar('타이어 마모 감소',cur.tyre*5,0,0,15,x=>Math.round(x)+'%','tyre')}
+   ${bar('배터리 회복',cur.energy*20,0,0,40,x=>Math.round(x)+'%','energy')}
+  </div></div></div>`}
+function mergeReportHTML(){const m=S.lastMerge;if(!m)return '';const u=UPGX[m.id];
+ return `<div class="card mrep"><header>개발 완료 리포트 · PR #${m.no}<span class="sp"></span><span class="pill">다음 결승부터 장착</span></header><div class="body">
+  <div class="mt"><b>${esc(m.t)} v${m.lv}</b><span class="muted">${esc(u.where)}</span></div>
+  <div class="mrow"><div><span class="lbl">${esc(u.stat)}</span><div class="num"><s>${m.b}</s> → <b>${m.a}</b></div></div>
+  ${m.dp>0?`<div><span class="lbl">차량 성능</span><div class="num"><s>${m.p0.toFixed(1)}</s> → <b>${m.p1.toFixed(1)}</b></div></div><div><span class="lbl">랩타임</span><div class="num"><b>−${(m.dp*.06).toFixed(3)}초</b>/랩 · 레이스 약 −${(m.dp*.06*m.laps).toFixed(1)}초</div></div><div><span class="lbl">차량 순위</span><div class="num">P${m.r0} → <b>P${m.r1}</b></div></div>`:`<div><span class="lbl">효과</span><div>${esc(m.fx)}</div></div>`}</div>
+  <ol class="pipe"><li class="ok">설계 · CFD</li><li class="ok">${m.id==='power'||m.id==='energy'?'다이노 테스트':m.id==='crew'?'피트 스톱 리허설':'풍동 검증'}</li><li class="ok">제작 · 품질 검사</li><li class="now">다음 결승 장착</li></ol>
+  <p class="muted" style="margin:10px 0 0;font-size:12.5px">${esc(m.note)}</p></div></div>`}
+const DEVNOTE={aero:['풍동 상관성 확인, 고속 코너 그립이 눈에 띄게 늘었습니다.','플로어 엣지 와류가 안정됐어요. 더티 에어에서도 앞차를 따라가기 쉬워집니다.'],power:['다이노에서 출력 곡선이 매끄러워졌습니다. 직선 끝 속도 +2~3km/h 예상.','ERS 배포 매핑을 다시 짰어요. 코너 탈출 가속이 좋아집니다.'],rel:['냉각 여유가 생겼어요. 더운 서킷에서 공격적인 엔진 모드를 더 오래 쓸 수 있습니다.','유압 라인 교체로 기계 고장 위험이 줄었습니다.'],crew:['크루가 야간 리허설에서 2.1초대를 반복 기록했습니다.','휠건 교체와 동선 정리로 느린 스톱이 줄어들 거예요.'],tyre:['타이어 온도 창을 더 오래 유지합니다. 스틴트를 2~3랩 늘릴 여유가 생겨요.','열 관리 맵 덕분에 막판 타이어 절벽이 늦게 옵니다.'],energy:['배터리 회생 효율이 올라 추월 모드를 더 자주 쓸 수 있습니다.','방어용 에너지가 남아서 막판 1초 이내 싸움이 유리해집니다.']};
+
+/* ============ 드라이버 오브 더 데이 ============ */
+function buildDotd(r){moodOf();const fl=r.cls.filter(e=>e.best).sort((a,b)=>a.best-b.best)[0];
+ const sc=r.cls.filter(e=>e.st==='run').map(e=>{const d=S.drivers[e.id];const u=d.team==='usr';const g=e.grid-e.pos;
+  let s=g*1.1+(e.pos===1?3.5:e.pos<=3?1.5:0)+(fl&&fl.id===e.id?1.5:0)+(e.pos<=10&&e.grid>10?2:0)+rnd()*2.5+(u?S.fans/35:0);
+  const why=[g>=3?`${e.grid}번 그리드 → P${e.pos} (▲${g})`:'',e.pos===1?'우승':e.pos<=3?'포디움':'',fl&&fl.id===e.id?'패스티스트 랩':'',e.pos<=10&&e.grid>10?'노포인트 그리드에서 포인트':''].filter(Boolean).join(' · ')||`P${e.pos} 안정적인 레이스`;
+  return{id:e.id,s,why}}).sort((a,b)=>b.s-a.s);
+ let c=sc.slice(0,5);const um=sc.find(x=>S.drivers[x.id].team==='usr');if(um&&!c.includes(um))c[4]=um;
+ const ex=c.map(x=>Math.exp(x.s/3));const tot=ex.reduce((a,b)=>a+b,0);let pct=ex.map(v=>v/tot*100);
+ pct=pct.map(p=>Math.max(3,p));const t2=pct.reduce((a,b)=>a+b,0);pct=pct.map(p=>+(p/t2*100).toFixed(1));
+ return{c:c.map((x,i)=>({id:x.id,why:x.why,pct:pct[i]})),voted:null,done:false,votes:Math.round((40000+rnd()*90000)*(.6+S.fans/120))}}
+function dotdVote(v){const r=S.results[S.results.length-1];const D=r.dotd;if(!D||D.done)return;
+ D.voted=v==='skip'?null:v;if(D.voted){const e=D.c.find(x=>x.id===D.voted);if(e){e.pct=+(e.pct+.6).toFixed(1);const t=D.c.reduce((a,b)=>a+b.pct,0);D.c.forEach(x=>x.pct=+(x.pct/t*100).toFixed(1))}}
+ D.done=true;D.c.sort((a,b)=>b.pct-a.pct);D.win=D.c[0].id;
+ if(S.drivers[D.win].team==='usr'){S.fans=clamp((S.fans||50)+2,0,100);S.mood=clamp((S.mood||70)+1,0,100);D.bonus=true}
+ const d=S.drivers[D.win];addCommit({kind:'dotd',msg:`Driver of the Day: #${d.num} ${d.name} (${D.c[0].pct}%)`,tags:d.team==='usr'?['win']:[],body:D.c.map(x=>`${S.drivers[x.id].code} ${x.pct}%`).join('\n')});
+ save();render()}
+function dotdTally(){const m={};S.results.forEach(r=>{if(r.dotd&&r.dotd.done)m[r.dotd.win]=(m[r.dotd.win]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+function dotdHTML(r){const D=r.dotd;if(!D)return '';const tl=dotdTally();
+ const row=(x,i)=>{const d=S.drivers[x.id],t=teamById(d.team);return `<div class="dc${D.done&&i===0?' win':''}${D.voted===x.id?' mine':''}"><span class="stripe" style="background:${t.color}"></span>
+  <div class="dn"><b>#${d.num} ${esc(d.name)}</b><small class="muted">${esc(t.name)} · ${esc(x.why)}</small>${D.done?`<div class="db"><i style="width:${x.pct}%;background:${t.color}"></i></div>`:''}</div>
+  ${D.done?`<b class="num dp">${x.pct}%</b>`:`<button class="btn" data-act="dotd" data-v="${x.id}">투표</button>`}</div>`};
+ return `<div class="card dotd" style="margin-bottom:16px"><header>DRIVER OF THE DAY<span class="sp"></span><span class="muted" style="font-size:12px;font-weight:400">${D.done?`팬 투표 ${fmtK(D.votes)}표 마감`:'팬 투표 진행 중 · 결과는 투표 후 공개'}</span></header><div class="body">
+  ${D.done?`<div class="dw">🏅 <b>${esc(S.drivers[D.win].name)}</b> 드라이버 오브 더 데이${D.bonus?' · <span class="up">팬 지수 +2</span>':''}${D.voted?`<span class="muted"> · 내 투표: ${esc(S.drivers[D.voted].code)}</span>`:''}</div>`:''}
+  <div class="dl">${(D.done?D.c:D.c).map(row).join('')}</div>
+  ${D.done?'':`<button class="btn" data-act="dotd" data-v="skip" style="margin-top:10px">투표 없이 결과 보기</button>`}
+  ${tl.length?`<div class="dt muted">시즌 DOTD: ${tl.map(([id,n])=>`<span class="${S.drivers[id].team==='usr'?'me':''}">${esc(S.drivers[id].code)} ×${n}</span>`).join(' · ')}</div>`:''}</div></div>`}
 
 /* ============ playback ============ */
 function play(){const R=S.wk&&S.wk.race;if(!R||R.done||R.red)return;R.pause=null;clearTimeout(timer);const el=performance.now()-mapAt;const left=mapW?Math.max(0,mapW.total-el):0;timer=setTimeout(tick,Math.max(SPEED[S.ui.speed]*.4,left));updateRace()}
@@ -1769,7 +1884,7 @@ function resultHTML(){
   <div class="row-flex">${mine.map(e=>`<div><span class="lbl">${S.drivers[e.id].code}</span><div style="font-family:var(--f-disp);font-weight:900;font-size:28px;line-height:1">${e.st==='run'?'P'+e.pos:e.st==='dsq'?'DSQ':'DNF'}</div></div>`).join('')}
   <div><span class="lbl">팀 포인트</span><div style="font-family:var(--f-disp);font-weight:900;font-size:28px;line-height:1">+${tp}</div></div><div><span class="lbl">개발 예산</span><div style="font-family:var(--f-disp);font-weight:900;font-size:28px;line-height:1">+${r.earn}</div></div></div>
   <div class="row-flex"><button class="btn" data-act="tab" data-v="commits">커밋 보기</button><button class="btn" data-act="tab" data-v="pulls">업그레이드</button><button class="btn red big" data-act="next">${S.cur+1<S.cal.length?'다음 그랑프리':'시즌 마무리'}</button></div></div></div>
-  ${raceReactHTML(r)}<div class="card"><header>${esc(tr.n)} 그랑프리 · 최종 결과</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>팀</th><th>그리드</th><th>±</th><th>기록</th><th>타이어</th><th>PTS</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  ${dotdHTML(r)}${raceReactHTML(r)}<div class="card"><header>${esc(tr.n)} 그랑프리 · 최종 결과</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>팀</th><th>그리드</th><th>±</th><th>기록</th><th>타이어</th><th>PTS</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 function releaseHTML(){
  const st=standings();const pos=st.tm.findIndex(x=>x.id==='usr')+1;const ut=userTeam();
@@ -1808,15 +1923,19 @@ function commitHTML(c){
 function viewPulls(m){
  const live=S.wk&&S.wk.phase==='race';
  m.innerHTML=`<div class="budget"><div><span class="lbl">개발 예산</span><b class="num">${S.budget}</b></div><span class="muted" style="font-size:13px">레이스마다 기본 5 + 팀 포인트의 25% (포디움 +2)가 들어옵니다.${live?' 결승 진행 중에는 병합할 수 없습니다.':''}</span></div>
- <div class="card prs"><header>Open<span class="sp"></span>${UPG.filter(u=>lvl(u.id)<u.max).length}</header>
- ${UPG.map(u=>{const lv=lvl(u.id);if(lv>=u.max)return '';return `<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-open" aria-hidden="true">${ICON.pulls}</svg><div style="min-width:0"><div class="t">${esc(u.t)} v${lv+1}</div><small>${esc(u.d)} · 현재 Lv.${lv}/${u.max}</small></div><button class="btn primary" data-act="merge" data-v="${u.id}" ${S.budget<u.cost||live?'disabled':''}>병합 · ${u.cost}</button></div>`}).join('')}</div>
- <div class="card prs" style="margin-top:16px"><header>Merged<span class="sp"></span>${S.merged.length}</header>${S.merged.length?S.merged.slice().reverse().map(x=>`<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-merged" aria-hidden="true">${ICON.pulls}</svg><div><div class="t">#${x.no} ${esc(x.t)} v${x.lv}</div><small>season-${x.year} · R${x.round} 전 병합</small></div><span></span></div>`).join(''):'<div class="body muted">아직 병합한 업그레이드가 없습니다.</div>'}</div>`;
+ ${mergeReportHTML()}${devPanelHTML()}
+ <div class="card prs" style="margin-top:16px"><header>Open<span class="sp"></span>${UPG.filter(u=>lvl(u.id)<u.max).length}</header>
+ ${UPG.map(u=>{const lv=lvl(u.id);if(lv>=u.max)return '';const pv=upgPreview(u.id);return `<div class="pr" data-part="${u.id}"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-open" aria-hidden="true">${ICON.pulls}</svg><div style="min-width:0"><div class="t">${esc(u.t)} v${lv+1} <span class="pill">${esc(UPGX[u.id].where)}</span></div><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv?'nx':''}"></i>`).join('')}</div><small>${esc(pv.fx)}${pv.dp>0?` · 차량 성능 +${pv.dp.toFixed(2)} · 랩당 −${pv.lap.toFixed(3)}초 (레이스 약 −${pv.race.toFixed(1)}초)${pv.r1<pv.r0?` · 차량 순위 P${pv.r0} → P${pv.r1}`:''}`:''}</small></div><button class="btn primary" data-act="merge" data-v="${u.id}" ${S.budget<u.cost||live?'disabled':''}>병합 · ${u.cost}</button></div>`}).join('')}</div>
+ <div class="card prs" style="margin-top:16px"><header>Merged<span class="sp"></span>${S.merged.length}</header>${S.merged.length?S.merged.slice().reverse().map(x=>`<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-merged" aria-hidden="true">${ICON.pulls}</svg><div><div class="t">#${x.no} ${esc(x.t)} v${x.lv}</div><small>season-${x.year} · R${x.round} 전 병합 · ${esc(UPGX[x.id].where)} · ${esc(UPG.find(u=>u.id===x.id).d)}</small></div><span></span></div>`).join(''):'<div class="body muted">아직 병합한 업그레이드가 없습니다.</div>'}</div>`;
 }
 function merge(id){
  const u=UPG.find(x=>x.id===id),ut=userTeam();if(S.budget<u.cost)return;
- S.budget-=u.cost;const lv=lvl(id)+1;
+ const pv=upgPreview(id),st0=devStats();S.budget-=u.cost;const lv=lvl(id)+1;
  if(id==='aero')ut.aero+=2;if(id==='power')ut.power+=2;if(id==='rel')ut.rel+=4;if(id==='crew')ut.crew+=1;if(id==='tyre')ut.tyre+=1;if(id==='energy')ut.energy+=1;
  const no=S.prNo++;S.merged.push({no,id,t:u.t,lv,year:S.year,round:S.cur+1});
+ {const st1=devStats();const k=id;const fm=x=>k==='tyre'?(x?'−'+x*5+'%':'0%'):k==='energy'?(x?'+'+x*20+'%':'0%'):k==='crew'?'Lv.'+x:k==='power'?x.toFixed(1):String(x);
+  S.lastMerge={no,id,t:u.t,lv,b:fm(st0.cur[k]),a:fm(st1.cur[k]),p0:st0.perf,p1:st1.perf,dp:st1.perf-st0.perf,r0:pv.r0,r1:pv.r1,laps:pv.laps,fx:pv.fx,note:pick(DEVNOTE[id]),round:S.cur+1};
+  (S.pending=S.pending||[]).push({id,t:u.t,lv,dp:st1.perf-st0.perf})}
  addCommit({kind:'merge',upg:id,msg:`Merge pull request #${no}: ${u.t} v${lv}`,body:`${u.d}\n예산 −${u.cost} → 남은 예산 ${S.budget}`});
  save();render();
 }
@@ -1858,6 +1977,7 @@ function viewSettings(m){
 function encodeSave(){try{return btoa(unescape(encodeURIComponent(JSON.stringify(S))))}catch(e){return ''}}
 
 /* ============ events ============ */
+document.addEventListener('mouseover',e=>{const p=e.target.closest&&e.target.closest('[data-part]');const car=document.querySelector('.car');if(!car)return;car.querySelectorAll('.part').forEach(g=>g.classList.toggle('hv',!!p&&g.dataset.part===p.dataset.part))});
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,v=b.dataset.v,i=b.dataset.i;
  if(!S){
@@ -1916,6 +2036,7 @@ document.addEventListener('click',e=>{
   case 'next':nextRound();break;
   case 'newseason':newSeason();break;
   case 'merge':merge(v);break;
+  case 'dotd':dotdVote(v);break;
   case 'copy':{const t=$('#exp').value;const done=()=>{$('#copied').textContent='복사했습니다'};try{navigator.clipboard.writeText(t).then(done,()=>{$('#exp').select();$('#copied').textContent='선택했습니다. Ctrl+C로 복사하세요'})}catch(err){$('#exp').select()}break}
   case 'import':{try{const o=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim()))));if(!o||!o.teams)throw 0;pause();S=o;save();go('overview')}catch(err){$('#imperr').textContent='코드를 읽지 못했습니다. 전체를 빠짐없이 붙여 넣었는지 확인하세요.'}break}
   case 'reset':if(!resetArm){resetArm=true;render()}else{resetArm=false;pause();try{localStorage.removeItem(KEY)}catch(err){}S=null;D=defaultDraft();rollProspects(D);render()}break;
