@@ -114,7 +114,7 @@ tr.me td{background:color-mix(in srgb,var(--team) 16%,transparent)}
 .step button{width:28px;height:28px;border:1px solid var(--line-2);background:var(--panel-2);border-radius:4px}
 .pool{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:4px}
 .drivers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.cands{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0 6px}
+.cands{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 6px}
 .cand{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cc,#888);border-radius:4px;padding:10px;display:grid;gap:6px;min-width:0}
 .cand[data-cat="F2"]{--cc:#3aa0ff}.cand[data-cat="F3"]{--cc:#f5a623}.cand[data-cat="리저브"]{--cc:#2ecc71}
 .cand .cn{font-family:var(--f-disp);font-size:15px;line-height:1.15;overflow-wrap:anywhere}
@@ -294,6 +294,7 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 }
 @media (max-width:620px){
   .ctrls,.drivers,.two{grid-template-columns:minmax(0,1fr)}
+  .cands{grid-template-columns:repeat(2,minmax(0,1fr))}
   .files .f{grid-template-columns:22px minmax(0,1fr) auto}
   .files .f .c{display:none}
   .tw{grid-template-columns:28px 14px 4px minmax(0,1fr) 66px 42px 14px;gap:4px}
@@ -398,11 +399,11 @@ function clampN(x,a,b){return Math.max(a,Math.min(b,x))}
 const prospect=id=>PROSPECTS.find(p=>p.id===id);
 function drvStat(x){const p=x.pid&&prospect(x.pid);if(p)return{skill:p.skill,growth:p.growth,cap:p.cap,sigma:p.sigma,cost:p.cost,n:p.cat+' 출신'};const a=ARCH[x.arch];return{...a}}
 function rollProspects(d){const signed=new Set(d.drivers.map(x=>x.pid).filter(Boolean));const prev=new Set(d.cands||[]);
- let pool=PROSPECTS.filter(p=>!signed.has(p.id)&&!prev.has(p.id));if(pool.length<5)pool=PROSPECTS.filter(p=>!signed.has(p.id));
+ let pool=PROSPECTS.filter(p=>!signed.has(p.id)&&!prev.has(p.id));if(pool.length<4)pool=PROSPECTS.filter(p=>!signed.has(p.id));
  pool=pool.slice();for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
  const pick=[];for(const cat of ['F2','F3','리저브']){const p=pool.find(x=>x.cat===cat);if(p)pick.push(p)}
- for(const p of pool){if(pick.length>=5)break;if(!pick.includes(p))pick.push(p)}
- d.cands=pick.slice(0,5).map(p=>p.id);d.rolls=(d.rolls||0)+1}
+ for(const p of pool){if(pick.length>=4)break;if(!pick.includes(p))pick.push(p)}
+ d.cands=pick.slice(0,4).map(p=>p.id);d.rolls=(d.rolls||0)+1}
 const UPG=[
  {id:'aero',t:'공력: 플로어·윙 개선',d:'다운포스 +2 (차량 성능 약 +1.1)',cost:8,max:6},
  {id:'power',t:'파워유닛: 연소·ERS 매핑',d:'출력 +2 (차량 성능 약 +0.9)',cost:8,max:6},
@@ -524,7 +525,7 @@ function setupHTML(){
    <b class="cn">${esc(p.name)}</b><small class="muted">${esc(p.org)}</small>
    <div class="cs num"><span>능력 <b>${p.skill}</b></span><span>상한 <b>${p.cap}</b></span><span>안정 <b>${Math.round((.26-p.sigma)*700)}</b></span></div>
    <div class="cb">${[0,1].map(k=>`<button class="btn" data-act="sign" data-i="${k}" data-v="${p.id}" aria-pressed="${seat===k}">${seat===k?'✓ ':''}${k+1}번 시트</button>`).join('')}</div></div>`}).join('')}</div>
- <small class="muted">새로고침하면 계약하지 않은 후보 5명이 새로 뽑힙니다 (F2·F3·리저브가 최소 한 명씩). 계약한 드라이버는 아래 시트에 들어갑니다.</small></div>
+ <small class="muted">새로고침하면 계약하지 않은 후보 4명이 새로 뽑힙니다 (F2·F3·리저브가 최소 한 명씩). 계약한 드라이버는 아래 시트에 들어갑니다.</small></div>
  <div class="field"><span class="lbl">드라이버 시트 (계약 비용은 위 포인트에서 차감)</span><div class="drivers">${d.drivers.map((x,i)=>{const st=drvStat(x),p=x.pid&&prospect(x.pid);return `<div class="dcard">
    <div class="two"><div><label class="lbl" for="d-name-${i}">이름</label><input id="d-name-${i}" type="text" value="${esc(x.name)}" ${p?'readonly':''}></div>
    <div class="two" style="grid-template-columns:1fr 1fr"><div><label class="lbl" for="d-code-${i}">코드</label><input id="d-code-${i}" type="text" maxlength="3" value="${esc(x.code)}"></div><div><label class="lbl" for="d-num-${i}">번호</label><input id="d-num-${i}" type="number" min="1" max="99" value="${x.num}"></div></div></div>
