@@ -114,6 +114,14 @@ tr.me td{background:color-mix(in srgb,var(--team) 16%,transparent)}
 .step button{width:28px;height:28px;border:1px solid var(--line-2);background:var(--panel-2);border-radius:4px}
 .pool{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:4px}
 .drivers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cands{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:8px 0 6px}
+.cand{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cc,#888);border-radius:4px;padding:10px;display:grid;gap:6px;min-width:0}
+.cand[data-cat="F2"]{--cc:#3aa0ff}.cand[data-cat="F3"]{--cc:#f5a623}.cand[data-cat="리저브"]{--cc:#2ecc71}
+.cand .cn{font-family:var(--f-disp);font-size:15px;line-height:1.15;overflow-wrap:anywhere}
+.cand .cs{display:flex;gap:10px;font-size:12px;color:var(--muted)}.cand .cs b{color:var(--fg)}
+.cand .cb{display:grid;grid-template-columns:1fr 1fr;gap:6px}.cand .cb .btn{padding:6px 4px;font-size:12px;justify-content:center}
+.cand .cb .btn[aria-pressed="true"]{border-color:var(--team);background:color-mix(in srgb,var(--team) 22%,var(--panel))}
+.ctag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line-2)}
 .dcard{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--team);border-radius:4px;padding:12px;display:grid;gap:8px;min-width:0}
 .dcard .two{gap:8px}
 .dcard input,.dcard select{background:var(--bg);border:1px solid var(--line-2);border-radius:4px;padding:6px 8px;color:var(--fg);font:inherit;width:100%;min-width:0}
@@ -361,6 +369,40 @@ const ARCH={
  ace:{n:'에이스 후보',skill:84,growth:.25,cap:93,sigma:.16,cost:4,d:'꾸준히 성장 (상한 93)'},
  rook:{n:'루키',skill:80,growth:.4,cap:91,sigma:.22,cost:0,d:'성장 폭 최대 · 실수 잦음'},
 };
+/* 영입 후보: 2026 F2·F3 참가자와 F1 팀 리저브 (2026년 10월 기준). [이름,코드,구분,소속,능력,상한,선호번호] */
+const PROSPECTS=[
+ ['Nikola Tsolov','TSO','F2','Campos Racing',84,93,19],['Gabriele Mini','MIN','F2','MP Motorsport',83,91,25],
+ ['Rafael Câmara','CAM','F2','Invicta Racing · Ferrari 주니어',83,92,26],['Alex Dunne','DUN','F2','Rodin Motorsport',82,90,28],
+ ['Noel León','LEO','F2','Campos Racing',81,88,29],['Kush Maini','MAI','F2','ART · Alpine 리저브',81,87,33],
+ ['Dino Beganovic','BEG','F2','DAMS · Ferrari 주니어',81,89,34],['Laurens van Hoepen','HOE','F2','Trident',80,88,35],
+ ['Martinius Stenshorne','STE','F2','Rodin Motorsport',80,89,36],['Tasanapol Inthraphuvasak','INT','F2','ART Grand Prix',79,87,37],
+ ['Ritomo Miyata','MIY','F2','Hitech',80,86,38],['Colton Herta','HTA','F2','Hitech · Cadillac 테스트',82,88,39],
+ ['Sebastian Montoya','MON','F2','Prema Racing',79,87,40],['Oliver Goethe','GOE','F2','MP Motorsport',79,86,42],
+ ['Roman Bilinski','BIL','F2','DAMS',78,87,45],
+ ['Freddie Slater','SLA','F3','Trident',79,93,46],['Ugo Ugochukwu','UGO','F3','Campos Racing',78,92,47],
+ ['Tuukka Taponen','TAP','F3','MP · Ferrari 주니어',77,90,48],['Ernesto Rivera','RIV','F3','Campos Racing',76,88,49],
+ ['Théophile Naël','NAE','F3','Campos Racing',76,88,50],['Brando Badoer','BAD','F3','Rodin Motorsport',76,88,51],
+ ['Taito Kato','KAT','F3','ART Grand Prix',76,88,52],['Hiyu Yamakoshi','YMK','F3','Van Amersfoort',76,89,53],
+ ['Noah Strømsted','STM','F3','Trident',76,89,54],['Mattia Colnaghi','CLN','F3','F3',75,89,56],
+ ['Yuki Tsunoda','TSU','리저브','Red Bull · Racing Bulls',86,88,22],['Leonardo Fornaroli','FOR','리저브','McLaren',83,91,57],
+ ["Pato O'Ward",'OWA','리저브','McLaren · IndyCar',84,87,58],['Fred Vesti','VES','리저브','Mercedes',81,86,59],
+ ['Antonio Giovinazzi','GIO','리저브','Ferrari',82,84,99],['Luke Browning','BRW','리저브','Williams',81,88,60],
+ ['Ayumu Iwasa','IWA','리저브','Racing Bulls',82,88,61],['Jak Crawford','CRA','리저브','Aston Martin',81,88,62],
+ ['Stoffel Vandoorne','VAN','리저브','Aston Martin',83,84,2],['Jack Doohan','DOO','리저브','Haas',82,87,7],
+ ['Ryo Hirakawa','HIR','리저브','Haas',83,85,64],['Paul Aron','ARO','리저브','Alpine',82,88,65],
+ ['Zhou Guanyu','ZHO','리저브','Cadillac',84,86,24],
+].map(([name,code,cat,org,skill,cap,num])=>({id:code,name,code,cat,org,skill,cap,num,
+ growth:+Math.max(.06,(cap-skill)/32).toFixed(2),sigma:+clampN(.12+(88-skill)*.01,.12,.24).toFixed(2),
+ cost:Math.round(clampN((skill-79)*.7+(cap-88)*.5,0,8))}));
+function clampN(x,a,b){return Math.max(a,Math.min(b,x))}
+const prospect=id=>PROSPECTS.find(p=>p.id===id);
+function drvStat(x){const p=x.pid&&prospect(x.pid);if(p)return{skill:p.skill,growth:p.growth,cap:p.cap,sigma:p.sigma,cost:p.cost,n:p.cat+' 출신'};const a=ARCH[x.arch];return{...a}}
+function rollProspects(d){const signed=new Set(d.drivers.map(x=>x.pid).filter(Boolean));const prev=new Set(d.cands||[]);
+ let pool=PROSPECTS.filter(p=>!signed.has(p.id)&&!prev.has(p.id));if(pool.length<5)pool=PROSPECTS.filter(p=>!signed.has(p.id));
+ pool=pool.slice();for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+ const pick=[];for(const cat of ['F2','F3','리저브']){const p=pool.find(x=>x.cat===cat);if(p)pick.push(p)}
+ for(const p of pool){if(pick.length>=5)break;if(!pick.includes(p))pick.push(p)}
+ d.cands=pick.slice(0,5).map(p=>p.id);d.rolls=(d.rolls||0)+1}
 const UPG=[
  {id:'aero',t:'공력: 플로어·윙 개선',d:'다운포스 +2 (차량 성능 약 +1.1)',cost:8,max:6},
  {id:'power',t:'파워유닛: 연소·ERS 매핑',d:'출력 +2 (차량 성능 약 +0.9)',cost:8,max:6},
@@ -402,9 +444,9 @@ let S=null, D=null, timer=null;
 function load(){try{const t=localStorage.getItem(KEY);if(t)S=JSON.parse(t)}catch(e){S=null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function defaultDraft(){return{owner:'jaehyung',name:'Hanbit Racing',desc:'서울에서 출발한 신생 팀. 첫 시즌 목표는 포인트 획득.',color:'#2f6fed',pu:'hon',alloc:{aero:7,power:5,rel:2,crew:1},len:12,
- drivers:[{name:'Minjun Kang',code:'KAN',num:21,arch:'ace'},{name:'Leo Hartmann',code:'HAR',num:8,arch:'rook'}]}}
+ drivers:[{name:'Minjun Kang',code:'KAN',num:21,arch:'ace'},{name:'Leo Hartmann',code:'HAR',num:8,arch:'rook'}],cands:[],rolls:0}}
 const POOL=20;
-function spent(d){return d.alloc.aero+d.alloc.power+d.alloc.rel+d.alloc.crew+d.drivers.reduce((s,x)=>s+ARCH[x.arch].cost,0)}
+function spent(d){return d.alloc.aero+d.alloc.power+d.alloc.rel+d.alloc.crew+d.drivers.reduce((s,x)=>s+drvStat(x).cost,0)}
 function draftSpec(d){const pu=PU[d.pu];return{aero:72+d.alloc.aero,power:72+d.alloc.power+pu.power,rel:80+2*d.alloc.rel+pu.rel,crew:d.alloc.crew}}
 const perfOf=t=>t.user?(t.aero*.55+(t.power+(t.puGain||0))*.45):t.perf;
 const teamById=id=>S.teams.find(t=>t.id===id);
@@ -417,7 +459,7 @@ function createTeam(){
   ui:{tab:'overview',speed:1,autoPause:true,gapMode:'leader'}};
  const ut={id:'usr',user:true,name:d.name.trim()||'My Team',slug:slug(d.name),desc:d.desc,color:d.color,pu:d.pu,aero:sp.aero,power:sp.power,rel:sp.rel,crew:sp.crew,tyre:0,energy:0,puGain:0,puGrow:pu.grow,drivers:[]};
  S.teams.push(ut);
- d.drivers.forEach((x,i)=>{const a=ARCH[x.arch];const id='U'+i;S.drivers[id]={id,code:(x.code||codeFrom(x.name)).toUpperCase().slice(0,3),name:x.name.trim()||('Driver '+(i+1)),num:+x.num||(i?2:1),team:'usr',skill:a.skill,growth:a.growth,cap:a.cap,sigma:a.sigma,arch:x.arch};ut.drivers.push(id)});
+ d.drivers.forEach((x,i)=>{const a=drvStat(x);const id='U'+i;S.drivers[id]={id,code:(x.code||codeFrom(x.name)).toUpperCase().slice(0,3),name:x.name.trim()||('Driver '+(i+1)),num:+x.num||(i?2:1),team:'usr',skill:a.skill,growth:a.growth,cap:a.cap,sigma:a.sigma,arch:x.arch,role:a.n,pid:x.pid||null};ut.drivers.push(id)});
  RIVALS.forEach(r=>{const t={id:r.id,name:r.name,color:r.color,perf:r.perf,rel:r.rel,drivers:[]};r.dr.forEach(([c,n,num,sk])=>{const id=r.id+'_'+c;S.drivers[id]={id,code:c,name:n,num,team:r.id,skill:sk,growth:0,cap:sk,sigma:.14+(92-sk)*.004};t.drivers.push(id)});S.teams.push(t)});
  addCommit({kind:'init',msg:'Initial commit: '+ut.name+' 창단',body:`파워유닛 ${pu.n}\n다운포스 ${sp.aero} · 출력 ${sp.power} · 신뢰성 ${sp.rel} · 피트 크루 Lv.${sp.crew}\n드라이버 ${userDrivers().map(x=>'#'+x.num+' '+x.name).join(', ')}\n시즌 ${S.year} · ${S.cal.length}라운드`});
  save();applyTheme();go('overview');
@@ -476,16 +518,24 @@ function setupHTML(){
   ${al('rel','신뢰성',sp.rel,8,'1점당 +2 · 기계 고장 감소')}
   ${al('crew','피트 크루',sp.crew,5,'1점당 정지 −0.12초')}
  </div><div class="pool"><span>남은 포인트</span><b class="num" style="font-size:20px;color:${left<0?'var(--bad)':'var(--fg)'}">${left}</b></div></div>
- <div class="field"><span class="lbl">드라이버 (계약 비용은 위 포인트에서 차감)</span><div class="drivers">${d.drivers.map((x,i)=>`<div class="dcard">
-   <div class="two"><div><label class="lbl" for="d-name-${i}">이름</label><input id="d-name-${i}" type="text" value="${esc(x.name)}"></div>
+ <div class="field"><div class="row-flex" style="justify-content:space-between;align-items:baseline"><span class="lbl">영입 후보 · F2 · F3 · 리저브</span><button class="btn" data-act="reroll" aria-label="후보 새로고침">↻ 후보 새로고침 <span class="muted num">(${d.rolls||0}회)</span></button></div>
+ <div class="cands">${(d.cands||[]).map(prospect).filter(Boolean).map(p=>{const seat=d.drivers.findIndex(x=>x.pid===p.id);return `<div class="cand" data-cat="${p.cat}">
+   <div class="row-flex" style="justify-content:space-between"><span class="ctag">${p.cat}</span><span class="muted num" style="font-size:12px">${p.cost}pt</span></div>
+   <b class="cn">${esc(p.name)}</b><small class="muted">${esc(p.org)}</small>
+   <div class="cs num"><span>능력 <b>${p.skill}</b></span><span>상한 <b>${p.cap}</b></span><span>안정 <b>${Math.round((.26-p.sigma)*700)}</b></span></div>
+   <div class="cb">${[0,1].map(k=>`<button class="btn" data-act="sign" data-i="${k}" data-v="${p.id}" aria-pressed="${seat===k}">${seat===k?'✓ ':''}${k+1}번 시트</button>`).join('')}</div></div>`}).join('')}</div>
+ <small class="muted">새로고침하면 계약하지 않은 후보 5명이 새로 뽑힙니다 (F2·F3·리저브가 최소 한 명씩). 계약한 드라이버는 아래 시트에 들어갑니다.</small></div>
+ <div class="field"><span class="lbl">드라이버 시트 (계약 비용은 위 포인트에서 차감)</span><div class="drivers">${d.drivers.map((x,i)=>{const st=drvStat(x),p=x.pid&&prospect(x.pid);return `<div class="dcard">
+   <div class="two"><div><label class="lbl" for="d-name-${i}">이름</label><input id="d-name-${i}" type="text" value="${esc(x.name)}" ${p?'readonly':''}></div>
    <div class="two" style="grid-template-columns:1fr 1fr"><div><label class="lbl" for="d-code-${i}">코드</label><input id="d-code-${i}" type="text" maxlength="3" value="${esc(x.code)}"></div><div><label class="lbl" for="d-num-${i}">번호</label><input id="d-num-${i}" type="number" min="1" max="99" value="${x.num}"></div></div></div>
-   <div class="opts" style="grid-template-columns:repeat(3,minmax(0,1fr))">${Object.entries(ARCH).map(([k,a])=>`<button class="opt" style="padding:8px" data-act="arch" data-i="${i}" data-v="${k}" aria-pressed="${k===x.arch}"><b style="font-size:13px">${a.n}</b><small>${a.skill} · ${a.cost}pt</small></button>`).join('')}</div>
-   <small class="muted">${ARCH[x.arch].d}</small>
+   ${p?`<div class="row-flex" style="justify-content:space-between"><span><span class="ctag">${p.cat}</span> <small class="muted">${esc(p.org)} · 능력 ${p.skill} → 상한 ${p.cap} · ${p.cost}pt</small></span><button class="btn" data-act="release" data-i="${i}">계약 해지</button></div>`
+   :`<div class="opts" style="grid-template-columns:repeat(3,minmax(0,1fr))">${Object.entries(ARCH).map(([k,a])=>`<button class="opt" style="padding:8px" data-act="arch" data-i="${i}" data-v="${k}" aria-pressed="${k===x.arch}"><b style="font-size:13px">${a.n}</b><small>${a.skill} · ${a.cost}pt</small></button>`).join('')}</div>
+   <small class="muted">직접 만든 드라이버 · ${ARCH[x.arch].d}</small>`}
    ${taken.has(+x.num)?`<span class="warn">#${x.num}은 다른 팀 드라이버가 쓰는 번호입니다.</span>`:''}${d.drivers[0].num==d.drivers[1].num?'<span class="warn">두 드라이버 번호가 같습니다.</span>':''}
- </div>`).join('')}</div></div>
+ </div>`}).join('')}</div></div>
  <div class="field"><span class="lbl">시즌 길이</span><div class="seg">${[6,12,24].map(n=>`<button data-act="len" data-v="${n}" aria-pressed="${d.len===n}">${n}라운드</button>`).join('')}</div></div>
  <div class="preview"><div><span class="lbl">예상 차량 성능</span><b class="num">${perf.toFixed(1)}</b></div><div><span class="lbl">12팀 중 예상</span><b>${rank}위권</b></div><div><span class="lbl">신뢰성</span><b class="num">${sp.rel}</b></div><div><span class="lbl">시작 개발 예산</span><b class="num">10</b></div></div>
- <div style="margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn primary big" data-act="create" ${left<0||d.drivers[0].num==d.drivers[1].num?'disabled':''}>팀 저장소 만들기</button>${left<0?'<span class="warn">포인트를 '+(-left)+'점 초과했습니다. 배분을 줄이거나 드라이버 등급을 낮춰 주세요.</span>':''}</div>
+ <div style="margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn primary big" data-act="create" ${left<0||d.drivers[0].num==d.drivers[1].num?'disabled':''}>팀 저장소 만들기</button>${left<0?'<span class="warn">포인트를 '+(-left)+'점 초과했습니다. 배분을 줄이거나 계약 비용이 낮은 드라이버를 골라 주세요.</span>':''}</div>
  <p class="muted" style="font-size:12px;margin-top:14px">진행 상황은 이 브라우저에 저장됩니다. 설정 탭에서 세이브 코드를 복사해 다른 기기로 옮길 수 있습니다.</p></div>`;
 }
 
@@ -519,7 +569,7 @@ function viewOverview(m){
   <aside class="side">
    <div><h3>About</h3><p class="muted" style="margin:0 0 10px">${esc(ut.desc)}</p><dl class="kv">
     <dt>차량 성능</dt><dd class="num">${perfOf(ut).toFixed(1)}</dd><dt>다운포스</dt><dd class="num">${ut.aero}</dd><dt>출력</dt><dd class="num">${(ut.power+(ut.puGain||0)).toFixed(1)}</dd><dt>신뢰성</dt><dd class="num">${ut.rel}</dd><dt>피트 크루</dt><dd class="num">Lv.${ut.crew}</dd><dt>개발 예산</dt><dd class="num">${S.budget}</dd></dl></div>
-   <div><h3>Contributors <span class="cnt pill" style="padding:0 7px">${dr.length}</span></h3><div class="contrib">${dr.map(x=>{const s=st.drv.find(y=>y.id===x.id);const p=st.drv.findIndex(y=>y.id===x.id)+1;return `<div class="person"><span class="ini">${x.num}</span><div><b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${ARCH[x.arch].n} · 능력 ${x.skill.toFixed(1)} · P${p} · ${s.pts}점</div></div></div>`}).join('')}</div></div>
+   <div><h3>Contributors <span class="cnt pill" style="padding:0 7px">${dr.length}</span></h3><div class="contrib">${dr.map(x=>{const s=st.drv.find(y=>y.id===x.id);const p=st.drv.findIndex(y=>y.id===x.id)+1;return `<div class="person"><span class="ini">${x.num}</span><div><b>${esc(x.name)}</b><div class="muted" style="font-size:12px">${esc(x.role||(ARCH[x.arch]?ARCH[x.arch].n:''))} · 능력 ${x.skill.toFixed(1)} · P${p} · ${s.pts}점</div></div></div>`}).join('')}</div></div>
    <div><h3>Releases <span class="pill" style="padding:0 7px">${S.seasons.length}</span></h3>${S.seasons.length?S.seasons.slice().reverse().map(s=>`<div style="font-size:13px"><b>v${s.year}.0</b> <span class="muted">· 컨스트럭터 P${s.pos} · ${s.pts}점</span></div>`).join(''):'<p class="muted" style="margin:0;font-size:13px">시즌을 마치면 릴리스가 생성됩니다.</p>'}</div>
   </aside></div>`;
 }
@@ -993,6 +1043,11 @@ document.addEventListener('click',e=>{
   else if(a==='alloc'){const k=b.dataset.k,mx={aero:12,power:12,rel:8,crew:5}[k];D.alloc[k]=clamp(D.alloc[k]+(+b.dataset.d),0,mx);render()}
   else if(a==='pu'){D.pu=v;render()}
   else if(a==='arch'){D.drivers[+i].arch=v;render()}
+  else if(a==='reroll'){rollProspects(D);render()}
+  else if(a==='sign'){const k=+i,p=prospect(v);if(!p)return;const other=D.drivers[1-k];if(other.pid===p.id){other.pid=null;other.name='Driver '+(2-k);other.code='DRV'}
+   const taken=new Set(RIVALS.flatMap(r=>r.dr.map(x=>x[2])));taken.add(+D.drivers[1-k].num);let n=p.num;while(taken.has(n))n=n%99+1;
+   D.drivers[k]={name:p.name,code:p.code,num:n,arch:D.drivers[k].arch||'rook',pid:p.id};render()}
+  else if(a==='release'){const k=+i;D.drivers[k]={name:'',code:'',num:D.drivers[k].num,arch:'rook'};render()}
   else if(a==='len'){D.len=+v;render()}
   else if(a==='create')createTeam();
   return;
@@ -1024,7 +1079,7 @@ document.addEventListener('click',e=>{
   case 'merge':merge(v);break;
   case 'copy':{const t=$('#exp').value;const done=()=>{$('#copied').textContent='복사했습니다'};try{navigator.clipboard.writeText(t).then(done,()=>{$('#exp').select();$('#copied').textContent='선택했습니다. Ctrl+C로 복사하세요'})}catch(err){$('#exp').select()}break}
   case 'import':{try{const o=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim()))));if(!o||!o.teams)throw 0;pause();S=o;save();go('overview')}catch(err){$('#imperr').textContent='코드를 읽지 못했습니다. 전체를 빠짐없이 붙여 넣었는지 확인하세요.'}break}
-  case 'reset':if(!resetArm){resetArm=true;render()}else{resetArm=false;pause();try{localStorage.removeItem(KEY)}catch(err){}S=null;D=defaultDraft();render()}break;
+  case 'reset':if(!resetArm){resetArm=true;render()}else{resetArm=false;pause();try{localStorage.removeItem(KEY)}catch(err){}S=null;D=defaultDraft();rollProspects(D);render()}break;
  }
 });
 document.addEventListener('change',e=>{
@@ -1049,7 +1104,7 @@ window.addEventListener('resize',()=>{if($('#lapchart'))sizeChart()});
 /* ============ boot ============ */
 load();
 if(S&&S.wk&&S.wk.race&&!S.wk.race.done&&S.ui)S.wk.race.pause=S.wk.race.pause||null;
-if(!S)D=defaultDraft();
+if(!S){D=defaultDraft();rollProspects(D)}
 else{const h=(location.hash||'').slice(1);if(TABS.some(t=>t[0]===h))S.ui.tab=h}
 render();
 </script>
