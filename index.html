@@ -601,6 +601,8 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 .slogo b{font-family:var(--f-disp);font-weight:900;font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .slogo.big{padding:5px 12px}.slogo.big svg{width:18px;height:18px}.slogo.big b{font-size:15px}
 .budget>div{display:grid;gap:2px}
+.ctrclose{border-color:var(--warn)}.ctrclose.ok{border-color:var(--good)}
+.cl-r{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
 .spnote{font-size:12px;color:var(--muted);margin:14px 0 0}
 .gfoot{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dim);line-height:1.6}
 .spstrip{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
@@ -1499,40 +1501,60 @@ function summerHTML(){
   <div class="card"><header>패독 동향 · 가상 시즌 루머</header><div class="body"><ul class="news">${sm.news.map(n=>`<li><span class="tag">${esc(n.t)}</span> ${esc(n.x)}</li>`).join('')}</ul></div></div></div>`;
 }
 
-const CTR_NOTE=`<div class="muted" style="font-size:12px">재계약은 시즌 중 언제든 계약 탭에서 할 수 있고, 여름 휴식기에 꼭 정할 필요는 없습니다. 거절당하면 같은 라운드에 조건을 올려 한 번 더 제안하거나, 다음 라운드 이후 다시 협상할 수 있습니다. 시즌이 끝날 때까지 재계약하지 않아도 드라이버는 자동으로 1년 연장되어 남습니다. 결별은 후임 영입이 확정될 때만 적용되며, 언제든 취소할 수 있습니다 (영입 비용은 환불).</div>`;
+const CTR_NOTE=`<div class="muted" style="font-size:12px">재계약은 시즌 중 언제든 할 수 있습니다. 거절당하면 같은 라운드에 조건을 올려 한 번 더 제안하거나, 다음 라운드 이후 다시 협상할 수 있습니다. 결별은 후임 영입이 확정될 때만 적용되며 언제든 취소할 수 있습니다 (영입 비용은 환불). <b style="color:var(--fg)">시즌이 끝나면 '계약 마무리'에서 두 시트를 모두 확정해야 다음 시즌을 시작할 수 있습니다.</b> 자동으로 연장되는 계약은 없습니다.</div>`;
+const seasonOver=()=>S.cur>=S.cal.length&&!S.wk;
+function validUntil(d){return (d.until||S.year)>S.year}
+function seatState(d,sm){const D=sm.deals[d.id];const rep=sm.sign.find(x=>x.slot===d.id);
+ if(D.state==='yes1'||D.state==='yes2')return{ok:true,t:`${D.years}년 재계약 · ${(d.until||S.year)+D.years}년 말까지`};
+ if(D.state==='leave')return rep?{ok:true,t:`결별 → 후임 ${rep.name}`}:{ok:false,t:'결별 예정인데 후임이 없음 · 이적 시장에서 영입하거나 결별 취소'};
+ if(validUntil(d))return{ok:true,t:`기존 계약 유효 · ${d.until}년 말까지`};
+ return{ok:false,t:D.state==='no'?'재계약 거절됨 · 다시 협상하거나 결별 후 후임 영입':'계약 만료 예정 · 재계약 또는 결별 결정 필요'}}
+function lineupReady(sm){return userDrivers().every(d=>seatState(d,sm).ok)}
+function closingHTML(){const sm=mkSummer();const ready=lineupReady(sm);
+ if(sm.closed)return `<div class="card ctrclose ok"><header>계약 마무리 · ${S.year+1} 라인업 확정 완료</header><div class="body plan">${userDrivers().map(d=>`<div class="cl-r"><b>#${d.num} ${esc(d.name)}</b><span class="okc">${esc(seatState(d,sm).t)}</span></div>`).join('')}</div></div>`;
+ return `<div class="card ctrclose"><header>계약 마무리 · ${S.year+1} 시즌 라인업<span class="sp"></span>${ready?'<span class="okc">확정 가능</span>':'<span class="badc">결정 필요</span>'}</header><div class="body plan">
+  ${userDrivers().map(d=>{const t=seatState(d,sm);return `<div class="cl-r"><b>#${d.num} ${esc(d.name)}</b><span class="${t.ok?'okc':'badc'}">${t.ok?'✓':'!'} ${esc(t.t)}</span></div>`}).join('')}
+  <div class="row-flex"><button class="btn primary" data-act="ctrclose" ${ready?'':'disabled'}>계약 마무리 · 라인업 확정</button>${ready||S.ui.tab==='contracts'?'':'<button class="btn" data-act="tab" data-v="contracts">계약 탭에서 결정하기</button>'}<small class="muted">확정하면 이번 겨울 계약은 더 바꿀 수 없습니다.</small></div></div></div>`}
 function contractCard(d,sm,st){const D=sm.deals[d.id];const s=st.drv.find(x=>x.id===d.id)||{pts:0};const p=st.drv.findIndex(x=>x.id===d.id)+1;
  const retry=D.state==='no'&&S.cur>(D.noRound??-1);const rep=sm.sign.find(x=>x.slot===d.id);
- const stTxt={yes1:'1년 재계약 완료',yes2:'2년 재계약 완료',leave:rep?'시즌 후 결별 · 후임 확정':'시즌 후 결별 예정 · 후임 미정 (확정 전까지 잔류)',no:retry?'지난 제안 거절 · 다시 협상 가능':'제안 거절됨 · 다음 라운드 이후 재협상 가능'}[D.state]||'협상 전 · 급하지 않음';
+ const over=seasonOver(),valid=validUntil(d),lock=sm.closed;
+ const stTxt=lock?'계약 마무리 완료 · '+seatState(d,sm).t:{yes1:'1년 재계약 완료',yes2:'2년 재계약 완료',leave:rep?'시즌 후 결별 · 후임 확정':'시즌 후 결별 예정 · 후임 미정 (시즌 말까지 영입 필요)',no:over?'재계약 거절됨 · 최종 협상 가능':retry?'지난 제안 거절 · 다시 협상 가능':'제안 거절됨 · 다음 라운드 이후 재협상 가능'}[D.state]||(valid?`기존 계약 유효 · ${d.until}년 말까지`:over?'계약 만료 · 결정 필요':'협상 전 · 시즌 말까지 결정');
  const col=D.state==='no'?'var(--bad)':D.state==='leave'?'var(--warn)':D.state?'var(--good)':'var(--muted)';
- const offers=!D.state||retry?`<button class="btn primary" data-act="renew" data-i="${d.id}" data-v="1" ${S.budget<D.ask?'disabled':''}>1년 재계약 · 예산 ${D.ask} · 수락 ${Math.round(D.c1*100)}%</button>
+ const finalAsk=D.ask+3;
+ const final=!lock&&over&&D.state==='no'&&D.tries>=2?(S.budget>=finalAsk?`<button class="btn primary" data-act="renewfinal" data-i="${d.id}">최종 조건 수용 · 1년 · 예산 ${finalAsk} · 확정</button>`:`<button class="btn primary" data-act="renewfinal" data-i="${d.id}">예산 부족 · 최소 조건 1년 연장 (팀 사기 −5)</button>`):'';
+ const offers=!lock&&(!D.state||retry||(over&&D.state==='no'&&D.tries<2&&!D.up))?`<button class="btn primary" data-act="renew" data-i="${d.id}" data-v="1" ${S.budget<D.ask?'disabled':''}>1년 재계약 · 예산 ${D.ask} · 수락 ${Math.round(D.c1*100)}%</button>
    <button class="btn" data-act="renew" data-i="${d.id}" data-v="2" ${S.budget<D.ask+1?'disabled':''}>2년 재계약 · 예산 ${D.ask+1} · 수락 ${Math.round(D.c2*100)}%</button>`:'';
- const raise=D.state==='no'&&!retry&&D.tries<2?`<button class="btn" data-act="renew" data-i="${d.id}" data-v="1" data-up="1" ${S.budget<D.ask+2?'disabled':''}>조건 올려 재제안 · 예산 ${D.ask+2} · 수락 ${Math.round(Math.min(.95,D.c1+.25)*100)}%</button>`:'';
- const leave=!D.state||D.state==='no'?`<button class="btn" data-act="leave" data-i="${d.id}">시즌 후 결별 검토</button>`:'';
- const undo=D.state==='leave'?`<button class="btn" data-act="stayc" data-i="${d.id}">결별 취소${rep?` (후임 ${esc(rep.name)} 영입 취소, 예산 +${rep.cost} 환불)`:''}</button>`:'';
+ const raise=!lock&&D.state==='no'&&!retry&&!over&&D.tries<2?`<button class="btn" data-act="renew" data-i="${d.id}" data-v="1" data-up="1" ${S.budget<D.ask+2?'disabled':''}>조건 올려 재제안 · 예산 ${D.ask+2} · 수락 ${Math.round(Math.min(.95,D.c1+.25)*100)}%</button>`:'';
+ const leave=!lock&&(!D.state||D.state==='no')?`<button class="btn" data-act="leave" data-i="${d.id}">시즌 후 결별 검토</button>`:'';
+ const undo=!lock&&D.state==='leave'?`<button class="btn" data-act="stayc" data-i="${d.id}">결별 취소${rep?` (후임 ${esc(rep.name)} 영입 취소, 예산 +${rep.cost} 환불)`:''}</button>`:'';
  return `<div class="pc"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:16px">#${d.num} ${esc(d.name)}</b><span class="pill">${PNAME[personaOf(d)]}</span></div>
   <div class="muted" style="font-size:12px">드라이버 P${p} · ${s.pts}점 · 능력 ${d.skill.toFixed(1)} · 계약 ${(d.until||S.year)}년 말 만료</div>
   <div><b style="color:${col}">${stTxt}</b></div>
-  ${offers||raise||leave||undo?`<div class="row-flex">${offers}${raise}${leave}${undo}</div>`:''}</div>`}
+  ${offers||raise||final||leave||undo?`<div class="row-flex">${offers}${raise}${final}${leave}${undo}</div>`:''}</div>`}
 function viewContracts(m){const sm=mkSummer();const st=standings();const free=freeSlots(sm);
  const mrow=(x,i)=>`<div class="pr"><span class="lbl" style="min-width:52px">${x.kind==='riv'?'F1':'유망주'}</span><div style="min-width:0"><div class="t">${esc(x.name)} <span class="muted" style="font-weight:400">${esc(x.from)}</span></div><small>능력 ${x.skill.toFixed?x.skill.toFixed(1):x.skill}${x.cap?' · 상한 '+x.cap:''}${x.failed?' · 협상 결렬':''}${x.done?' · 내년 합류 합의':''}</small></div>
-  ${x.done||x.failed?'<span></span>':`<button class="btn ${free.length?'primary':''}" data-act="signc" data-v="${i}" ${!free.length||S.budget<x.cost?'disabled':''}>영입 제안 · ${x.cost} · ${Math.round(x.chance*100)}%</button>`}</div>`;
+  ${x.done||x.failed||sm.closed?'<span></span>':`<button class="btn ${free.length?'primary':''}" data-act="signc" data-v="${i}" ${!free.length||S.budget<x.cost?'disabled':''}>영입 제안 · ${x.cost} · ${Math.round(x.chance*100)}%</button>`}</div>`;
  m.innerHTML=`<div class="budget"><div><span class="lbl">개발 예산</span><b class="num">${S.budget}</b></div><span class="muted" style="font-size:13px">${S.year} 시즌 · R${Math.min(S.cur+1,S.cal.length)} · 계약 변경은 다음 시즌부터 적용됩니다.</span></div>
- <div class="qgrid wide"><div class="card"><header>드라이버 계약</header><div class="body plan">${userDrivers().map(d=>contractCard(d,sm,st)).join('')}${CTR_NOTE}</div></div>
+ ${seasonOver()?`<div style="margin-bottom:16px">${closingHTML()}</div>`:''}<div class="qgrid wide"><div class="card"><header>드라이버 계약</header><div class="body plan">${userDrivers().map(d=>contractCard(d,sm,st)).join('')}${CTR_NOTE}</div></div>
  <div class="card prs"><header>이적 시장${free.length?` · 빈 시트 ${free.length}`:' · 결별을 검토하면 영입 제안 가능'}</header>${sm.market.map(mrow).join('')}</div></div>`}
 function summerAct(a,b){const sm=mkSummer();const i=b.dataset.i;
- if(a==='renew'){const D=sm.deals[i];const yrs=+b.dataset.v;const up=!!b.dataset.up;if(D.state==='no'&&!up&&S.cur>(D.noRound??-1))D.tries=0;const cost=D.ask+(up?2:yrs-1);const ch=up?Math.min(.95,D.c1+.25):yrs===2?D.c2:D.c1;if(S.budget<cost)return;D.tries++;
+ if(sm.closed)return;
+ if(a==='renewfinal'){const D=sm.deals[i];const c=D.ask+3;if(S.budget>=c)S.budget-=c;else{moodOf();S.mood=clamp(S.mood-5,0,100)}D.state='yes1';D.years=1;addCommit({kind:'init',msg:`Contract: ${S.drivers[i].name} 1년 재계약 (최종 협상)`,body:'시즌 말 최종 조건 수용'});save();render();return}
+ if(a==='renew'){const D=sm.deals[i];const yrs=+b.dataset.v;const up=!!b.dataset.up;if(D.state==='no'&&!up&&S.cur>(D.noRound??-1)&&!seasonOver())D.tries=0;const cost=D.ask+(up?2:yrs-1);const ch=up?Math.min(.95,D.c1+.25):yrs===2?D.c2:D.c1;if(S.budget<cost)return;D.tries++;
   if(rnd()<ch){S.budget-=cost;D.state=yrs===2?'yes2':'yes1';D.years=yrs;addCommit({kind:'init',msg:`Contract: ${S.drivers[i].name} ${yrs}년 재계약`,body:`예산 −${cost}`})}else{D.state='no';D.noRound=S.cur}}
  else if(a==='leave'){sm.deals[i].state='leave'}
  else if(a==='stayc'){const D=sm.deals[i];const k=sm.sign.findIndex(x=>x.slot===i);if(k>=0){const sg=sm.sign[k];S.budget+=sg.cost;const m=sm.market.find(x=>(x.id&&x.id===sg.id)||(x.pid&&x.pid===sg.pid));if(m)m.done=false;sm.sign.splice(k,1)}D.state=null;D.tries=0}
  else if(a==='signc'){const m=sm.market[+b.dataset.v];const fs=freeSlots(sm);if(!fs.length||S.budget<m.cost)return;
   if(rnd()<m.chance){S.budget-=m.cost;m.done=true;sm.sign.push({slot:fs[0].id,...m})}else m.failed=true}
- else if(a==='summerdone'){sm.done=true;const parts=userDrivers().map(d=>{const D=sm.deals[d.id];const s=sm.sign.find(x=>x.slot===d.id);return `${d.code}: ${D.state==='leave'?'결별 → '+(s?s.name:'?'):D.years+'년 재계약'}`});
+ else if(a==='ctrclose'){if(!lineupReady(sm))return;sm.closed=true;
+  addCommit({kind:'init',msg:`Contract: ${S.year+1} 시즌 라인업 확정`,body:userDrivers().map(d=>`#${d.num} ${d.name} — ${seatState(d,sm).t}`).join('\n')})}
+ else if(a==='summerdone'){sm.done=true;const parts=userDrivers().map(d=>{const D=sm.deals[d.id];const s=sm.sign.find(x=>x.slot===d.id);return `${d.code}: ${D.state==='leave'?'결별 → '+(s?s.name:'후임 미정'):D.years?D.years+'년 재계약':validUntil(d)?'계약 유효':'미결정'}`});
   addCommit({kind:'init',msg:`Summer break: 계약 정리 (${parts.join(', ')})`,body:sm.news.map(n=>`[${n.t}] ${n.x}`).join('\n')})}
  save();render()}
 function applySummer(){const sm=S.summer;if(!sm||sm.applied||sm.year!==S.year-1)return [];sm.applied=true;const ut=userTeam();const log=[];
  Object.entries(sm.deals).forEach(([id,D])=>{const d=S.drivers[id];if(D.state==='yes1'||D.state==='yes2')d.until=(d.until||sm.year)+D.years;
   else if(D.state==='leave'&&!sm.sign.some(x=>x.slot===id))log.push(`${d.name} 후임 미확보 · 팀 잔류 (1년 연장)`);
-  if(d.team==='usr'&&(d.until||sm.year)<S.year&&!(D.state==='leave'&&sm.sign.some(x=>x.slot===id))){d.until=S.year;if(D.state!=='leave')log.push(`${d.name} 계약 1년 자동 연장`)}});
+  if(d.team==='usr'&&(d.until||sm.year)<S.year&&!(D.state==='leave'&&sm.sign.some(x=>x.slot===id))){d.until=S.year;log.push(`${d.name} 계약 유지 (예전 세이브 보정)`)}});
  sm.sign.forEach(s=>{const old=S.drivers[s.slot];const k=ut.drivers.indexOf(s.slot);if(k<0)return;
   if(s.kind==='riv'){const r=S.drivers[s.id];const rt=teamById(r.team);rt.drivers[rt.drivers.indexOf(r.id)]=old.id;old.team=rt.id;r.team='usr';r.until=S.year+1;r.role='이적 영입';ut.drivers[k]=r.id;log.push(`${r.name} 합류 · ${old.name} → ${rt.name}`)}
   else{const p=prospect(s.pid);let id='U'+Object.keys(S.drivers).length;while(S.drivers[id])id+='x';const taken=new Set(S.teams.flatMap(t=>t.drivers.map(x=>S.drivers[x].num)));let n=p.num;while(taken.has(n))n=n%99+1;
@@ -2509,9 +2531,11 @@ function releaseHTML(){
   <h2 style="font-size:30px;font-weight:900">${S.year} 시즌 종료 · 컨스트럭터 P${pos}</h2>
   <div class="row-flex">${userDrivers().map(d=>{const s=st.drv.find(x=>x.id===d.id);return `<div class="pc" style="background:var(--panel-2);padding:10px 14px;border-radius:4px"><span class="lbl">${d.code}</span><div style="font-family:var(--f-disp);font-weight:900;font-size:22px">P${st.drv.indexOf(s)+1} · ${s.pts}점</div><small class="muted">우승 ${s.wins} · 포디움 ${s.pods}</small></div>`}).join('')}</div>
   <div class="tscroll"><table><tbody>${st.tm.map((x,i)=>{const t=teamById(x.id);return `<tr class="${t.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${t.color}"></span>${esc(t.name)}</td><td class="num" style="text-align:right">${x.pts}</td></tr>`}).join('')}</tbody></table></div>
-  <div class="row-flex"><button class="btn red big" data-act="newseason">${S.year+1} 시즌 시작</button><span class="muted" style="font-size:13px">팀·차량·드라이버 성장은 이어지고 포인트는 초기화됩니다.</span></div></div></div>`;
+  ${closingHTML()}
+  <div class="row-flex"><button class="btn red big" data-act="newseason" ${mkSummer().closed?'':'disabled'}>${S.year+1} 시즌 시작</button>${mkSummer().closed?'':'<span class="warn">계약 마무리를 먼저 해야 합니다.</span>'}<span class="muted" style="font-size:13px">팀·차량·드라이버 성장은 이어지고 포인트는 초기화됩니다.</span></div></div></div>`;
 }
 function newSeason(){
+ {const sm=mkSummer();if(!sm.closed){go('contracts');return}}
  const st=standings();const pos=st.tm.findIndex(x=>x.id==='usr')+1;
  S.seasons.push({year:S.year,pos,pts:st.tm.find(x=>x.id==='usr').pts});
  S.year++;S.cur=0;S.results=[];S.wk=null;
@@ -2646,7 +2670,7 @@ document.addEventListener('click',e=>{
   case 'stratpick':{const o=stratOptions(i).find(x=>x.seq.join('')===v);if(o)setStrat(i,o);save();render();break}
   case 'stopadj':{const p=S.wk.strat[i];const k=+b.dataset.k,L=TR(S.wk.track).laps;const lo=k?p.laps[k-1]+1:1,hi=k<p.laps.length-1?p.laps[k+1]-1:L-1;p.laps[k]=clamp(p.laps[k]+(+b.dataset.d),lo,hi);save();render();break}
   case 'planadj':{const P=car.plan;if(!P||P.idx>=P.laps.length)break;const lo=Math.max(R.lap+1,P.idx?1:1),hi=P.idx<P.laps.length-1?P.laps[P.idx+1]-1:R.laps-1;P.laps[P.idx]=clamp(P.laps[P.idx]+(+b.dataset.d),lo,hi);if(car.planPend){car.pitReq=null;car.planPend=false}updateRace();break}
-  case 'renew':case 'leave':case 'stayc':case 'signc':case 'summerdone':summerAct(a,b);break;
+  case 'renew':case 'renewfinal':case 'leave':case 'stayc':case 'signc':case 'summerdone':case 'ctrclose':summerAct(a,b);break;
   case 'runq':runQuali();break;
   case 'qopt':S.wk.qx.opt[i][b.dataset.k]=v;save();render();break;
   case 'qstart':qStart();break;
