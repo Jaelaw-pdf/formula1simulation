@@ -1120,14 +1120,14 @@ function viewOverview(m){
   ${kpi('스폰서 만족도',spAvg==null?'—':spAvg,spAvg==null?'계약한 스폰서 없음':`${P.active.length}개 브랜드 평균 · ${satWord(spAvg)}`,spAvg==null?'':meter(spAvg,satCol(spAvg)))}
  </section>
  <div class="pdk-g"><div class="pdk-m">
-  <section class="card"><header>부품 개발 현황<span class="sp"></span><span class="pdh">차량 성능 <b class="num">${perf.toFixed(1)}</b>${perf>perf0?` <span class="up num">+${(perf-perf0).toFixed(1)}</span>`:''} · 그리드 내 차량 순위 <b class="num">P${crank}</b></span></header>
-   <div class="body pdev"><div class="carw">${carSVG(hl)}<small class="muted" style="text-align:center">진할수록 개발이 많이 된 부품<br>카드에 마우스를 올리면 위치 표시</small></div>
-   <div class="parts">${UPG.map(part).join('')}</div></div>
-   ${(S.pending||[]).length?`<div class="pend"><span class="lbl">장착 대기</span>${S.pending.map(p=>`<span class="pill">${esc(p.t)} v${p.lv}</span>`).join('')}<span class="muted" style="font-size:12px">다음 결승부터 차에 들어갑니다</span></div>`:''}</section>
   <div class="pdk-2">
    <section class="card"><header>컨스트럭터 순위</header><div class="sl">${tmRows}</div></section>
    <section class="card"><header>드라이버 순위</header><div class="sl">${dRows}</div></section>
   </div>
+  <section class="card"><header>부품 개발 현황<span class="sp"></span><span class="pdh">차량 성능 <b class="num">${perf.toFixed(1)}</b>${perf>perf0?` <span class="up num">+${(perf-perf0).toFixed(1)}</span>`:''} · 그리드 내 차량 순위 <b class="num">P${crank}</b></span></header>
+   <div class="body pdev"><div class="carw">${carSVG(hl)}<small class="muted" style="text-align:center">진할수록 개발이 많이 된 부품<br>카드에 마우스를 올리면 위치 표시</small></div>
+   <div class="parts">${UPG.map(part).join('')}</div></div>
+   ${(S.pending||[]).length?`<div class="pend"><span class="lbl">장착 대기</span>${S.pending.map(p=>`<span class="pill">${esc(p.t)} v${p.lv}</span>`).join('')}<span class="muted" style="font-size:12px">다음 결승부터 차에 들어갑니다</span></div>`:''}</section>
   <section class="card"><header>최근 그랑프리<span class="sp"></span><button class="btn sm" data-act="tab" data-v="commits">전체 기록</button></header>${recent?`<div class="frl">${recent}</div>`:'<div class="body muted">첫 그랑프리를 마치면 결과가 여기에 쌓입니다.</div>'}
    <div class="body"><div class="lbl" style="margin-bottom:8px">라운드별 포인트</div><div class="heat">${dr.map(x=>heatRow(x.id,x.code)).join('')}</div></div></section>
  </div>
