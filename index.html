@@ -596,11 +596,13 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 .ai[data-k=race]{color:var(--f1red)}.ai[data-k=merge]{color:#a371f7}.ai[data-k=sponsor]{color:#ffd400}
 
 /* sponsor */
-.slogo{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 6px;border-radius:3px;background:#000;border:1px solid color-mix(in srgb,var(--sc) 45%,var(--line));border-left:3px solid var(--sc);max-width:100%;min-width:0}
+.slogo{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:3px;background:#000;border:1px solid color-mix(in srgb,var(--sc) 45%,var(--line));border-left:3px solid var(--sc);max-width:100%;min-width:0}
 .slogo svg{width:14px;height:14px;color:var(--sc);flex:none}
 .slogo b{font-family:var(--f-disp);font-weight:900;font-size:12px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slogo.big{padding:5px 12px 5px 8px}.slogo.big svg{width:18px;height:18px}.slogo.big b{font-size:15px}
+.slogo.big{padding:5px 12px}.slogo.big svg{width:18px;height:18px}.slogo.big b{font-size:15px}
 .budget>div{display:grid;gap:2px}
+.spnote{font-size:12px;color:var(--muted);margin:14px 0 0}
+.gfoot{margin-top:32px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dim);line-height:1.6}
 .spstrip{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .raceh .spstrip{margin-top:8px}
 .spg{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
@@ -872,7 +874,7 @@ function render(){
  app.innerHTML=`<div class="repo"><div class="repo-h"><h1>${esc(S.owner)} / <b>${esc(ut.slug)}</b></h1>
   <span class="pill">season-${S.year}</span>${(()=>{const t=S.spon.active.find(a=>a.slot==='title');return t?`<span class="pill" style="border-color:${spById(t.sid).c};color:#fff">presented by ${esc(spById(t.sid).n)}</span>`:''})()}<span class="pill">${S.cur<S.cal.length?'R'+(S.cur+1)+' / '+S.cal.length:'시즌 종료'}</span>${live?'<span class="pill live">LIVE</span>':''}</div>
   <nav class="tabs" aria-label="저장소 탭">${TABS.map(([k,l])=>`<button data-act="tab" data-v="${k}" ${S.ui.tab===k?'aria-current="page"':''}><svg viewBox="0 0 16 16" aria-hidden="true">${ICON[k]}</svg>${l}${cnt[k]!=null?`<span class="cnt">${cnt[k]}</span>`:''}${k==='race'&&live?'<span class="cnt" style="background:var(--f1red)">LIVE</span>':''}</button>`).join('')}</nav></div>
-  <main id="main"></main>`;
+  <main id="main"></main><footer class="gfoot">PitWall 디렉터 · ${SPON_NOTE} 실제 팀·드라이버 이름 역시 시뮬레이션 설정용입니다.</footer>`;
  const m=$('#main');
  ({overview:viewOverview,race:viewRace,commits:viewCommits,pulls:viewPulls,sponsors:viewSponsors,contracts:viewContracts,insights:viewInsights,settings:viewSettings}[S.ui.tab]||viewOverview)(m);
 }
@@ -928,31 +930,24 @@ const TIER={title:{n:'타이틀 스폰서',slots:['title'],pay:2,bonus:4,done:6,
  minor:{n:'오피셜 서플라이어',slots:['fw','halo'],pay:1,bonus:1,done:2,k:.6,len:[3,6]}};
 const RANK_PTS=[38,28,20,14,9.5,6.5,4.5,3,2,1.2,.7,.4];
 const SPON=[
- {id:'solvane',n:'Solvane Energy',cat:'에너지',c:'#ffb000',g:'bolt',tier:'title',fans:62,pos:5,goal:'pts'},
- {id:'halden',n:'Halden Bank',cat:'금융',c:'#3d8bff',g:'hex',tier:'title',fans:70,pos:4,goal:'pos'},
- {id:'nexora',n:'Nexora Mobile',cat:'통신',c:'#ff2d8a',g:'wave',tier:'title',fans:56,pos:6,goal:'pod',perk:{fans:1}},
- {id:'arcturus',n:'Arcturus Air',cat:'항공',c:'#00c2b2',g:'star',tier:'title',fans:66,pos:4,goal:'pts'},
- {id:'brisa',n:'Brisa Water',cat:'음료',c:'#35c9ff',g:'drop',tier:'major',fans:45,pos:8,goal:'fin',perk:{mood:1}},
- {id:'kestrel',n:'Kestrel Logistics',cat:'물류',c:'#ff7a1a',g:'arrow',tier:'major',fans:40,pos:9,goal:'fin'},
- {id:'lumio',n:'Lumio Cloud',cat:'클라우드',c:'#8f7bff',g:'ring',tier:'major',fans:48,pos:7,goal:'pts'},
- {id:'ondo',n:'Ondo Streaming',cat:'미디어',c:'#ff4060',g:'play',tier:'major',fans:52,pos:7,goal:'pod',perk:{fans:1}},
- {id:'gridline',n:'Gridline Watches',cat:'시계',c:'#d9b44a',g:'ring',tier:'major',fans:50,pos:8,goal:'pts'},
- {id:'pitbite',n:'Pitbite Snacks',cat:'식품',c:'#ff9f1c',g:'star',tier:'minor',fans:0,pos:12,goal:'pts',perk:{mood:1}},
- {id:'fennec',n:'Fennec VPN',cat:'보안',c:'#3ddc84',g:'hex',tier:'minor',fans:0,pos:12,goal:'fin'},
- {id:'rally',n:'Rally Coffee',cat:'커피',c:'#e0a46a',g:'drop',tier:'minor',fans:30,pos:12,goal:'pts',perk:{mood:1}},
- {id:'quill',n:'Quill Notes',cat:'앱',c:'#ffd60a',g:'play',tier:'minor',fans:35,pos:11,goal:'pts',perk:{fans:1}},
- {id:'mono',n:'Mono Ink',cat:'디자인',c:'#f2f2f2',g:'bolt',tier:'minor',fans:20,pos:12,goal:'fin'},
+ {id:'solvane',n:'Shell',cat:'에너지',c:'#ffd500',g:'bolt',tier:'title',fans:62,pos:5,goal:'pts'},
+ {id:'halden',n:'Shinhan Bank',cat:'금융',c:'#3d8bff',g:'hex',tier:'title',fans:70,pos:4,goal:'pos'},
+ {id:'nexora',n:'SK Telecom',cat:'통신',c:'#ff4b3e',g:'wave',tier:'title',fans:56,pos:6,goal:'pod',perk:{fans:1}},
+ {id:'arcturus',n:'Korean Air',cat:'항공',c:'#4fb3e8',g:'star',tier:'title',fans:66,pos:4,goal:'pts'},
+ {id:'brisa',n:'Pocari Sweat',cat:'음료',c:'#35a8ff',g:'drop',tier:'major',fans:45,pos:8,goal:'fin',perk:{mood:1}},
+ {id:'kestrel',n:'DHL',cat:'물류',c:'#ffcc00',g:'arrow',tier:'major',fans:40,pos:9,goal:'fin'},
+ {id:'lumio',n:'AWS',cat:'클라우드',c:'#ff9900',g:'ring',tier:'major',fans:48,pos:7,goal:'pts'},
+ {id:'ondo',n:'Netflix',cat:'미디어',c:'#e50914',g:'play',tier:'major',fans:52,pos:7,goal:'pod',perk:{fans:1}},
+ {id:'gridline',n:'TAG Heuer',cat:'시계',c:'#d9b44a',g:'ring',tier:'major',fans:50,pos:8,goal:'pts'},
+ {id:'pitbite',n:'Nongshim',cat:'식품',c:'#ff3b30',g:'star',tier:'minor',fans:0,pos:12,goal:'pts',perk:{mood:1}},
+ {id:'fennec',n:'AhnLab',cat:'보안',c:'#2f7bff',g:'hex',tier:'minor',fans:0,pos:12,goal:'fin'},
+ {id:'rally',n:'Lavazza',cat:'커피',c:'#5b8def',g:'drop',tier:'minor',fans:30,pos:12,goal:'pts',perk:{mood:1}},
+ {id:'quill',n:'Notion',cat:'앱',c:'#f2f2f2',g:'play',tier:'minor',fans:35,pos:11,goal:'pts',perk:{fans:1}},
+ {id:'mono',n:'Logitech',cat:'주변기기',c:'#00b8fc',g:'bolt',tier:'minor',fans:20,pos:12,goal:'fin'},
 ];
-const GLYPH={bolt:'<path d="M9.5 1 3 9h4.2L6 15l7-8.4H8.6z" fill="currentColor"/>',
- hex:'<path d="M8 1.2 14 4.6v6.8L8 14.8 2 11.4V4.6z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="8" r="2" fill="currentColor"/>',
- wave:'<path d="M1 6.5c2.3-3 4.3-3 6.6 0s4.4 3 6.9 0 M1 11c2.3-3 4.3-3 6.6 0s4.4 3 6.9 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
- star:'<path d="m8 1 2.1 4.6 5 .5-3.8 3.3 1.1 4.9L8 11.8l-4.4 2.5 1.1-4.9L.9 6.1l5-.5z" fill="currentColor"/>',
- ring:'<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="8" cy="8" r="1.7" fill="currentColor"/>',
- drop:'<path d="M8 1C5.2 5.4 3.2 8 3.2 10.4a4.8 4.8 0 0 0 9.6 0C12.8 8 10.8 5.4 8 1z" fill="currentColor"/>',
- arrow:'<path d="M1.5 8h11 M8 3l5.5 5L8 13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
- play:'<path d="M4 2.2 14 8 4 13.8z" fill="currentColor"/>'};
+const SPON_NOTE='비영리 팬 시뮬레이션입니다. 스폰서 브랜드명은 게임 속 설정을 위해 이름만 사용했으며, 실제 기업의 후원·제휴·승인과 무관합니다.';
 const spById=id=>SPON.find(s=>s.id===id);
-function sponLogo(sp,cls=''){return `<span class="slogo ${cls}" style="--sc:${sp.c}"><svg viewBox="0 0 16 16" aria-hidden="true">${GLYPH[sp.g]}</svg><b>${esc(sp.n)}</b></span>`}
+function sponLogo(sp,cls=''){return `<span class="slogo ${cls}" style="--sc:${sp.c}"><b>${esc(sp.n)}</b></span>`}
 function curPos(){if(!S.results.length)return gridRank(devStats().perf);const st=standings();return st.tm.findIndex(x=>x.id==='usr')+1}
 function expPts(){const base=RANK_PTS[clamp(gridRank(devStats().perf),1,12)-1];const rs=S.results.slice(-3);if(rs.length){const v=rs.reduce((s,r)=>s+r.cls.filter(e=>S.drivers[e.id].team==='usr').reduce((a,e)=>a+e.pts,0),0)/rs.length;
   return Math.max(.4,(v*2+base)/3)}
@@ -1061,7 +1056,8 @@ function viewSponsors(m){const P=sponOf();moodOf();const used=slotUsed();const l
    <div class="card"><header>계약 중 <span class="sp"></span>${P.active.length}</header><div class="body spl">${P.active.length?P.active.slice().sort((a,b)=>SLOT_ORDER.indexOf(a.slot)-SLOT_ORDER.indexOf(b.slot)).map(actCard).join(''):'<p class="muted" style="margin:0">아직 계약한 스폰서가 없습니다. 위 제안에서 계약하면 차량과 패독에 로고가 올라갑니다.</p>'}</div></div>
   </div></div>
  <div class="ins" style="margin-top:16px"><div class="card"><header>관심을 보이는 브랜드</header><div class="body spl">${locked.length?locked.map(sp=>`<div class="spl-r">${sponLogo(sp)}<small class="muted">${TIER[sp.tier].n} · 팬 지수 ${sp.fans} 이상 또는 컨스트럭터 P${sp.pos} 이내 <span class="num">(현재 ${S.fans} · P${curPos()})</span></small></div>`).join(''):'<p class="muted" style="margin:0">조건을 갖춘 브랜드는 모두 제안 목록에 올라와 있습니다.</p>'}</div></div>
-  <div class="card"><header>계약 기록</header><div class="body spl">${P.hist.length?P.hist.slice(0,10).map(h=>`<div class="spl-r">${sponLogo(spById(h.sid))}<small class="muted">${esc(h.from)} → ${esc(h.to)} · <b style="color:${h.res==='목표 달성'?'var(--good)':h.res==='목표 미달'?'var(--warn)':'var(--bad)'}">${h.res}</b></small></div>`).join(''):'<p class="muted" style="margin:0">끝난 계약이 아직 없습니다.</p>'}</div></div></div>`}
+  <div class="card"><header>계약 기록</header><div class="body spl">${P.hist.length?P.hist.slice(0,10).map(h=>`<div class="spl-r">${sponLogo(spById(h.sid))}<small class="muted">${esc(h.from)} → ${esc(h.to)} · <b style="color:${h.res==='목표 달성'?'var(--good)':h.res==='목표 미달'?'var(--warn)':'var(--bad)'}">${h.res}</b></small></div>`).join(''):'<p class="muted" style="margin:0">끝난 계약이 아직 없습니다.</p>'}</div></div></div>
+ <p class="spnote">※ ${SPON_NOTE}</p>`}
 
 /* ============ 패독 ============ */
 const PART_IC={aero:'<path d="M1 11.5h14 M3 11.5 5.2 5h5.6l2.2 6.5 M6 8h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
