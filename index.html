@@ -923,7 +923,17 @@ function setupHTML(){
 }
 
 /* ============ overview ============ */
-function lvl(id){return S.merged.filter(m=>m.id===id).length}
+function lvl(id){return S.merged.filter(m=>m.id===id&&m.year===S.year).length}
+/* 시즌이 바뀌면 신차가 나온다: 업그레이드 레벨은 Lv.0으로 초기화되고,
+   지난 시즌 개발분 중 일부(공력·출력 50%, 신뢰성 50%, 피트 크루 절반)만 신차 기본 사양으로 승계된다.
+   타이어 열 관리·배터리 회생 소프트웨어는 신차에 맞춰 처음부터 다시 개발한다. */
+const CARRY={aero:{inc:2,keep:.5,n:'다운포스'},power:{inc:2,keep:.5,n:'출력'},rel:{inc:4,keep:.5,n:'신뢰성'},crew:{inc:1,keep:.5,n:'피트 크루'},tyre:{inc:1,keep:0,n:'타이어 마모'},energy:{inc:1,keep:0,n:'배터리 회복'}};
+function seasonCarry(year){const ut=userTeam();if(!ut||(S.devCarried||0)>=year)return null;
+ const out=[];Object.keys(CARRY).forEach(id=>{const c=CARRY[id];const L=S.merged.filter(m=>m.id===id&&m.year===year).length;if(!L)return;
+  const gain=c.inc*L,keep=Math.floor(gain*c.keep),lose=gain-keep;ut[id]=(ut[id]||0)-lose;out.push({id,L,gain,keep})});
+ S.devCarried=year;return out}
+function carryLines(out){const f=(id,x)=>id==='tyre'?x*5+'%':id==='energy'?x*20+'%':id==='crew'?x+'단계':String(x);
+ return out.map(o=>`${CARRY[o.id].n}: 개발 +${f(o.id,o.gain)} 중 +${f(o.id,o.keep)} 신차 승계 (Lv.${o.L} → Lv.0)`)}
 /* ============ 스폰서 ============ */
 const SLOTS={title:{n:'타이틀 · 엔진 커버'},side:{n:'사이드포드'},rw:{n:'리어 윙'},fw:{n:'프론트 윙'},halo:{n:'헤일로 · 미러'}};
 const SLOT_ORDER=['title','side','rw','fw','halo'];
@@ -1084,12 +1094,12 @@ function viewOverview(m){
  const valTxt={aero:String(cur.aero),power:cur.power.toFixed(1),rel:String(cur.rel),crew:'Lv.'+cur.crew,tyre:(cur.tyre?'−'+cur.tyre*5:0)+'%',energy:'+'+cur.energy*20+'%'};
  const statN={aero:'다운포스',power:'출력',rel:'신뢰성',crew:'정지 시간',tyre:'타이어 마모',energy:'배터리 회복'};
  const part=u=>{const lv=lvl(u.id),done=lv>=u.max,isP=pend.has(u.id),can=!done&&S.budget>=u.cost;
-  const lm=S.merged.filter(x=>x.id===u.id).slice(-1)[0];
+  const lm=S.merged.filter(x=>x.id===u.id&&x.year===S.year).slice(-1)[0];
   const stt=done?['done','개발 완료']:isP?['pend','장착 대기 · 다음 결승']:can?['can','개발 가능 · '+u.cost]:['lock','예산 '+u.cost+' 필요'];
   return `<button class="part-c ${hl===u.id?'hl':''}" data-act="tab" data-v="pulls" data-part="${u.id}"><span class="pi">${'<svg viewBox="0 0 16 16" aria-hidden="true">'+PART_IC[u.id]+'</svg>'}</span>
    <span class="pn"><b>${esc(UPGX[u.id].where.split(' (')[0])}</b><small class="muted">${statN[u.id]} <span class="num" style="color:var(--fg)">${valTxt[u.id]}</span></small></span>
    <span class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv&&!done?'nx':''}"></i>`).join('')}</span>
-   <span class="pst" data-s="${stt[0]}">${stt[1]}</span><small class="muted pl">${lm?`Lv.${lv}/${u.max} · ${lm.year} R${lm.round} 병합`:`Lv.0/${u.max} · 기본 사양`}</small></button>`};
+   <span class="pst" data-s="${stt[0]}">${stt[1]}</span><small class="muted pl">${lm?`Lv.${lv}/${u.max} · ${lm.year} R${lm.round} 병합`:`Lv.0/${u.max} · ${S.year} 신차 기본 사양`}</small></button>`};
  const heatRow=(id,label)=>`<div class="r" style="--n:${S.cal.length}"><span class="lbl">${label}</span>${S.cal.map((tid,i)=>{const r=S.results[i];if(!r)return `<i data-l="x" title="R${i+1} ${TR(tid).n}"></i>`;const e=r.cls.find(e=>e.id===id);const p=e?e.pts:0;const l=p===0?0:p<5?1:p<11?2:p<19?3:4;return `<i data-l="${l}" title="R${i+1} ${TR(tid).n}: ${e.st==='run'?'P'+e.pos:e.st==='dsq'?'실격':'리타이어'} · ${p}점"></i>`}).join('')}</div>`;
  const lead=Math.max(1,st.tm[0].pts);
  const tmRows=st.tm.map((x,i)=>{const t=teamById(x.id);return `<div class="sr ${t.user?'me':''}"><span class="num p">${i+1}</span><span class="stripe" style="background:${t.color}"></span><span class="tn">${esc(t.user?teamDisp():t.name)}</span><span class="sbar"><i style="width:${x.pts/lead*100}%;background:${t.color}"></i></span><span class="num pt">${x.pts}</span></div>`}).join('');
@@ -2172,7 +2182,7 @@ function devPanelHTML(){const ut=userTeam(),{cur,base,perf,perf0}=devStats();con
   <div class="carw">${carSVG(hl)}<div class="legend"><span><i style="background:#23272e"></i>기본 사양</span><span><i style="background:var(--team);opacity:.45"></i>개발 초기</span><span><i style="background:var(--team)"></i>개발 완료</span></div></div>
   <div class="specs">
    <div class="kpis"><div><span class="lbl">차량 성능</span><b class="num">${perf.toFixed(1)}</b>${perf>perf0?`<span class="up num">+${(perf-perf0).toFixed(1)}</span>`:''}</div>
-    <div><span class="lbl">그리드 내 차량 순위</span><b class="num">P${r1}</b>${r1<r0?`<span class="up num">▲${r0-r1}</span>`:''}<small class="muted">창단 사양 P${r0}</small></div>
+    <div><span class="lbl">그리드 내 차량 순위</span><b class="num">P${r1}</b>${r1<r0?`<span class="up num">▲${r0-r1}</span>`:''}<small class="muted">${S.seasons.length?S.year+' 신차 사양':'창단 사양'} P${r0}</small></div>
     <div><span class="lbl">누적 랩타임 이득</span><b class="num">${gain>0?'−'+gain.toFixed(3):'0.000'}초</b><small class="muted">랩당</small></div></div>
    ${bar('다운포스 · 윙·플로어',cur.aero,base.aero,65,100,x=>Math.round(x),'aero')}
    ${bar('출력 · 파워유닛',cur.power,base.power,65,100,x=>x.toFixed(1),'power')}
@@ -2532,16 +2542,18 @@ function releaseHTML(){
   <div class="row-flex">${userDrivers().map(d=>{const s=st.drv.find(x=>x.id===d.id);return `<div class="pc" style="background:var(--panel-2);padding:10px 14px;border-radius:4px"><span class="lbl">${d.code}</span><div style="font-family:var(--f-disp);font-weight:900;font-size:22px">P${st.drv.indexOf(s)+1} · ${s.pts}점</div><small class="muted">우승 ${s.wins} · 포디움 ${s.pods}</small></div>`}).join('')}</div>
   <div class="tscroll"><table><tbody>${st.tm.map((x,i)=>{const t=teamById(x.id);return `<tr class="${t.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${t.color}"></span>${esc(t.name)}</td><td class="num" style="text-align:right">${x.pts}</td></tr>`}).join('')}</tbody></table></div>
   ${closingHTML()}
-  <div class="row-flex"><button class="btn red big" data-act="newseason" ${mkSummer().closed?'':'disabled'}>${S.year+1} 시즌 시작</button>${mkSummer().closed?'':'<span class="warn">계약 마무리를 먼저 해야 합니다.</span>'}<span class="muted" style="font-size:13px">팀·차량·드라이버 성장은 이어지고 포인트는 초기화됩니다.</span></div></div></div>`;
+  <div class="row-flex"><button class="btn red big" data-act="newseason" ${mkSummer().closed?'':'disabled'}>${S.year+1} 시즌 시작</button>${mkSummer().closed?'':'<span class="warn">계약 마무리를 먼저 해야 합니다.</span>'}<span class="muted" style="font-size:13px">포인트와 업그레이드 레벨은 초기화되고, 차량 개발분 일부가 신차에 승계됩니다.</span></div></div></div>`;
 }
 function newSeason(){
  {const sm=mkSummer();if(!sm.closed){go('contracts');return}}
  const st=standings();const pos=st.tm.findIndex(x=>x.id==='usr')+1;
  S.seasons.push({year:S.year,pos,pts:st.tm.find(x=>x.id==='usr').pts});
- S.year++;S.cur=0;S.results=[];S.wk=null;
+ const carry=seasonCarry(S.year);
+ S.year++;S.cur=0;S.results=[];S.wk=null;S.pending=[];S.lastMerge=null;
  S.teams.forEach(t=>{if(!t.user)t.perf=clamp(t.perf-1.5+gauss()*1.2,72,95)});
  const moves=applySummer();
  addCommit({kind:'init',msg:`season-${S.year} 브랜치 시작`,body:`v${S.year-1}.0 릴리스 · 컨스트럭터 P${pos}`+(moves.length?'\n'+moves.join('\n'):'')});
+ if(carry)addCommit({kind:'init',msg:`${S.year} 신차 공개 · 업그레이드 초기화`,body:['지난 시즌 업그레이드 레벨이 모두 Lv.0으로 돌아갑니다.'].concat(carryLines(carry),carry.length?[]:['지난 시즌 병합한 업그레이드 없음']).join('\n')});
  save();go('overview');
 }
 
@@ -2592,7 +2604,7 @@ function viewPulls(m){
  ${mergeReportHTML()}${devPanelHTML()}
  <div class="card prs" style="margin-top:16px"><header>Open<span class="sp"></span>${UPG.filter(u=>lvl(u.id)<u.max).length}</header>
  ${UPG.map(u=>{const lv=lvl(u.id);if(lv>=u.max)return '';const pv=upgPreview(u.id);return `<div class="pr" data-part="${u.id}"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-open" aria-hidden="true">${ICON.pulls}</svg><div style="min-width:0"><div class="t">${esc(u.t)} v${lv+1} <span class="pill">${esc(UPGX[u.id].where)}</span></div><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv?'nx':''}"></i>`).join('')}</div><small>${esc(pv.fx)}${pv.dp>0?` · 차량 성능 +${pv.dp.toFixed(2)} · 랩당 −${pv.lap.toFixed(3)}초 (레이스 약 −${pv.race.toFixed(1)}초)${pv.r1<pv.r0?` · 차량 순위 P${pv.r0} → P${pv.r1}`:''}`:''}</small></div><button class="btn primary" data-act="merge" data-v="${u.id}" ${S.budget<u.cost||live?'disabled':''}>병합 · ${u.cost}</button></div>`}).join('')}</div>
- <div class="card prs" style="margin-top:16px"><header>Merged<span class="sp"></span>${S.merged.length}</header>${S.merged.length?S.merged.slice().reverse().map(x=>`<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-merged" aria-hidden="true">${ICON.pulls}</svg><div><div class="t">#${x.no} ${esc(x.t)} v${x.lv}</div><small>season-${x.year} · R${x.round} 전 병합 · ${esc(UPGX[x.id].where)} · ${esc(UPG.find(u=>u.id===x.id).d)}</small></div><span></span></div>`).join(''):'<div class="body muted">아직 병합한 업그레이드가 없습니다.</div>'}</div>`;
+ <div class="card prs" style="margin-top:16px"><header>Merged · season-${S.year}<span class="sp"></span>${S.merged.filter(x=>x.year===S.year).length}</header>${S.merged.some(x=>x.year===S.year)?S.merged.filter(x=>x.year===S.year).reverse().map(x=>`<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-merged" aria-hidden="true">${ICON.pulls}</svg><div><div class="t">#${x.no} ${esc(x.t)} v${x.lv}</div><small>season-${x.year} · R${x.round} 전 병합 · ${esc(UPGX[x.id].where)} · ${esc(UPG.find(u=>u.id===x.id).d)}</small></div><span></span></div>`).join(''):`<div class="body muted">${S.year} 신차에 아직 병합한 업그레이드가 없습니다.${S.seasons.length?' 지난 시즌 업그레이드는 신차 기본 사양에 일부 승계됐고, 레벨은 Lv.0부터 다시 시작합니다.':''}</div>`}</div>`;
 }
 function merge(id){
  const u=UPG.find(x=>x.id===id),ut=userTeam();if(S.budget<u.cost)return;
@@ -2744,6 +2756,10 @@ window.addEventListener('resize',()=>{if($('#lapchart'))sizeChart()});
 /* ============ boot ============ */
 load();
 if(S&&S.wk&&S.wk.race&&!S.wk.race.done&&S.ui)S.wk.race.pause=S.wk.race.pause||null;
+if(S&&S.teams&&S.merged&&S.devCarried===undefined){
+ const yrs=[...new Set(S.merged.map(m=>m.year).filter(y=>y<S.year))].sort((a,b)=>a-b);S.devCarried=0;
+ yrs.forEach(y=>{const c=seasonCarry(y);if(c&&c.length)addCommit({kind:'init',msg:`${y+1} 신차 공개 · 업그레이드 초기화`,body:['지난 시즌 업그레이드 레벨이 모두 Lv.0으로 돌아갑니다.'].concat(carryLines(c)).join('\n')})});
+ S.devCarried=S.year-1;S.pending=(S.pending||[]).filter(p=>S.merged.some(m=>m.id===p.id&&m.year===S.year));save()}
 if(!S){D=defaultDraft();rollProspects(D)}
 else{const h=(location.hash||'').slice(1);if(TABS.some(t=>t[0]===h))S.ui.tab=h}
 render();
