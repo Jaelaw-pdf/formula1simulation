@@ -850,13 +850,63 @@ const perfOf=t=>t.user?effP(t.aero*.55+(t.power+(t.puGain||0))*.45):t.perf;
 function trackMod(t,tid){const tr=TR(tid),ty=TTYPE[tid]||'bal';
  if(t.user){const d=(t.power+(t.puGain||0))-t.aero;return clamp(ty==='pw'?d*.12:ty==='df'?-d*.12:0,-1.2,1.2)}
  const T=TRAIT[t.id]||{pw:0,df:0,st:0};return 1.2*((ty==='bal'?0:T[ty])+(tr.st?T.st:0))}
-function fpBonus(t,ses){return 0}
+const SPRINT=['chn','mia','can','gbr','ned','sgp'];
+const SPTS=[8,7,6,5,4,3,2,1];
+const FPSET={df:{n:'하이 다운포스',d:'코너 그립↑ · 직선 속도↓'},bal:{n:'균형',d:'어느 서킷에서도 무난하지만 최적은 아님'},pw:{n:'로우 드래그',d:'직선 속도↑ · 코너 그립↓'}};
+const FPPROG={setup:{n:'셋업 최적화',d:'예선·결승 페이스 소폭 향상'},quali:{n:'예선 시뮬레이션',d:'원랩 페이스 향상 · 결승 영향 없음'},long:{n:'롱런 · 타이어 데이터',d:'결승 타이어 마모 −6% · 라이벌 롱런 페이스를 정확히 파악'},parts:{n:'신규 파츠 상관성 테스트',d:'장착 대기 부품의 상관성 문제 예방'}};
+function setupFit(st,ty){if(st==='bal')return ty==='bal'?.25:.1;if(ty==='bal')return 0;return st===ty?.35:-.35}
+function fpBonus(t,ses){const f=S.wk&&S.wk.fp;if(!f||!f.done)return 0;let b=setupFit(f.setup,TTYPE[S.wk.track]||'bal')+(f.corr||0);
+ if(f.prog==='setup')b+=.25;else if(f.prog==='quali'&&ses==='q')b+=.35;else if(f.prog==='long'&&ses==='r')b+=.1;return b}
 function wkPerf(t,ses){const wk=S.wk;let p=perfOf(t);if(!wk)return p;return p+trackMod(t,wk.track)+((wk.form||{})[t.id]||0)+(t.user?fpBonus(t,ses):0)}
 /* 라이벌의 타이어·에너지·피트 기술 (보통 이상: 상위 팀일수록 성숙) */
 function rivTech(t){if(!DF().par)return{crew:2,tm:1,batR:1};const p=t.perf;return{crew:2+clamp(Math.round((p-84)/4),0,3),tm:1-.05*clamp(Math.round((p-85)/3.5),0,3),batR:1+.2*clamp(Math.round((p-87)/4),0,2)}}
 function weekPreviewHTML(tr){const ut=userTeam();const ord=S.teams.map(t=>({t,p:perfOf(t)+trackMod(t,tr.id)})).sort((a,b)=>b.p-a.p);const um=trackMod(ut,tr.id);
  const nw=rnewsFor(S.year,S.cur+1);
  return `<div class="muted" style="font-size:13px;margin-top:6px">강세 예상: ${ord.slice(0,3).map(x=>esc(x.t.user?teamDisp():x.t.name)).join(' · ')} · 우리 차 궁합 <b style="color:${um>.05?'var(--good)':um<-.05?'var(--bad)':'var(--fg)'}">${um>=0?'+':''}${um.toFixed(1)}</b> · 그리드 내 예상 P${ord.findIndex(x=>x.t.user)+1}</div>${nw.length?`<div class="muted" style="font-size:13px">업그레이드 투입: ${nw.map(n=>esc(teamById(n.t).name)+' '+esc(n.part)).join(' · ')}</div>`:''}`}
+function fpRun(){const wk=S.wk,tr=TR(wk.track),f=wk.fp;const pend=(S.pending||[]).length;const ty=TTYPE[tr.id]||'bal';
+ f.corr=pend&&f.prog!=='parts'&&rnd()<.3?-.3:0;f.done=true;
+ const ids=S.teams.flatMap(t=>t.drivers);
+ f.one=ids.map(id=>{const d=S.drivers[id],t=teamById(d.team);const sand=t.user?0:Math.abs(gauss())*.35;return[id,+(tr.base-1.1+(100-wkPerf(t,'q'))*.06+(100-d.skill)*.035+gauss()*.22+sand).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
+ const acc=f.prog==='long'?.08:.3;
+ f.lr=S.teams.map(t=>[t.id,+(tr.base+1.2+(100-wkPerf(t,'r'))*.06+gauss()*acc).toFixed(3)]).sort((a,b)=>a[1]-b[1]);
+ const fit=setupFit(f.setup,ty);const N=[];
+ N.push(`${FPSET[f.setup].n} 셋업 · ${TTN[ty]} 궁합 ${fit>=.25?'아주 좋음':fit>0?'무난':fit===0?'보통':'나쁨 — 직선/코너 밸런스가 안 맞습니다'}`);
+ if(f.prog==='setup')N.push('셋업 작업 완료 · 예선·결승 페이스 향상');if(f.prog==='quali')N.push('예선 시뮬레이션 완료 · 원랩 페이스 향상');
+ if(f.prog==='long')N.push('롱런 데이터 확보 · 결승 타이어 마모 −6% · 롱런 순위 신뢰도 높음');
+ if(f.prog==='parts')N.push(`신규 파츠 ${pend}개 상관성 확인 완료`);if(f.corr)N.push('신규 파츠 상관성 문제 발견 · 이번 주말 성능 −0.3');
+ f.notes=N;save();render()}
+function fpHTML(){const wk=S.wk,f=wk.fp,tr=TR(wk.track),ty=TTYPE[tr.id]||'bal';const pend=(S.pending||[]).length;
+ const ttl=wk.sprint?'FP1 · 스프린트 주말 유일한 연습 세션':'프리 프랙티스 · FP1–FP3';
+ if(!f.done)return `<div class="card"><header>${ttl}</header><div class="body plan">
+  <div class="muted" style="font-size:13px">${TTN[ty]}${tr.st?' · 스트리트':''} · ${ty==='pw'?'긴 직선이 많아 드래그가 중요합니다':ty==='df'?'중저속 코너가 많아 다운포스가 중요합니다':'직선과 코너가 고르게 섞여 있습니다'}${wk.sprint?' · 이 세션 뒤 곧바로 스프린트 예선입니다':''}</div>
+  <div style="display:grid;gap:6px"><span class="lbl">셋업 방향</span><div class="seg">${Object.entries(FPSET).map(([k,x])=>`<button data-act="fpset" data-v="${k}" aria-pressed="${f.setup===k}">${x.n}</button>`).join('')}</div><small class="muted">${esc(FPSET[f.setup].d)}</small></div>
+  <div style="display:grid;gap:6px"><span class="lbl">세션 프로그램</span><div class="qchoice" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${Object.entries(FPPROG).map(([k,x])=>`<button data-act="fpprog" data-v="${k}" aria-pressed="${f.prog===k}" ${k==='parts'&&!pend?'disabled':''}><b>${x.n}</b><span>${esc(k==='parts'&&!pend?'장착 대기 부품 없음':x.d)}</span></button>`).join('')}</div>
+  ${pend?`<small class="warn">장착 대기 부품 ${pend}개 · 상관성 테스트를 하지 않으면 30% 확률로 이번 주말 성능 손실</small>`:''}</div>
+  <div class="row-flex"><button class="btn red big" data-act="fprun">연습 주행 시작</button><button class="btn" data-act="fpskip">기본값으로 건너뛰기</button></div></div></div>`;
+ const row=(id,t,i,b)=>{const d=S.drivers[id],tm=teamById(d.team);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(tm.name)}</span></td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-b).toFixed(3):''}</td></tr>`};
+ const b0=f.one[0][1],l0=f.lr[0][1];
+ return `<div class="qgrid wide"><div class="card"><header>${ttl} · 원랩 기록</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>베스트</th><th>차이</th></tr></thead><tbody>${f.one.slice(0,12).map(([id,t],i)=>row(id,t,i,b0)).join('')}${f.one.slice(12).map(([id,t],i)=>teamById(S.drivers[id].team).user?row(id,t,i+12,b0):'').join('')}</tbody></table></div></div>
+  <div style="display:grid;gap:16px;min-width:0"><div class="card"><header>롱런 페이스 · 팀별 평균${f.prog==='long'?' · 신뢰도 높음':' · 추정치'}</header><div class="tscroll"><table><tbody>${f.lr.map(([id,t],i)=>{const tm=teamById(id);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span>${esc(tm.user?teamDisp():tm.name)}</td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-l0).toFixed(3):''}</td></tr>`}).join('')}</tbody></table></div></div>
+  <div class="card"><header>엔지니어 디브리핑</header><div class="body plan"><ul class="news">${f.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><button class="btn red big" data-act="fpdone">${wk.sprint?'스프린트 예선으로':'예선으로'}</button></div></div></div></div>`}
+function sqRun(){const wk=S.wk;const r=qualiSim(false);wk.sgrid=r.grid;wk.sq=r.q;wk.sTyre=wk.sTyre||{};userDrivers().forEach(d=>{wk.sTyre[d.id]=wk.sTyre[d.id]||'M'});save();render()}
+function sqHTML(){const wk=S.wk,tr=TR(wk.track);const L=Math.max(10,Math.round(tr.laps/3));
+ if(!wk.sgrid)return `<div class="card"><header>스프린트 예선 · SQ1–SQ3</header><div class="body plan"><div class="muted" style="font-size:13px">스프린트 그리드를 정하는 짧은 예선입니다. 본 예선 런 계획(안정·표준·한계 공격)이 그대로 적용됩니다. 스프린트는 ${L}랩 · 의무 피트 스톱 없음 · 상위 8명 8–1점.</div><div class="row-flex"><button class="btn red big" data-act="sqrun">스프린트 예선 진행</button></div></div></div>`;
+ const best=id=>{const q=wk.sq[id];return q.q3||q.q2||q.q1};const b0=best(wk.sgrid[0]);
+ return `<div class="qgrid wide"><div class="card"><header>스프린트 그리드</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>기록</th><th></th></tr></thead><tbody>${wk.sgrid.map((id,i)=>{const d=S.drivers[id],t=teamById(d.team);return `<tr class="${t.user?'me':''} ${i===9?'cut':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${t.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(d.name)}</span></td><td class="num">${fmtLap(best(id))}</td><td class="num muted">${i?'+'+(best(id)-b0).toFixed(3):''}</td></tr>`}).join('')}</tbody></table></div></div>
+ <div class="card"><header>스프린트 · ${L}랩</header><div class="body plan">${userDrivers().map(d=>`<div class="pc"><b style="font-family:var(--f-disp)">#${d.num} ${esc(d.code)} · P${wk.sgrid.indexOf(d.id)+1}</b><div class="row-flex" style="gap:6px;margin-top:6px"><span class="lbl">출발 타이어</span>${['S','M','H'].map(x=>`<button class="btn sm" data-act="sstire" data-i="${d.id}" data-v="${x}" aria-pressed="${wk.sTyre[d.id]===x}">${tyreHTML(x)}</button>`).join('')}</div></div>`).join('')}
+  <div class="muted" style="font-size:12px">${L}랩이면 미디엄으로 끝까지 갈 수 있고, 소프트는 초반 추월에 유리하지만 막판 마모 위험이 있습니다.</div>
+  <button class="btn red big" data-act="sstart">스프린트 출발</button></div></div></div>`}
+function finishSprint(){const wk=S.wk,R=wk.race;R.done=true;
+ R.cars.forEach(c=>{if(c.st==='run'&&c.pen){c.T+=c.pen;c.penE=c.pen;c.pen=0}});
+ const fin=R.cars.filter(c=>c.st==='run').sort((a,b)=>a.T-b.T),outs=R.cars.filter(c=>c.st!=='run').sort((a,b)=>b.outLap-a.outLap);const lead=fin[0];
+ const cls=[...fin,...outs].map((c,i)=>({id:c.id,pos:i+1,grid:c.grid,pts:c.st==='run'&&i<8?SPTS[i]:0,st:c.st,gap:c.st!=='run'?'DNF':i===0?fmtLap(c.T):'+'+(c.T-lead.T).toFixed(3),pen:(c.penS||0)+(c.penE||0),reason:c.reason,stints:c.stints.map(x=>x.c).join('')}));
+ log('rc',`스프린트 체커기 · ${S.drivers[lead.id].name} 우승`);
+ cls.forEach(e=>{const c=R.cars.find(x=>x.id===e.id);if(c.user&&e.st==='run'){c.radAt=null;dr(c,e.pos===1?'win':e.pos<=3?'pod':e.pos<=8?'pts':'nopts',{p:e.pos},1)}});
+ wk.spr={cls,laps:R.laps,feed:R.feed.slice(0,12)};wk.phase='sdone';pause();save()}
+function sprintResHTML(){const wk=S.wk,sp=wk.spr;const mine=sp.cls.filter(e=>S.drivers[e.id].team==='usr');const tp=mine.reduce((s,e)=>s+e.pts,0);
+ return `<div class="card" style="margin-bottom:16px"><div class="body row-flex" style="justify-content:space-between"><div class="row-flex">${mine.map(e=>`<div><span class="lbl">${S.drivers[e.id].code}</span><div style="font-family:var(--f-disp);font-weight:900;font-size:28px;line-height:1">${e.st==='run'?'P'+e.pos:'DNF'}</div></div>`).join('')}<div><span class="lbl">스프린트 포인트</span><div style="font-family:var(--f-disp);font-weight:900;font-size:28px;line-height:1">+${tp}</div></div></div>
+  <button class="btn red big" data-act="sdone">본 예선으로</button></div></div>
+ <div class="card"><header>스프린트 결과 · ${sp.laps}랩</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>그리드</th><th>기록</th><th>타이어</th><th>PTS</th></tr></thead><tbody>${sp.cls.map(e=>{const d=S.drivers[e.id],t=teamById(d.team);return `<tr class="${t.user?'me':''}"><td class="num">${e.st==='run'?e.pos:'—'}</td><td><span class="stripe" style="background:${t.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(t.name)}</span></td><td class="num">${e.grid}</td><td class="num">${esc(e.gap)}${e.pen?` <small style="color:#ffd400">페널티 ${e.pen}초</small>`:''}</td><td>${[...(e.stints||'')].map(x=>tyreHTML(x)).join(' ')}</td><td class="num">${e.pts||''}</td></tr>`}).join('')}</tbody></table></div></div>`}
 function upgCost(u){const f=DF();return Math.round(u.cost*f.cost*(1+f.step*lvl(u.id)))}
 function slotsLeft(){return Math.max(0,DF().slots-S.merged.filter(m=>m.year===S.year&&m.round===S.cur+1).length)}
 function rivalDev(){const df=DF();const riv=S.teams.filter(t=>!t.user);const up=perfOf(userTeam());const sc=24/Math.max(6,S.cal.length);
@@ -889,7 +939,7 @@ function standings(){
  const dp={},tp={},wins={},pods={};
  Object.keys(S.drivers).forEach(id=>{dp[id]=0;wins[id]=0;pods[id]=0});S.teams.forEach(t=>tp[t.id]=0);
  const cum={};S.teams.forEach(t=>cum[t.id]=[]);
- S.results.forEach(r=>{r.cls.forEach(e=>{dp[e.id]+=e.pts;tp[S.drivers[e.id].team]+=e.pts;if(e.pos===1&&e.st==='run')wins[e.id]++;if(e.pos<=3&&e.st==='run')pods[e.id]++});S.teams.forEach(t=>cum[t.id].push(tp[t.id]))});
+ S.results.forEach(r=>{r.cls.forEach(e=>{dp[e.id]+=e.pts;tp[S.drivers[e.id].team]+=e.pts;if(e.pos===1&&e.st==='run')wins[e.id]++;if(e.pos<=3&&e.st==='run')pods[e.id]++});(r.spr||[]).forEach(e=>{if(!S.drivers[e.id])return;dp[e.id]+=e.pts;tp[S.drivers[e.id].team]+=e.pts});S.teams.forEach(t=>cum[t.id].push(tp[t.id]))});
  const drv=Object.keys(dp).filter(id=>S.drivers[id].team!=='ret'||dp[id]>0).sort((a,b)=>dp[b]-dp[a]||wins[b]-wins[a]).map(id=>({id,pts:dp[id],wins:wins[id],pods:pods[id]}));
  const tm=S.teams.map(t=>({id:t.id,pts:tp[t.id],wins:t.drivers.reduce((s,d)=>s+wins[d],0)})).sort((a,b)=>b.pts-a.pts||b.wins-a.wins);
  return{drv,tm,cum};
@@ -904,7 +954,7 @@ function render(){
  const ut=userTeam();
  $('#crumbs').innerHTML=`<span>${esc(S.owner)}</span><span>/</span><b>${esc(ut.slug)}</b>`;
  $('#avatar').textContent=S.owner.slice(0,2).toUpperCase();
- const live=S.wk&&S.wk.phase==='race'&&S.wk.race&&!S.wk.race.done;
+ const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint')&&S.wk.race&&!S.wk.race.done;
  const openPR=UPG.filter(u=>lvl(u.id)<u.max).length;
  sponOf();const cnt={commits:S.commits.length,pulls:openPR};if(S.spon.offers.length)cnt.sponsors=S.spon.offers.length;
  app.innerHTML=`<div class="repo"><div class="repo-h"><h1>${esc(S.owner)} / <b>${esc(ut.slug)}</b></h1>
@@ -1011,7 +1061,7 @@ function sponEligible(sp){moodOf();return S.fans>=sp.fans||curPos()<=sp.pos}
 function slotUsed(){const u={};S.spon.active.forEach(a=>u[a.slot]=a);return u}
 function freeSlotFor(tier){const u=slotUsed();return TIER[tier].slots.find(s=>!u[s])||null}
 function sponOf(){if(!S.spon)S.spon={active:[],offers:[],hist:[],key:null,seq:1,income:0};const P=S.spon;
- const key=S.year+'-'+S.cur;const live=S.wk&&S.wk.phase==='race'&&S.wk.race&&!S.wk.race.done;
+ const key=S.year+'-'+S.cur;const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint')&&S.wk.race&&!S.wk.race.done;
  if(P.key!==key&&!live){P.key=key;const keep=P.offers.filter(o=>o.ttl>0);keep.forEach(o=>o.ttl--);
   const busy=new Set([...P.active.map(a=>a.sid),...keep.map(o=>o.sid)]);
   const pool=shuffle(SPON.filter(s=>!busy.has(s.id)&&sponEligible(s)));const want=Math.max(0,3-keep.length);const out=[];
@@ -1076,7 +1126,7 @@ function sponStripHTML(){const P=S.spon;if(!P||!P.active.length)return '';const 
  return `<div class="spstrip">${P.active.slice().sort((a,b)=>ord(a)-ord(b)).map(a=>sponLogo(spById(a.sid),a.slot==='title'?'big':'')).join('')}</div>`}
 
 /* ============ 스폰서 탭 ============ */
-function viewSponsors(m){const P=sponOf();moodOf();const used=slotUsed();const live=S.wk&&S.wk.phase==='race'&&S.wk.race&&!S.wk.race.done;
+function viewSponsors(m){const P=sponOf();moodOf();const used=slotUsed();const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint')&&S.wk.race&&!S.wk.race.done;
  const perRace=P.active.reduce((s,a)=>s+a.pay,0);const avg=P.active.length?Math.round(P.active.reduce((s,a)=>s+a.sat,0)/P.active.length):null;
  const actCard=a=>{const sp=spById(a.sid),g=goalState(a);const arm=S.ui.spArm===a.sid;
   return `<div class="spc" style="--sc:${sp.c}"><div class="spc-h">${sponLogo(sp,'big')}<span class="pill">${TIER[a.tier].n}</span></div>
@@ -1196,7 +1246,7 @@ function makeWeather(tr){
 }
 function startWeekend(){
  const tr=TR(S.cal[S.cur]);
- S.wk={round:S.cur+1,track:tr.id,phase:'quali',qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.6).toFixed(2)]))};
+ S.wk={round:S.cur+1,track:tr.id,phase:'fp',fp:{setup:'bal',prog:'setup',done:false},sprint:S.cal.length>=12&&SPRINT.includes(tr.id),qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.6).toFixed(2)]))};
  userDrivers().forEach(d=>{qsOf(d.id);S.wk.startTyre[d.id]='M'});
  save();go('race');
 }
@@ -1818,17 +1868,18 @@ function answer(v){const R=S.wk.race;const A=R.ask;if(!A)return;const c=R.cars.f
 
 /* ============ race engine ============ */
 function aiStart(i,tr){if(tr.deg>=1.2)return i<10?(rnd()<.6?'M':'H'):(rnd()<.5?'H':'M');return i<10?(rnd()<.65?'M':'S'):(rnd()<.45?'H':(rnd()<.5?'M':'S'))}
-function initRace(){
- const wk=S.wk,tr=TR(wk.track),ut=userTeam();
- const cars=wk.grid.map((id,i)=>{const d=S.drivers[id],t=teamById(d.team),u=!!t.user;const ty=u?wk.startTyre[id]:aiStart(i,tr);
+function initRace(sp){
+ const wk=S.wk,tr=TR(wk.track),ut=userTeam();sp=!!sp;const lr=!sp&&wk.fp&&wk.fp.done&&wk.fp.prog==='long'?.94:1;
+ const cars=(sp?wk.sgrid:wk.grid).map((id,i)=>{const d=S.drivers[id],t=teamById(d.team),u=!!t.user;const ty=u?(sp?(wk.sTyre&&wk.sTyre[id])||'M':wk.startTyre[id]):sp?(i<10?(rnd()<.7?'M':'S'):(rnd()<.5?'S':'M')):aiStart(i,tr);
   return{id,team:t.id,user:u,grid:i+1,T:i*.22,tyre:ty,wear:0,age:0,used:[ty],stints:[{c:ty,from:0}],stops:0,st:'run',reason:'',outLap:0,
    mode:'std',en:'auto',bat:3,pitReq:null,auto:false,pitAt:.78+rnd()*.2,last:null,best:Infinity,hist:[i+1],w85:false,
-   perf:wkPerf(t,'r'),skill:d.skill,sigma:d.sigma,rel:t.rel,...(u?{crew:ut.crew,tm:1-.05*ut.tyre,batR:1+.2*ut.energy}:rivTech(t))}});
- cars.filter(c=>c.user).forEach(c=>{const p=wk.strat&&wk.strat[c.id];c.plan=p&&p.seq[0]===c.tyre?{seq:p.seq.slice(),laps:p.laps.slice(),idx:0,off:false}:null;c.sets=Object.assign({S:2,M:3,H:2},wk.sets&&wk.sets[c.id]);if(c.sets[c.tyre]>0)c.sets[c.tyre]--;else c.wear=.12});
+   perf:wkPerf(t,'r'),skill:d.skill,sigma:d.sigma,rel:t.rel,...(u?{crew:ut.crew,tm:(1-.05*ut.tyre)*lr,batR:1+.2*ut.energy}:rivTech(t))}});
+ cars.filter(c=>c.user).forEach(c=>{if(sp){c.plan=null;return}const p=wk.strat&&wk.strat[c.id];c.plan=p&&p.seq[0]===c.tyre?{seq:p.seq.slice(),laps:p.laps.slice(),idx:0,off:false}:null;c.sets=Object.assign({S:2,M:3,H:2},wk.sets&&wk.sets[c.id]);if(c.sets[c.tyre]>0)c.sets[c.tyre]--;else c.wear=.12});
  mapHist=null;mapW=null;
- wk.race={lap:0,laps:tr.laps,cars,oppAt:null,flag:null,wet:0,restart:false,standing:true,feed:[],done:false,pause:null,red:null,redUsed:false,wetAlert:false,events:[],prevPos:{}};
- wk.phase='race';
- log('rc',`${tr.n} 그랑프리 · ${tr.laps}랩 · 포메이션 랩 완료. 출발 준비.`);
+ wk.race={lap:0,laps:sp?Math.max(10,Math.round(tr.laps/3)):tr.laps,sprint:sp,cars,oppAt:null,flag:null,wet:0,restart:false,standing:true,feed:[],done:false,pause:null,red:null,redUsed:false,wetAlert:false,events:[],prevPos:{}};
+ wk.phase=sp?'sprint':'race';
+ log('rc',sp?`${tr.n} 스프린트 · ${wk.race.laps}랩 · 의무 피트 없음 · 출발 준비.`:`${tr.n} 그랑프리 · ${tr.laps}랩 · 포메이션 랩 완료. 출발 준비.`);
+ if(sp){mapHist=null;save();return}
  if(S.pending&&S.pending.length){S.pending.forEach(p=>log('crew',`신규 파츠 장착: ${p.t} v${p.lv}${p.dp>0?` · 랩당 약 −${(p.dp*.06).toFixed(3)}초 예상`:''}`,1,CREW_N.aero));S.pending=[]}
  rnewsFor(S.year,S.cur+1).forEach(n=>log('rc',`${teamById(n.t).name} 업그레이드 투입: ${n.part} (성능 +${n.sz.toFixed(1)} 추정)`));
  S.lastMerge=null;
@@ -1853,7 +1904,7 @@ function lapTime(c,R,tr){
 }
 function pitLoss(R,tr){const f=R.flag&&R.flag.type;return f==='SC'?10.5:f==='VSC'?13.5:tr.pit}
 function stopTime(c){let s=2.45-.12*c.crew+Math.abs(gauss())*.18;const slowP=c.user?.06-.01*c.crew:.05;if(rnd()<slowP)s+=2+rnd()*4;return s}
-function needsSecond(c){if(c.used.includes('I')||c.used.includes('W'))return false;return new Set(c.used).size<2}
+function needsSecond(c){if(S.wk&&S.wk.race&&S.wk.race.sprint)return false;if(c.used.includes('I')||c.used.includes('W'))return false;return new Set(c.used).size<2}
 function aiPit(c,R,tr){
  const rem=R.laps-R.lap;if(rem<1)return null;const f=R.flag&&R.flag.type;const w=R.wet;
  if(w>.82&&c.tyre!=='W'&&rnd()<.5)return'W';
@@ -1863,7 +1914,7 @@ function aiPit(c,R,tr){
  if(c.tyre==='I'||c.tyre==='W')return null;
  const need=needsSecond(c);
  const pick=()=>{let o=rem>28?['H','M']:rem>14?['M','H']:['S','M'];if(need){return o.find(x=>!c.used.includes(x))||(c.tyre==='S'?'M':'S')}return o[0]};
- if((f==='SC'||f==='VSC')&&c.wear>.35&&rem>6&&rnd()<.75)return pick();
+ if(!R.sprint&&(f==='SC'||f==='VSC')&&c.wear>.35&&rem>6&&rnd()<.75)return pick();
  if(c.wear>=c.pitAt){if(!need&&c.wear+rem*wearPerLap(c,tr)<1.12)return null;return pick()}
  if(need&&rem<=2)return pick();
  return null;
@@ -2014,6 +2065,7 @@ function applyRed(){
  R.red=null;R.redTyre=null;R.standing=true;R.pause=null;save();
 }
 function finishRace(){
+ if(S.wk.race&&S.wk.race.sprint){finishSprint();return}
  const wk=S.wk,R=wk.race,tr=TR(wk.track);R.done=true;wk.phase='done';
  R.cars.forEach(c=>{if(c.st==='run'&&c.pen){c.T+=c.pen;c.penE=c.pen;log(c.user?'radio':'rc',`${nm(c)} 미소화 페널티 ${c.pen}초 결승 기록에 가산`,c.user);c.pen=0}});
  const run=R.cars.filter(c=>c.st==='run').sort((a,b)=>a.T-b.T);
@@ -2027,13 +2079,13 @@ function finishRace(){
  if(!lead.user)opp(lead,'win',{},1);
  cls.forEach(e=>{const c=R.cars.find(x=>x.id===e.id);if(!c.user||e.st!=='run')return;const p=e.pos;R.lap=R.laps;c.radAt=null;dr(c,p===1?'win':p<=3?'pod':p<=10?'pts':'nopts',{p},1)});
  const ut=userTeam();const mine=cls.filter(e=>S.drivers[e.id].team==='usr');const tp=mine.reduce((s,e)=>s+e.pts,0);
- const pod=mine.some(e=>e.st==='run'&&e.pos<=3);const earn0=5+Math.round(tp*.25*DF().earn)+(pod?2:0);
- S.results.push({round:S.cur+1,track:tr.id,cls,earn:earn0});const RR=S.results[S.results.length-1];RR.rx=raceReact(RR,R);RR.dotd=buildDotd(RR);
+ const pod=mine.some(e=>e.st==='run'&&e.pos<=3);const smine=wk.spr?wk.spr.cls.filter(e=>S.drivers[e.id].team==='usr'):[];const tps=smine.reduce((s,e)=>s+e.pts,0);const earn0=5+Math.round((tp+tps)*.25*DF().earn)+(pod?2:0);
+ S.results.push({round:S.cur+1,track:tr.id,cls,earn:earn0,spr:wk.spr?wk.spr.cls.map(e=>({id:e.id,pos:e.pos,pts:e.pts,st:e.st})):null});const RR=S.results[S.results.length-1];RR.rx=raceReact(RR,R);RR.dotd=buildDotd(RR);
  const SPR=sponsorAfterRace(RR,mine,tp);RR.spay=SPR.pay;const earn=earn0+SPR.pay;RR.earn=earn;S.budget+=earn;
  const desc=mine.map(e=>`#${S.drivers[e.id].num} ${e.st==='run'?'P'+e.pos:e.st==='dsq'?'DSQ':'DNF'}`).join(', ');
  const tags=[];if(mine.some(e=>e.pos===1&&e.st==='run'))tags.push('win');else if(pod)tags.push('pod');if(mine.some(e=>e.st!=='run'))tags.push('dnf');
  S.cur++;
- addCommit({kind:'race',msg:`R${S.cur} ${tr.n} GP: ${desc} (+${tp})`,tags,body:{cls:cls.slice(0,10).map(e=>[e.id,e.pts]),mine,events:R.events.slice(0,10),earn,spay:SPR.pay,track:tr.id}});
+ addCommit({kind:'race',msg:`R${S.cur} ${tr.n} GP: ${desc} (+${tp}${tps?' · 스프린트 +'+tps:''})`,tags,body:{cls:cls.slice(0,10).map(e=>[e.id,e.pts]),mine,smine:smine.map(e=>({id:e.id,pos:e.pos,pts:e.pts,st:e.st,grid:e.grid})),events:R.events.slice(0,10),earn,spay:SPR.pay,track:tr.id}});
  S.cur--;S.commits[0].round=S.cur+1;
  SPR.commits.forEach(c=>{addCommit(c);S.commits[0].round=S.cur+1});
  // between-race evolution
@@ -2430,13 +2482,16 @@ function simToEnd(){const R=S.wk.race;userCars().forEach(c=>c.auto=true);const a
 function viewRace(m){
  if(S.cur>=S.cal.length&&!S.wk){m.innerHTML=releaseHTML();return}
  if(summerDue()){m.innerHTML=summerHTML();return}
- if(!S.wk){const tr=TR(S.cal[S.cur]);const seen=S.ui.introSeen===S.year+'-'+S.cur;m.innerHTML=`<div class="next"><div><div class="rd">ROUND ${S.cur+1} · ${S.year}</div><h3>${esc(tr.n)} 그랑프리</h3><div class="muted">${esc(tr.p)} · ${tr.laps}랩 · ${TTN[TTYPE[tr.id]||'bal']}${tr.st?' · 스트리트':''}</div>${weekPreviewHTML(tr)}</div><div class="row-flex"><button class="btn" data-act="introopen">인트로 보기</button><button class="btn red big" data-act="weekend">주말 시작</button></div></div>`+(seen?'':introHTML());return}
+ if(!S.wk){const tr=TR(S.cal[S.cur]);const seen=S.ui.introSeen===S.year+'-'+S.cur;m.innerHTML=`<div class="next"><div><div class="rd">ROUND ${S.cur+1} · ${S.year}</div><h3>${esc(tr.n)} 그랑프리${S.cal.length>=12&&SPRINT.includes(tr.id)?' <span class="pill" style="vertical-align:middle">SPRINT</span>':''}</h3><div class="muted">${esc(tr.p)} · ${tr.laps}랩 · ${TTN[TTYPE[tr.id]||'bal']}${tr.st?' · 스트리트':''}</div>${weekPreviewHTML(tr)}</div><div class="row-flex"><button class="btn" data-act="introopen">인트로 보기</button><button class="btn red big" data-act="weekend">주말 시작</button></div></div>`+(seen?'':introHTML());return}
  const wk=S.wk,tr=TR(wk.track);
- const head=`<div class="raceh"><div><div class="rd">ROUND ${wk.round} · ${S.year}</div><h2>${esc(tr.n)} 그랑프리</h2><div class="muted">${esc(tr.p)} · ${tr.laps}랩${tr.st?' · 스트리트 서킷':''} · ${esc(teamDisp())}</div>${sponStripHTML()}</div>
-  <div class="seg">${['예선','그리드','결승','결과'].map((x,i)=>`<button aria-pressed="${['quali','qres|grid','race','done'][i].split('|').includes(wk.phase)}" tabindex="-1">${x}</button>`).join('')}</div></div>`;
+ const head=`<div class="raceh"><div><div class="rd">ROUND ${wk.round} · ${S.year}</div><h2>${esc(tr.n)} 그랑프리</h2><div class="muted">${esc(tr.p)} · ${tr.laps}랩${tr.st?' · 스트리트 서킷':''}${wk.sprint?' · <b style="color:var(--warn)">스프린트 주말</b>':''} · ${esc(teamDisp())}</div>${sponStripHTML()}</div>
+  <div class="seg">${(wk.sprint?[['FP1','fp'],['스프린트','sq|sprint|sdone'],['예선','quali'],['그리드','qres|grid'],['결승','race'],['결과','done']]:[['FP','fp'],['예선','quali'],['그리드','qres|grid'],['결승','race'],['결과','done']]).map(([x,p])=>`<button aria-pressed="${p.split('|').includes(wk.phase)}" tabindex="-1">${x}</button>`).join('')}</div></div>`;
+ if(wk.phase==='fp'){m.innerHTML=head+fpHTML();return}
+ if(wk.phase==='sq'){m.innerHTML=head+sqHTML();return}
+ if(wk.phase==='sdone'){m.innerHTML=head+sprintResHTML();return}
  if(wk.phase==='quali'){qualiView(m,head);return}
  if(wk.phase==='qres'||wk.phase==='grid'){m.innerHTML=head+gridHTML();return}
- if(wk.phase==='race'){m.innerHTML=head+raceShellHTML();buildRace();updateRace();return}
+ if(wk.phase==='race'||wk.phase==='sprint'){m.innerHTML=head+raceShellHTML();buildRace();updateRace();return}
  if(wk.phase==='done'){m.innerHTML=head+resultHTML();return}
 }
 function qualiPlanHTML(){
@@ -2685,7 +2740,7 @@ function commitHTML(c){
  return `<li class="tli" data-k="${k}">${icon}<details class="ci"><summary><div class="cmain"><div class="ctop">${top}</div>${sub}<div class="cmeta">${esc(S.owner)} · ${when} · <span class="mono">${c.hash}</span></div></div><div class="cright">${right}<span class="chev" aria-hidden="true">▾</span></div></summary><div class="cbody">${body}</div></details></li>`;
 }
 function viewPulls(m){
- const live=S.wk&&S.wk.phase==='race';
+ const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint');
  m.innerHTML=`<div class="budget"><div><span class="lbl">개발 예산</span><b class="num">${S.budget}</b></div><div><span class="lbl">이번 라운드 개발 슬롯</span><b class="num">${DF().slots>8?'∞':slotsLeft()+' / '+DF().slots}</b></div><span class="muted" style="font-size:13px">난이도 ${DF().n} · 레이스마다 기본 5 + 팀 포인트의 ${Math.round(25*DF().earn)}% (포디움 +2)에 스폰서 수입이 더해집니다.${DF().step?` 같은 부품은 레벨이 오를 때마다 비용이 ${Math.round(DF().step*100)}%씩 오릅니다.`:''} ${DF().dim<1?'차량 성능 91 이상 구간은 개발 효과가 점점 줄어듭니다.':''}${live?' 결승 진행 중에는 병합할 수 없습니다.':''}</span></div>
  ${mergeReportHTML()}${devPanelHTML()}
  <div class="card prs" style="margin-top:16px"><header>Open<span class="sp"></span>${UPG.filter(u=>lvl(u.id)<u.max).length}</header>
@@ -2791,6 +2846,15 @@ document.addEventListener('click',e=>{
   case 'stayout':if(car&&car.st==='run'&&!car.auto)dirMsg(car,'stay');break;
   case 'stire':{S.wk.startTyre[i]=v;const o=stratOptions(i).find(x=>x.seq[0]===v);if(o)setStrat(i,o);save();render();break}
   case 'start':initRace();render();break;
+  case 'fpset':S.wk.fp.setup=v;save();render();break;
+  case 'fpprog':S.wk.fp.prog=v;save();render();break;
+  case 'fprun':fpRun();break;
+  case 'fpskip':S.wk.fp.setup='bal';S.wk.fp.prog='setup';fpRun();S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
+  case 'fpdone':S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
+  case 'sqrun':sqRun();break;
+  case 'sstire':S.wk.sTyre[i]=v;save();render();break;
+  case 'sstart':initRace(true);render();break;
+  case 'sdone':S.wk.race=null;S.wk.phase='quali';mapHist=null;mapW=null;save();render();break;
   case 'play':play();break;
   case 'pause':pause();break;
   case 'speed':S.ui.speed=+v;save();$$('[data-act="speed"]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===v));if(timer)play();break;
