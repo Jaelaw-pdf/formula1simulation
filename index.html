@@ -726,6 +726,18 @@ const TRACKS=[
  {id:'abu',n:'아부다비',p:'야스 마리나',laps:58,base:85.5,ot:.85,deg:.95,rain:.02,sc:.3,st:0,pit:21},
 ];
 const LEN={6:['aus','mon','gbr','ita','sgp','abu'],12:['aus','jpn','mia','mon','esp','gbr','hun','ita','aze','usa','bra','abu'],24:TRACKS.map(t=>t.id)};
+/* 트랙 성격 · 팀 성향 (주말마다 강세 팀이 바뀜) */
+const TTYPE={aus:'bal',chn:'bal',jpn:'df',bhr:'bal',sau:'pw',mia:'bal',can:'pw',mon:'df',esp:'df',aut:'pw',gbr:'df',bel:'pw',hun:'df',ned:'df',ita:'pw',mad:'bal',aze:'pw',sgp:'df',usa:'bal',mex:'pw',bra:'bal',lvg:'pw',qat:'df',abu:'bal'};
+const TTN={pw:'파워 서킷',df:'다운포스 서킷',bal:'밸런스 서킷'};
+const TRAIT={mcl:{pw:-.6,df:.5,st:-.1},mer:{pw:.8,df:-.3,st:.1},rbr:{pw:.4,df:0,st:-.2},fer:{pw:.5,df:.2,st:.7},wil:{pw:1,df:-.9,st:-.3},ast:{pw:-.5,df:.6,st:.2},rb:{pw:.3,df:-.1,st:0},has:{pw:.3,df:-.4,st:-.2},aud:{pw:0,df:.2,st:-.1},alp:{pw:-.3,df:.4,st:.3},cad:{pw:.4,df:-.5,st:.1}};
+const DIFF={
+ easy:{n:'쉬움',d:'업그레이드 비용 고정 · 라운드당 병합 제한 없음 · 신차 승계 50% · 라이벌 개발 완만',cost:1,step:0,earn:1,grow:1,carry:.5,riv:.7,cat:0,slots:9,dim:1,par:0},
+ normal:{n:'보통',d:'레벨이 오를수록 비용 상승 · 라운드당 병합 2건 · 신차 승계 30% · 상위 팀은 타이어·에너지 기술도 성숙 · 앞서가면 라이벌이 추격 개발',cost:1,step:.25,earn:.65,grow:.6,carry:.3,riv:1,cat:.015,slots:2,dim:.7,par:1},
+ hard:{n:'어려움',d:'비용 가파르게 상승 · 라운드당 병합 1건 · 신차 승계 20% · 라이벌 개발 공격적',cost:1.1,step:.4,earn:.5,grow:.45,carry:.2,riv:1.3,cat:.025,slots:1,dim:.55,par:1}};
+const DF=()=>DIFF[(S&&S.diff)||'normal']||DIFF.normal;
+/* 성능 91 이상은 개발 효율 체감 · 상한 약 97.5 (상위권일수록 한 단계 올리기가 어려움) */
+const effP=raw=>{const k=DF().dim;if(k>=1||raw<=91)return raw;return 91+6.5*(1-Math.exp(-(raw-91)*k/6.5))};
+const RPK=['새 플로어','프론트 윙 개정','저드래그 리어 윙','사이드포드 재설계','서스펜션 지오메트리','냉각 패키지','디퓨저 업데이트','PU 에너지 맵'];
 const RIVALS=[
  {id:'mcl',name:'McLaren',color:'#ff8000',perf:92,rel:90,dr:[['NOR','Lando Norris',4,93],['PIA','Oscar Piastri',81,91]]},
  {id:'mer',name:'Mercedes',color:'#27f4d2',perf:91,rel:91,dr:[['RUS','George Russell',63,91],['ANT','Kimi Antonelli',12,86]]},
@@ -831,14 +843,30 @@ function defaultDraft(){return{owner:'jaehyung',name:'Hanbit Racing',desc:'서�
 const POOL=20;
 function spent(d){return d.alloc.aero+d.alloc.power+d.alloc.rel+d.alloc.crew+d.drivers.reduce((s,x)=>s+drvStat(x).cost,0)}
 function draftSpec(d){const pu=PU[d.pu];return{aero:72+d.alloc.aero,power:72+d.alloc.power+pu.power,rel:80+2*d.alloc.rel+pu.rel,crew:d.alloc.crew}}
-const perfOf=t=>t.user?(t.aero*.55+(t.power+(t.puGain||0))*.45):t.perf;
+const perfOf=t=>t.user?effP(t.aero*.55+(t.power+(t.puGain||0))*.45):t.perf;
+function trackMod(t,tid){const tr=TR(tid),ty=TTYPE[tid]||'bal';
+ if(t.user){const d=(t.power+(t.puGain||0))-t.aero;return clamp(ty==='pw'?d*.12:ty==='df'?-d*.12:0,-1.2,1.2)}
+ const T=TRAIT[t.id]||{pw:0,df:0,st:0};return 1.2*((ty==='bal'?0:T[ty])+(tr.st?T.st:0))}
+function fpBonus(t,ses){return 0}
+function wkPerf(t,ses){const wk=S.wk;let p=perfOf(t);if(!wk)return p;return p+trackMod(t,wk.track)+((wk.form||{})[t.id]||0)+(t.user?fpBonus(t,ses):0)}
+/* 라이벌의 타이어·에너지·피트 기술 (보통 이상: 상위 팀일수록 성숙) */
+function rivTech(t){if(!DF().par)return{crew:2,tm:1,batR:1};const p=t.perf;return{crew:2+clamp(Math.round((p-84)/4),0,3),tm:1-.05*clamp(Math.round((p-85)/3.5),0,3),batR:1+.2*clamp(Math.round((p-87)/4),0,2)}}
+function upgCost(u){const f=DF();return Math.round(u.cost*f.cost*(1+f.step*lvl(u.id)))}
+function slotsLeft(){return Math.max(0,DF().slots-S.merged.filter(m=>m.year===S.year&&m.round===S.cur+1).length)}
+function rivalDev(){const df=DF();const riv=S.teams.filter(t=>!t.user);const up=perfOf(userTeam());const sc=24/Math.max(6,S.cal.length);
+ const ord=riv.slice().sort((a,b)=>b.perf-a.perf);const news=[];
+ ord.forEach((t,i)=>{let g=(rnd()*.06*df.riv+(up>90&&i<5?df.cat*Math.max(0,up-t.perf):0))*sc;
+  if(rnd()<(.08+.012*i)*df.riv*Math.sqrt(sc)){const sz=+((.45+rnd()*.75)*(1+i*.03)*Math.sqrt(sc)).toFixed(2);g+=sz;news.push({t:t.id,part:pick(RPK),sz})}
+  t.perf=Math.min(97.5,t.perf+g*clamp((97.5-t.perf)/5,.15,1))});
+ S.rnews=S.rnews||[];news.forEach(n=>S.rnews.unshift({...n,y:S.year,r:S.cur+2}));if(S.rnews.length>40)S.rnews.length=40;return news}
+const rnewsFor=(y,r)=>(S.rnews||[]).filter(n=>n.y===y&&n.r===r);
 const teamById=id=>S.teams.find(t=>t.id===id);
 const userTeam=()=>S.teams.find(t=>t.user);
 const userDrivers=()=>userTeam().drivers.map(id=>S.drivers[id]);
 
 function createTeam(){
  const d=D, sp=draftSpec(d), pu=PU[d.pu];
- S={v:1,year:2027,owner:d.owner.trim()||'director',budget:10,prNo:1,merged:[],drivers:{},teams:[],cal:LEN[d.len].slice(),cur:0,results:[],commits:[],seasons:[],wk:null,
+ S={v:1,diff:'normal',year:2027,owner:d.owner.trim()||'director',budget:10,prNo:1,merged:[],drivers:{},teams:[],cal:LEN[d.len].slice(),cur:0,results:[],commits:[],seasons:[],wk:null,
   ui:{tab:'overview',speed:1,autoPause:true,gapMode:'leader'}};
  const ut={id:'usr',user:true,name:d.name.trim()||'My Team',slug:slug(d.name),desc:d.desc,color:d.color,pu:d.pu,aero:sp.aero,power:sp.power,rel:sp.rel,crew:sp.crew,tyre:0,energy:0,puGain:0,puGrow:pu.grow,drivers:[]};
  S.teams.push(ut);
@@ -930,7 +958,7 @@ function lvl(id){return S.merged.filter(m=>m.id===id&&m.year===S.year).length}
 const CARRY={aero:{inc:2,keep:.5,n:'다운포스'},power:{inc:2,keep:.5,n:'출력'},rel:{inc:4,keep:.5,n:'신뢰성'},crew:{inc:1,keep:.5,n:'피트 크루'},tyre:{inc:1,keep:0,n:'타이어 마모'},energy:{inc:1,keep:0,n:'배터리 회복'}};
 function seasonCarry(year){const ut=userTeam();if(!ut||(S.devCarried||0)>=year)return null;
  const out=[];Object.keys(CARRY).forEach(id=>{const c=CARRY[id];const L=S.merged.filter(m=>m.id===id&&m.year===year).length;if(!L)return;
-  const gain=c.inc*L,keep=Math.floor(gain*c.keep),lose=gain-keep;ut[id]=(ut[id]||0)-lose;out.push({id,L,gain,keep})});
+  const gain=c.inc*L,keep=Math.floor(gain*(c.keep?DF().carry:0)),lose=gain-keep;ut[id]=(ut[id]||0)-lose;out.push({id,L,gain,keep})});
  S.devCarried=year;return out}
 function carryLines(out){const f=(id,x)=>id==='tyre'?x*5+'%':id==='energy'?x*20+'%':id==='crew'?x+'단계':String(x);
  return out.map(o=>`${CARRY[o.id].n}: 개발 +${f(o.id,o.gain)} 중 +${f(o.id,o.keep)} 신차 승계 (Lv.${o.L} → Lv.0)`)}
@@ -1093,9 +1121,9 @@ function viewOverview(m){
  const hl=S.lastMerge&&S.lastMerge.id;const pend=new Set((S.pending||[]).map(p=>p.id));
  const valTxt={aero:String(cur.aero),power:cur.power.toFixed(1),rel:String(cur.rel),crew:'Lv.'+cur.crew,tyre:(cur.tyre?'−'+cur.tyre*5:0)+'%',energy:'+'+cur.energy*20+'%'};
  const statN={aero:'다운포스',power:'출력',rel:'신뢰성',crew:'정지 시간',tyre:'타이어 마모',energy:'배터리 회복'};
- const part=u=>{const lv=lvl(u.id),done=lv>=u.max,isP=pend.has(u.id),can=!done&&S.budget>=u.cost;
+ const part=u=>{const lv=lvl(u.id),done=lv>=u.max,isP=pend.has(u.id),uc=upgCost(u),can=!done&&S.budget>=uc&&slotsLeft()>0;
   const lm=S.merged.filter(x=>x.id===u.id&&x.year===S.year).slice(-1)[0];
-  const stt=done?['done','개발 완료']:isP?['pend','장착 대기 · 다음 결승']:can?['can','개발 가능 · '+u.cost]:['lock','예산 '+u.cost+' 필요'];
+  const stt=done?['done','개발 완료']:isP?['pend','장착 대기 · 다음 결승']:can?['can','개발 가능 · '+uc]:!slotsLeft()&&!done?['lock','이번 라운드 슬롯 소진']:['lock','예산 '+uc+' 필요'];
   return `<button class="part-c ${hl===u.id?'hl':''}" data-act="tab" data-v="pulls" data-part="${u.id}"><span class="pi">${'<svg viewBox="0 0 16 16" aria-hidden="true">'+PART_IC[u.id]+'</svg>'}</span>
    <span class="pn"><b>${esc(UPGX[u.id].where.split(' (')[0])}</b><small class="muted">${statN[u.id]} <span class="num" style="color:var(--fg)">${valTxt[u.id]}</span></small></span>
    <span class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv&&!done?'nx':''}"></i>`).join('')}</span>
@@ -1161,11 +1189,11 @@ function makeWeather(tr){
 }
 function startWeekend(){
  const tr=TR(S.cal[S.cur]);
- S.wk={round:S.cur+1,track:tr.id,phase:'quali',qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr)};
+ S.wk={round:S.cur+1,track:tr.id,phase:'quali',qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.6).toFixed(2)]))};
  userDrivers().forEach(d=>{qsOf(d.id);S.wk.startTyre[d.id]='M'});
  save();go('race');
 }
-function carPace(id){const d=S.drivers[id],t=teamById(d.team);return{perf:perfOf(t),skill:d.skill,sigma:d.sigma,rel:t.rel}}
+function carPace(id){const d=S.drivers[id],t=teamById(d.team);return{perf:wkPerf(t,'q'),skill:d.skill,sigma:d.sigma,rel:t.rel}}
 function runQuali(){
  const wk=S.wk;const r=qualiSim(true);wk.quali=r.q;wk.grid=r.grid;const ud=userDrivers();const n=r.grid.length;const L=[];
  if(wk.tow&&wk.tow!=='none'){const rc=S.drivers[wk.tow],gv=ud.find(d=>d.id!==wk.tow);if(rc&&gv)L.push({k:'radio',t:`토우 운영: ${gv.code} → ${rc.code} 슬립스트림 제공`})}
@@ -1786,13 +1814,14 @@ function initRace(){
  const cars=wk.grid.map((id,i)=>{const d=S.drivers[id],t=teamById(d.team),u=!!t.user;const ty=u?wk.startTyre[id]:aiStart(i,tr);
   return{id,team:t.id,user:u,grid:i+1,T:i*.22,tyre:ty,wear:0,age:0,used:[ty],stints:[{c:ty,from:0}],stops:0,st:'run',reason:'',outLap:0,
    mode:'std',en:'auto',bat:3,pitReq:null,auto:false,pitAt:.78+rnd()*.2,last:null,best:Infinity,hist:[i+1],w85:false,
-   perf:perfOf(t),skill:d.skill,sigma:d.sigma,rel:t.rel,crew:u?ut.crew:2,tm:u?1-.05*ut.tyre:1,batR:u?1+.2*ut.energy:1}});
+   perf:wkPerf(t,'r'),skill:d.skill,sigma:d.sigma,rel:t.rel,...(u?{crew:ut.crew,tm:1-.05*ut.tyre,batR:1+.2*ut.energy}:rivTech(t))}});
  cars.filter(c=>c.user).forEach(c=>{const p=wk.strat&&wk.strat[c.id];c.plan=p&&p.seq[0]===c.tyre?{seq:p.seq.slice(),laps:p.laps.slice(),idx:0,off:false}:null;c.sets=Object.assign({S:2,M:3,H:2},wk.sets&&wk.sets[c.id]);if(c.sets[c.tyre]>0)c.sets[c.tyre]--;else c.wear=.12});
  mapHist=null;mapW=null;
  wk.race={lap:0,laps:tr.laps,cars,oppAt:null,flag:null,wet:0,restart:false,standing:true,feed:[],done:false,pause:null,red:null,redUsed:false,wetAlert:false,events:[],prevPos:{}};
  wk.phase='race';
  log('rc',`${tr.n} 그랑프리 · ${tr.laps}랩 · 포메이션 랩 완료. 출발 준비.`);
  if(S.pending&&S.pending.length){S.pending.forEach(p=>log('crew',`신규 파츠 장착: ${p.t} v${p.lv}${p.dp>0?` · 랩당 약 −${(p.dp*.06).toFixed(3)}초 예상`:''}`,1,CREW_N.aero));S.pending=[]}
+ rnewsFor(S.year,S.cur+1).forEach(n=>log('rc',`${teamById(n.t).name} 업그레이드 투입: ${n.part} (성능 +${n.sz.toFixed(1)} 추정)`));
  S.lastMerge=null;
  save();
 }
@@ -1969,7 +1998,7 @@ function finishRace(){
  if(!lead.user)opp(lead,'win',{},1);
  cls.forEach(e=>{const c=R.cars.find(x=>x.id===e.id);if(!c.user||e.st!=='run')return;const p=e.pos;R.lap=R.laps;c.radAt=null;dr(c,p===1?'win':p<=3?'pod':p<=10?'pts':'nopts',{p},1)});
  const ut=userTeam();const mine=cls.filter(e=>S.drivers[e.id].team==='usr');const tp=mine.reduce((s,e)=>s+e.pts,0);
- const pod=mine.some(e=>e.st==='run'&&e.pos<=3);const earn0=5+Math.round(tp*.25)+(pod?2:0);
+ const pod=mine.some(e=>e.st==='run'&&e.pos<=3);const earn0=5+Math.round(tp*.25*DF().earn)+(pod?2:0);
  S.results.push({round:S.cur+1,track:tr.id,cls,earn:earn0});const RR=S.results[S.results.length-1];RR.rx=raceReact(RR,R);RR.dotd=buildDotd(RR);
  const SPR=sponsorAfterRace(RR,mine,tp);RR.spay=SPR.pay;const earn=earn0+SPR.pay;RR.earn=earn;S.budget+=earn;
  const desc=mine.map(e=>`#${S.drivers[e.id].num} ${e.st==='run'?'P'+e.pos:e.st==='dsq'?'DSQ':'DNF'}`).join(', ');
@@ -1979,9 +2008,9 @@ function finishRace(){
  S.cur--;S.commits[0].round=S.cur+1;
  SPR.commits.forEach(c=>{addCommit(c);S.commits[0].round=S.cur+1});
  // between-race evolution
- S.teams.forEach(t=>{if(!t.user)t.perf=Math.min(97,t.perf+rnd()*.25)});
+ rivalDev();
  if(ut.puGrow&&(ut.puGain||0)<6)ut.puGain=Math.min(6,(ut.puGain||0)+ut.puGrow);
- Object.values(S.drivers).forEach(d=>{if(d.growth)d.skill=Math.min(d.cap,d.skill+d.growth)});
+ Object.values(S.drivers).forEach(d=>{if(d.growth)d.skill=Math.min(d.cap,d.skill+d.growth*DF().grow)});
  pause();save();
 }
 function nextRound(){S.cur++;S.wk=null;S.ui.introSeen=null;save();if(S.cur<S.cal.length)go('race');else render()}
@@ -2174,10 +2203,10 @@ const UPGX={aero:{parts:['fw','rw','floor'],where:'프론트 윙 · 리어 윙 �
 function devStats(t){t=t||userTeam();const L=id=>lvl(id);
  const cur={aero:t.aero,power:t.power+(t.puGain||0),rel:t.rel,crew:t.crew,tyre:t.tyre||0,energy:t.energy||0};
  const base={aero:t.aero-2*L('aero'),power:t.power-2*L('power')+(t.puGain||0),rel:t.rel-4*L('rel'),crew:t.crew-L('crew'),tyre:0,energy:0};
- const pf=x=>x.aero*.55+x.power*.45;return{cur,base,perf:pf(cur),perf0:pf(base)}}
+ const pf=x=>effP(x.aero*.55+x.power*.45);return{cur,base,perf:pf(cur),perf0:pf(base)}}
 function gridRank(perf){return S.teams.filter(t=>!t.user&&perfOf(t)>perf).length+1}
 function upgPreview(id){const ut=userTeam();const {cur,perf}=devStats();const u=UPGX[id];const nx={...cur};nx[id]+=u.inc;
- const p2=nx.aero*.55+nx.power*.45;const dp=p2-perf;const laps=S.cal[S.cur]?TR(S.cal[S.cur]).laps:57;
+ const p2=effP(nx.aero*.55+nx.power*.45);const dp=p2-perf;const laps=S.cal[S.cur]?TR(S.cal[S.cur]).laps:57;
  const fx={aero:`다운포스 ${cur.aero} → ${nx.aero}`,power:`출력 ${cur.power.toFixed(1)} → ${nx.power.toFixed(1)}`,rel:`신뢰성 ${cur.rel} → ${nx.rel} · 기계 고장 확률 약 −${(4*.12).toFixed(1)}%p`,crew:`정지 시간 −0.12초 (현재 Lv.${cur.crew} → ${nx.crew})`,tyre:`타이어 마모 ${cur.tyre?'−'+cur.tyre*5:0}% → −${nx.tyre*5}%`,energy:`배터리 회복 +${cur.energy*20}% → +${nx.energy*20}%`}[id];
  return{fx,dp,lap:dp*.06,race:dp*.06*laps,r0:gridRank(perf),r1:gridRank(p2),laps}}
 function carSVG(hl){const L=id=>lvl(id),M=id=>UPG.find(u=>u.id===id).max;
@@ -2577,7 +2606,7 @@ function newSeason(){
  S.seasons.push({year:S.year,pos,pts:st.tm.find(x=>x.id==='usr').pts});
  const carry=seasonCarry(S.year);
  S.year++;S.cur=0;S.results=[];S.wk=null;S.pending=[];S.lastMerge=null;
- S.teams.forEach(t=>{if(!t.user)t.perf=clamp(t.perf-1.5+gauss()*1.2,72,95)});
+ S.teams.forEach(t=>{if(!t.user)t.perf=clamp(t.perf-1.6-(t.perf-86)*.12+gauss()*.8,72,95)});
  const moves=applySummer();
  addCommit({kind:'init',msg:`season-${S.year} 브랜치 시작`,body:`v${S.year-1}.0 릴리스 · 컨스트럭터 P${pos}`+(moves.length?'\n'+moves.join('\n'):'')});
  if(carry)addCommit({kind:'init',msg:`${S.year} 신차 공개 · 업그레이드 초기화`,body:['지난 시즌 업그레이드 레벨이 모두 Lv.0으로 돌아갑니다.'].concat(carryLines(carry),carry.length?[]:['지난 시즌 병합한 업그레이드 없음']).join('\n')});
@@ -2627,21 +2656,21 @@ function commitHTML(c){
 }
 function viewPulls(m){
  const live=S.wk&&S.wk.phase==='race';
- m.innerHTML=`<div class="budget"><div><span class="lbl">개발 예산</span><b class="num">${S.budget}</b></div><span class="muted" style="font-size:13px">레이스마다 기본 5 + 팀 포인트의 25% (포디움 +2)에 스폰서 수입이 더해집니다.${live?' 결승 진행 중에는 병합할 수 없습니다.':''}</span></div>
+ m.innerHTML=`<div class="budget"><div><span class="lbl">개발 예산</span><b class="num">${S.budget}</b></div><div><span class="lbl">이번 라운드 개발 슬롯</span><b class="num">${DF().slots>8?'∞':slotsLeft()+' / '+DF().slots}</b></div><span class="muted" style="font-size:13px">난이도 ${DF().n} · 레이스마다 기본 5 + 팀 포인트의 ${Math.round(25*DF().earn)}% (포디움 +2)에 스폰서 수입이 더해집니다.${DF().step?` 같은 부품은 레벨이 오를 때마다 비용이 ${Math.round(DF().step*100)}%씩 오릅니다.`:''} ${DF().dim<1?'차량 성능 91 이상 구간은 개발 효과가 점점 줄어듭니다.':''}${live?' 결승 진행 중에는 병합할 수 없습니다.':''}</span></div>
  ${mergeReportHTML()}${devPanelHTML()}
  <div class="card prs" style="margin-top:16px"><header>Open<span class="sp"></span>${UPG.filter(u=>lvl(u.id)<u.max).length}</header>
- ${UPG.map(u=>{const lv=lvl(u.id);if(lv>=u.max)return '';const pv=upgPreview(u.id);return `<div class="pr" data-part="${u.id}"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-open" aria-hidden="true">${ICON.pulls}</svg><div style="min-width:0"><div class="t">${esc(u.t)} v${lv+1} <span class="pill">${esc(UPGX[u.id].where)}</span></div><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv?'nx':''}"></i>`).join('')}</div><small>${esc(pv.fx)}${pv.dp>0?` · 차량 성능 +${pv.dp.toFixed(2)} · 랩당 −${pv.lap.toFixed(3)}초 (레이스 약 −${pv.race.toFixed(1)}초)${pv.r1<pv.r0?` · 차량 순위 P${pv.r0} → P${pv.r1}`:''}`:''}</small></div><button class="btn primary" data-act="merge" data-v="${u.id}" ${S.budget<u.cost||live?'disabled':''}>병합 · ${u.cost}</button></div>`}).join('')}</div>
+ ${UPG.map(u=>{const lv=lvl(u.id);if(lv>=u.max)return '';const pv=upgPreview(u.id);return `<div class="pr" data-part="${u.id}"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-open" aria-hidden="true">${ICON.pulls}</svg><div style="min-width:0"><div class="t">${esc(u.t)} v${lv+1} <span class="pill">${esc(UPGX[u.id].where)}</span></div><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv?'nx':''}"></i>`).join('')}</div><small>${esc(pv.fx)}${pv.dp>0?` · 차량 성능 +${pv.dp.toFixed(2)} · 랩당 −${pv.lap.toFixed(3)}초 (레이스 약 −${pv.race.toFixed(1)}초)${pv.r1<pv.r0?` · 차량 순위 P${pv.r0} → P${pv.r1}`:''}`:''}</small></div><button class="btn primary" data-act="merge" data-v="${u.id}" ${S.budget<upgCost(u)||live||!slotsLeft()?'disabled':''}>병합 · ${upgCost(u)}</button></div>`}).join('')}</div>
  <div class="card prs" style="margin-top:16px"><header>Merged · season-${S.year}<span class="sp"></span>${S.merged.filter(x=>x.year===S.year).length}</header>${S.merged.some(x=>x.year===S.year)?S.merged.filter(x=>x.year===S.year).reverse().map(x=>`<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-merged" aria-hidden="true">${ICON.pulls}</svg><div><div class="t">#${x.no} ${esc(x.t)} v${x.lv}</div><small>season-${x.year} · R${x.round} 전 병합 · ${esc(UPGX[x.id].where)} · ${esc(UPG.find(u=>u.id===x.id).d)}</small></div><span></span></div>`).join(''):`<div class="body muted">${S.year} 신차에 아직 병합한 업그레이드가 없습니다.${S.seasons.length?' 지난 시즌 업그레이드는 신차 기본 사양에 일부 승계됐고, 레벨은 Lv.0부터 다시 시작합니다.':''}</div>`}</div>`;
 }
 function merge(id){
- const u=UPG.find(x=>x.id===id),ut=userTeam();if(S.budget<u.cost)return;
- const pv=upgPreview(id),st0=devStats();S.budget-=u.cost;const lv=lvl(id)+1;
+ const u=UPG.find(x=>x.id===id),ut=userTeam();const cost=upgCost(u);if(S.budget<cost||!slotsLeft()||lvl(id)>=u.max)return;
+ const pv=upgPreview(id),st0=devStats();S.budget-=cost;const lv=lvl(id)+1;
  if(id==='aero')ut.aero+=2;if(id==='power')ut.power+=2;if(id==='rel')ut.rel+=4;if(id==='crew')ut.crew+=1;if(id==='tyre')ut.tyre+=1;if(id==='energy')ut.energy+=1;
  const no=S.prNo++;S.merged.push({no,id,t:u.t,lv,year:S.year,round:S.cur+1});
  {const st1=devStats();const k=id;const fm=x=>k==='tyre'?(x?'−'+x*5+'%':'0%'):k==='energy'?(x?'+'+x*20+'%':'0%'):k==='crew'?'Lv.'+x:k==='power'?x.toFixed(1):String(x);
   S.lastMerge={no,id,t:u.t,lv,b:fm(st0.cur[k]),a:fm(st1.cur[k]),p0:st0.perf,p1:st1.perf,dp:st1.perf-st0.perf,r0:pv.r0,r1:pv.r1,laps:pv.laps,fx:pv.fx,note:pick(DEVNOTE[id]),round:S.cur+1};
   (S.pending=S.pending||[]).push({id,t:u.t,lv,dp:st1.perf-st0.perf})}
- addCommit({kind:'merge',upg:id,msg:`Merge pull request #${no}: ${u.t} v${lv}`,body:`${u.d}\n예산 −${u.cost} → 남은 예산 ${S.budget}`});
+ addCommit({kind:'merge',upg:id,msg:`Merge pull request #${no}: ${u.t} v${lv}`,body:`${u.d}\n예산 −${cost} → 남은 예산 ${S.budget}`});
  save();render();
 }
 function lineChart(series,labels){
@@ -2669,7 +2698,11 @@ function standTables(st){
 }
 let resetArm=false;
 function viewSettings(m){
- m.innerHTML=`<div class="ins"><div class="card"><header>세이브 코드</header><div class="body" style="display:grid;gap:10px">
+ const cd0=(S.diff||'normal');
+ m.innerHTML=`<div class="card" style="margin-bottom:16px"><header>난이도</header><div class="body" style="display:grid;gap:10px">
+  <div class="seg">${Object.entries(DIFF).map(([k,x])=>`<button data-act="diff" data-v="${k}" aria-pressed="${cd0===k}">${x.n}</button>`).join('')}</div>
+  <p class="muted" style="margin:0;font-size:13px">${esc(DIFF[cd0].d)}. 시즌 중에도 바로 바뀌며, 포인트 상금 ×${DIFF[cd0].earn} · 드라이버 성장 ×${DIFF[cd0].grow}이 적용됩니다.</p></div></div>
+ <div class="ins"><div class="card"><header>세이브 코드</header><div class="body" style="display:grid;gap:10px">
   <p class="muted" style="margin:0;font-size:13px">진행 상황은 이 브라우저에 자동 저장됩니다. 다른 기기로 옮기려면 코드를 복사해 그쪽 설정 탭에 붙여 넣으세요.</p>
   <textarea id="exp" readonly aria-label="세이브 코드">${esc(encodeSave())}</textarea>
   <div class="row-flex"><button class="btn" data-act="copy">코드 복사</button><span id="copied" class="muted" style="font-size:12px"></span></div></div></div>
@@ -2745,6 +2778,7 @@ document.addEventListener('click',e=>{
   case 'next':nextRound();break;
   case 'newseason':newSeason();break;
   case 'merge':merge(v);break;
+  case 'diff':if(DIFF[v]){S.diff=v;addCommit({kind:'init',msg:`난이도 변경: ${DIFF[v].n}`,body:DIFF[v].d});save();render()}break;
   case 'spacc':acceptOffer(v);break;
   case 'spdec':declineOffer(v);break;
   case 'spend':endSpon(v);break;
