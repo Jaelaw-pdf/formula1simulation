@@ -1240,23 +1240,13 @@ function sponsorAfterRace(r,mine,tp){const P=sponOf();moodOf();const out={pay:0,
  P.income=(P.income||0)+out.pay;return out}
 
 /* ---- 리버리 (스폰서 로고가 들어간 차량 상면도) ---- */
-function liverySVG(){const u=slotUsed();const tc='var(--team)';
- const plate=(slot,x,y,w,h,rot,fs)=>{const a=u[slot];const cx=x+w/2,cy=y+h/2;const tf=rot?`rotate(${rot} ${cx} ${cy})`:'';
-  if(!a)return `<g class="lv-slot empty"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/><text x="${cx}" y="${cy}" transform="${tf}" font-size="${fs*.8}" text-anchor="middle" dominant-baseline="central">빈 슬롯</text></g>`;
-  const sp=spById(a.sid);return `<g class="lv-slot"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#0b0c0f"/><text x="${cx}" y="${cy}" transform="${tf}" font-size="${fs}" fill="${sp.c}" text-anchor="middle" dominant-baseline="central" textLength="${Math.min((rot?h:w)-6,sp.n.length*fs*.62)}" lengthAdjust="spacingAndGlyphs">${esc(sp.n.toUpperCase())}</text></g>`};
- return `<svg class="livery" viewBox="0 0 140 300" role="img" aria-label="스폰서 로고가 들어간 차량 리버리">
-  <rect x="10" y="46" width="20" height="40" rx="6" fill="#16181c"/><rect x="110" y="46" width="20" height="40" rx="6" fill="#16181c"/><rect x="6" y="212" width="24" height="46" rx="7" fill="#16181c"/><rect x="110" y="212" width="24" height="46" rx="7" fill="#16181c"/>
-  <rect x="14" y="10" width="112" height="18" rx="3" fill="${tc}"/>
-  <path d="M60 28 Q70 4 80 28 L84 112 L56 112 Z" fill="${tc}"/>
-  <path d="M36 110 L104 110 L102 196 L84 252 L56 252 L38 196 Z" fill="${tc}"/>
-  <rect x="24" y="264" width="92" height="22" rx="3" fill="${tc}"/>
-  <ellipse cx="70" cy="122" rx="11" ry="17" fill="#050608" stroke="#555" stroke-width="1.2"/>
-  ${plate('fw',22,12,96,14,0,8.5)}
-  ${plate('halo',58,86,24,16,0,4.6)}
-  ${plate('side',38,124,16,70,-90,7)}${plate('side',86,124,16,70,90,7)}
-  ${plate('title',60,146,20,96,-90,8.5)}
-  ${plate('rw',28,268,84,14,0,8.5)}
- </svg>`}
+function liverySVG(){const u=slotUsed();
+ const fill=k=>({floor:'fill="#0e1014"',wing:'fill="var(--team)"',wing2:'fill="#1b1e24"',side:'fill="var(--team)"',body:'fill="var(--team)"',bat:'fill="#1b1e24"',tyre:'fill="#14161a"'})[k];
+ const plate=(slot,x,y,w,h,rot,fs)=>{const a=u[slot];const cx=x+w/2,cy=y+h/2;const tf=rot?`rotate(${rot} ${cx} ${cy})`:'';const len=rot?h:w;
+  if(!a)return `<g class="lv-slot empty"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/><text x="${cx}" y="${cy}" transform="${tf}" font-size="${Math.min(fs*.8,5.5)}" text-anchor="middle" dominant-baseline="central">빈 슬롯</text></g>`;
+  const sp=spById(a.sid);return `<g class="lv-slot"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.6" fill="#08090c" fill-opacity=".88" stroke="rgba(255,255,255,.12)" stroke-width=".4"/><text x="${cx}" y="${cy}" transform="${tf}" font-size="${fs}" fill="${sp.c}" text-anchor="middle" dominant-baseline="central" textLength="${Math.min(len-4,sp.n.length*fs*.62)}" lengthAdjust="spacingAndGlyphs">${esc(sp.n.toUpperCase())}</text></g>`};
+ const over=`${plate('fw',34,12.5,72,7.5,0,6)}${plate('halo',63.6,50,12.8,34,-90,5.2)}${plate('side',40,132,11,54,-90,6.4)}${plate('side',89,132,11,54,90,6.4)}${plate('title',62.5,150,15,66,-90,7.4)}${plate('rw',34,270,72,8,0,6.4)}`;
+ return `<svg class="livery" viewBox="0 0 140 300" role="img" aria-label="스폰서 로고가 들어간 차량 리버리">${carShape({pre:'lv',fill,over})}</svg>`}
 function sponStripHTML(){const P=S.spon;if(!P||!P.active.length)return '';const ord=a=>SLOT_ORDER.indexOf(a.slot);
  return `<div class="spstrip">${P.active.slice().sort((a,b)=>ord(a)-ord(b)).map(a=>sponLogo(spById(a.sid),a.slot==='title'?'big':'')).join('')}</div>`}
 
@@ -2457,19 +2447,76 @@ function upgPreview(id,rk,fc,mult){const {cur,perf}=devStats();const u=UPGX[id];
  const f1=x=>x.toFixed(1);
  const fx={aero:`다운포스 ${f1(cur.aero)} → ${f1(nx.aero)}`,power:`출력 ${f1(cur.power)} → ${f1(nx.power)}`,rel:`신뢰성 ${Math.round(cur.rel)} → ${Math.round(nx.rel)} · 기계 고장 확률 약 −${(inc*.12).toFixed(1)}%p`,crew:`정지 시간 약 −${(inc*.12).toFixed(2)}초 (Lv.${f1(cur.crew)} → ${f1(nx.crew)})`,tyre:`타이어 마모 −${Math.round(cur.tyre*5)}% → −${Math.round(nx.tyre*5)}%`,energy:`배터리 회복 +${Math.round(cur.energy*20)}% → +${Math.round(nx.energy*20)}%`}[id];
  return{fx,dp,lap:dp*.06,race:dp*.06*laps,r0:gridRank(perf),r1:gridRank(p2),laps,inc}}
+/* ---- 차량 상면도 공통 형상 (개발 패널 · 리버리 공용) ---- */
+function carShape(o){
+ /* o.fill(part) → fill 속성 문자열, o.wrap(part, inner) → 파트 그룹 래핑, o.pre 접두어(gradient id 충돌 방지), o.over 오버레이(리버리 로고) */
+ const P=o.pre,F=o.fill,W=o.wrap||((p,s)=>s);
+ const mir=s=>`${s}<g transform="translate(140 0) scale(-1 1)">${s}</g>`;
+ const tyre=(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w*.32}" ${F('tyre')}/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w*.32}" fill="url(#${P}tg)"/><rect x="${x+w*.18}" y="${y+2}" width="${w*.64}" height="${h-4}" rx="${w*.2}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".8"/>`;
+ return `<defs>
+  <linearGradient id="${P}sh" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".38" stop-color="#fff" stop-opacity=".10"/><stop offset=".5" stop-color="#fff" stop-opacity=".22"/><stop offset=".62" stop-color="#fff" stop-opacity=".10"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient>
+  <linearGradient id="${P}tg" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></linearGradient>
+  <radialGradient id="${P}hm" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#9aa3ad"/></radialGradient>
+ </defs>
+ <ellipse cx="70" cy="160" rx="62" ry="146" fill="#000" opacity=".35"/>
+ <!-- 서스펜션 암 -->
+ <g stroke="#3a3f47" stroke-width="1.6" stroke-linecap="round" fill="none">${mir('<path d="M30 58 L62 50 M30 70 L62 76 M30 64 L60 88"/><path d="M30 228 L56 212 M30 242 L58 238 M30 234 L54 226"/>')}</g>
+ <!-- 플로어 -->
+ ${W('aero',`<path ${F('floor')} d="M60 98 L42 104 Q32 108 31 120 L30 196 Q31 222 46 236 L56 246 L84 246 L94 236 Q109 222 110 196 L109 120 Q108 108 98 104 L80 98 Z"/>
+  <path d="M33 132 L33 194 M107 132 L107 194" stroke="rgba(255,255,255,.18)" stroke-width=".8" stroke-dasharray="3 2"/>`)}
+ <!-- 타이어 -->
+ ${W('tyre',`${tyre(13,42,17,42)}${tyre(110,42,17,42)}${tyre(7,212,23,50)}${tyre(110,212,23,50)}`)}
+ <!-- 사이드포드 (냉각) -->
+ ${W('rel',mir(`<path ${F('side')} d="M58 112 L44 115 Q37 117 37 125 L38 168 Q40 194 52 212 L60 222 Z"/><path d="M44 116 Q38 118 38 124 L44 124 Z" fill="#05060a"/>`))}
+ <!-- 엔진 커버 -->
+ ${W('power',`<path ${F('body')} d="M57 132 L83 132 L82 190 Q80 222 75 248 L65 248 Q60 222 58 190 Z"/>`)}
+ <!-- 노즈 · 모노코크 -->
+ <path ${F('body')} d="M65.5 26 Q70 20 74.5 26 L79 88 L82 112 L83 134 L57 134 L58 112 L61 88 Z"/>
+ <clipPath id="${P}cb"><path d="M65.5 26 Q70 20 74.5 26 L79 88 L82 112 L83 134 L82 190 Q80 222 75 248 L65 248 Q60 222 58 190 L57 134 L58 112 L61 88 Z"/></clipPath>
+ <rect x="56" y="20" width="28" height="230" fill="url(#${P}sh)" clip-path="url(#${P}cb)"/>
+ <!-- 에너지 스토어 (배터리 커버) -->
+ ${W('energy',`<rect ${F('bat')} x="61" y="136" width="18" height="10" rx="2"/><path d="M64 141 h12" stroke="rgba(0,0,0,.45)" stroke-width="1"/>`)}
+ <!-- 에어박스 · 샤크핀 -->
+ <path d="M64 130 Q70 124 76 130 L75 138 L65 138 Z" fill="#06070a"/>
+ <path d="M70 140 L70 250" stroke="rgba(0,0,0,.4)" stroke-width="1.4"/>
+ <path d="M70 140 L70 250" stroke="rgba(255,255,255,.18)" stroke-width=".5" transform="translate(.8 0)"/>
+ <!-- 콕핏 · 헤일로 · 헬멧 -->
+ <path d="M62.5 98 Q70 92 77.5 98 L78.5 126 Q70 130 61.5 126 Z" fill="#050608"/>
+ <circle cx="70" cy="114" r="6.2" fill="url(#${P}hm)"/><path d="M64.6 111.5 Q70 108.6 75.4 111.5 L75 114 Q70 112 65 114 Z" fill="#111"/>
+ <path d="M61 124 L61.5 100 Q70 90 78.5 100 L79 124 M70 92 L70 99" fill="none" stroke="#1b1e23" stroke-width="2.6" stroke-linecap="round"/>
+ <path d="M61 124 L61.5 100 Q70 90 78.5 100 L79 124" fill="none" stroke="rgba(255,255,255,.22)" stroke-width=".6"/>
+ <!-- 미러 -->
+ ${mir('<path d="M58 100 L49 98" stroke="#1b1e23" stroke-width="1.4"/><rect x="44" y="95" width="6" height="4" rx="1.2" fill="#1b1e23"/>')}
+ <!-- 디퓨저 · 기어박스 -->
+ <path d="M54 246 L86 246 L90 262 L50 262 Z" fill="#090a0d"/><path d="M60 248 L59 261 M66 248 L66 261 M74 248 L74 261 M80 248 L81 261" stroke="#1d2026" stroke-width=".8"/>
+ <rect x="66" y="246" width="8" height="26" rx="2" fill="#15171b"/>
+ <!-- 프론트 윙 -->
+ ${W('aero',`<path ${F('wing')} d="M15 23 Q16 13 30 12 Q70 8 110 12 Q124 13 125 23 Q104 18 70 19 Q36 18 15 23 Z"/>
+  <path ${F('wing2')} d="M18 29 Q38 22 62 24 L62 28 Q40 27 20 33 Z M122 29 Q102 22 78 24 L78 28 Q100 27 120 33 Z"/>
+  <rect x="11" y="9" width="4.5" height="25" rx="1.5" fill="#15171b"/><rect x="124.5" y="9" width="4.5" height="25" rx="1.5" fill="#15171b"/>`)}
+ <!-- 리어 윙 -->
+ ${W('aero',`<path ${F('wing')} d="M25 270 Q70 264 115 270 L115 282 Q70 277 25 282 Z"/>
+  <path ${F('wing2')} d="M25 284 Q70 280 115 284 L115 290 Q70 287 25 290 Z"/>
+  <rect x="21" y="262" width="5" height="32" rx="1.5" fill="#15171b"/><rect x="114" y="262" width="5" height="32" rx="1.5" fill="#15171b"/>
+  <path d="M60 266 L58 270 M80 266 L82 270" stroke="#15171b" stroke-width="2"/>`)}
+ <!-- 레인 라이트 -->
+ <rect x="67" y="292" width="6" height="3" rx="1" fill="#ff2d2d"/>
+ ${o.over||''}`}
+
 function carSVG(hl){const L=id=>lvl(id),M=id=>UPG.find(u=>u.id===id).max;
- const f=id=>{const l=L(id);return l?`fill="var(--team)" fill-opacity="${(.3+.7*l/M(id)).toFixed(2)}"`:'fill="#23272e"'};
+ const of={floor:'aero',wing:'aero',wing2:'aero',side:'rel',body:'power',bat:'energy',tyre:'tyre'};
+ const f=k=>{if(k==='body')return 'fill="#2a2e35"';const id=of[k];const l=L(id);
+  if(k==='tyre')return l?`fill="var(--team)" fill-opacity="${(.35+.6*l/M(id)).toFixed(2)}"`:'fill="#16181c"';
+  return l?`fill="var(--team)" fill-opacity="${(.3+.7*l/M(id)).toFixed(2)}"`:`fill="${k==='floor'?'#121418':'#262a31'}"`};
  const cls=id=>`class="part${hl===id?' hl':''}" data-part="${id}"`;
- return `<svg class="car" viewBox="0 0 140 300" role="img" aria-label="차량 상면도: 업그레이드된 부품이 팀 컬러로 표시됩니다">
- <g ${cls('aero')}><path ${f('aero')} d="M32 72 L46 70 L48 236 L30 246 L26 200 Z M108 72 L94 70 L92 236 L110 246 L114 200 Z"/><rect ${f('aero')} x="14" y="12" width="112" height="14" rx="3"/><rect ${f('aero')} x="26" y="268" width="88" height="16" rx="3"/></g>
- <path d="M62 24 Q70 8 78 24 L82 110 L58 110 Z" fill="#30353d" stroke="#000" stroke-width="1"/>
- <g ${cls('rel')}><rect ${f('rel')} x="38" y="112" width="20" height="78" rx="8"/><rect ${f('rel')} x="82" y="112" width="20" height="78" rx="8"/></g>
- <g ${cls('power')}><path ${f('power')} d="M56 150 L84 150 L80 250 L60 250 Z"/></g>
- <ellipse cx="70" cy="128" rx="11" ry="18" fill="#0b0d10" stroke="#555" stroke-width="1.2"/>
- <g ${cls('energy')}><rect ${f('energy')} x="60" y="140" width="20" height="9" rx="2" stroke="#000" stroke-width=".8"/></g>
- <g ${cls('tyre')}><rect ${f('tyre')} x="10" y="46" width="20" height="40" rx="6"/><rect ${f('tyre')} x="110" y="46" width="20" height="40" rx="6"/><rect ${f('tyre')} x="6" y="212" width="24" height="46" rx="7"/><rect ${f('tyre')} x="110" y="212" width="24" height="46" rx="7"/></g>
- <g ${cls('crew')}><circle ${f('crew')} cx="20" cy="66" r="4.5"/><circle ${f('crew')} cx="120" cy="66" r="4.5"/><circle ${f('crew')} cx="18" cy="235" r="5"/><circle ${f('crew')} cx="122" cy="235" r="5"/></g>
- </svg>`}
+ const wrap=(id,s)=>`<g ${cls(id)}>${s}</g>`;
+ const pw=L('power');const powerFill=pw?`fill="var(--team)" fill-opacity="${(.3+.7*pw/M('power')).toFixed(2)}"`:'fill="#2a2e35"';
+ let svg=carShape({pre:'cv',fill:f,wrap});
+ /* 엔진 커버(power 그룹 안 body)는 파워 개발도로 칠함 */
+ svg=svg.replace(/(<g [^>]*data-part="power">)<path fill="#2a2e35"/,`$1<path ${powerFill}`);
+ const crew=L('crew');const cf=crew?`fill="var(--team)" fill-opacity="${(.4+.6*crew/M('crew')).toFixed(2)}"`:'fill="#4a505a"';
+ const nuts=`<g ${cls('crew')}><circle ${cf} cx="21.5" cy="63" r="3.6"/><circle ${cf} cx="118.5" cy="63" r="3.6"/><circle ${cf} cx="18.5" cy="237" r="4.2"/><circle ${cf} cx="121.5" cy="237" r="4.2"/></g>`;
+ return `<svg class="car" viewBox="0 0 140 300" role="img" aria-label="차량 상면도: 업그레이드된 부품이 팀 컬러로 표시됩니다">${svg}${nuts}</svg>`}
 function devPanelHTML(){const ut=userTeam(),{cur,base,perf,perf0}=devStats();const r0=gridRank(perf0),r1=gridRank(perf);const hl=S.lastMerge&&S.lastMerge.id;
  const bar=(lab,v,b,mn,mx,fmt,id)=>{const p=x=>clamp((x-mn)/(mx-mn)*100,0,100);const d=v-b;return `<div class="sb${hl===id?' hl':''}" data-part="${id}"><div class="sbt"><span>${lab}</span><b class="num">${fmt(v)}</b>${d>0?`<span class="up num">+${fmt(d)}</span>`:''}<span class="lv">Lv.${lvl(id)}/${UPG.find(u=>u.id===id).max}</span></div><div class="sbb"><i style="width:${p(b)}%"></i><i class="g" style="left:${p(b)}%;width:${p(v)-p(b)}%"></i></div></div>`};
  const gain=(perf-perf0)*.06;
