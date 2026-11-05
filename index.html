@@ -660,6 +660,19 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 .ct{font-family:var(--f-disp);font-size:16px;font-weight:700;min-width:0;overflow-wrap:anywhere}
 .ctop .tag{margin-left:0}
 .tag.merged{border-color:#a371f7;color:#a371f7}
+.tag.open{border-color:var(--good);color:var(--good)}.tag.fail{border-color:var(--bad);color:var(--bad)}
+.setg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:start}
+.setp{display:grid;gap:8px}
+.setr{display:grid;grid-template-columns:92px 28px 1fr 22px 28px;align-items:center;gap:6px;font-size:13px}
+.setbar{display:grid;grid-template-columns:repeat(9,1fr);gap:2px}.setbar i{height:8px;border-radius:2px;background:var(--line-2)}.setbar i.on{background:var(--team)}
+.fb{display:grid;gap:4px;font-size:12.5px}.fb>div{display:grid;grid-template-columns:78px 38px 1fr;gap:6px;align-items:baseline}
+.fb>div[data-g="0"] b{color:var(--good)}.fb>div[data-g="1"] b{color:var(--fg)}.fb>div[data-g="2"] b{color:var(--warn)}.fb>div[data-g="3"] b{color:var(--bad)}
+table.setlog{font-size:12px}table.setlog td,table.setlog th{padding:2px 6px}
+.tbreak{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}.tbreak b{color:var(--fg)}
+.profg{display:grid;gap:6px}.profr{display:grid;grid-template-columns:76px 1fr 44px;gap:8px;align-items:center;font-size:12.5px}
+.profb{position:relative;height:10px;background:var(--line-2);border-radius:3px}.profb i{position:absolute;top:0;bottom:0;background:var(--team);border-radius:3px}.profb s{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg);opacity:.6}
+.prj{display:grid;gap:6px;padding:12px 16px;border-top:1px solid var(--line)}.prj .pbar{height:6px;background:var(--line-2);border-radius:3px;overflow:hidden}.prj .pbar i{display:block;height:100%;background:var(--team)}
+.prj .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .cres{display:flex;flex-wrap:wrap;gap:6px 14px}
 .rgrp{display:inline-flex;align-items:center;gap:6px}
 .csub{font-size:13px;color:#d6d9de;min-width:0}
@@ -706,6 +719,15 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 /* ============ data ============ */
 const PTS=[25,18,15,12,10,8,6,4,2,1];
 const COMP={S:{n:'소프트',off:0,deg:.085,life:16},M:{n:'미디엄',off:.32,deg:.05,life:26},H:{n:'하드',off:.6,deg:.032,life:38},I:{n:'인터미디어트',off:0,deg:0,life:30},W:{n:'웨트',off:0,deg:0,life:34}};
+/* 타이어 손실 곡선: 초반은 완만, 후반으로 갈수록 가파르게 (비선형), 100% 이후 절벽.
+   워밍업: 새 타이어 첫 두 랩 손실 [아웃랩, 다음 랩] — 하드일수록 크다. 출발 스틴트는 블랭킷·포메이션 랩 덕에 절반. */
+const tyreLoss=(k,w)=>{const C=COMP[k];if(!C||k==='I'||k==='W')return 0;return C.off+C.deg*C.life*(.55*w+.45*w*w)+(w>1?(w-1)*C.life*.4:0)};
+const WARM={S:[.35,.1],M:[.7,.2],H:[1.2,.45]};
+const warmOf=(k,age,first,tr)=>{const W=WARM[k];if(!W||age>1||age<0)return 0;return W[age]*(first?.5:1)*(tr&&tr.id==='lvg'?1.4:1)};
+/* 더티 에어: 앞차 1초 이내면 랩당 손실 + 마모 증가. 추월이 어려운 서킷일수록 크다 */
+const dirtyAir=tr=>.22+.3*clamp(1.15-tr.ot,0,1);
+/* 피트 후 복귀 트래픽 예상 손실(스톱당): 계획 계산에 쓰는 기대값 */
+const trafCost=tr=>+(.8+5*Math.pow(clamp(1-tr.ot,0,1),1.5)).toFixed(2);
 const TRACKS=[
  {id:'aus',n:'오스트레일리아',p:'앨버트 파크',laps:58,base:80.5,ot:.8,deg:1,rain:.15,sc:.5,st:0,pit:20},
  {id:'chn',n:'중국',p:'상하이',laps:56,base:94.5,ot:1,deg:1.1,rain:.2,sc:.35,st:0,pit:22},
@@ -736,11 +758,50 @@ const LEN={6:['aus','mon','gbr','ita','sgp','abu'],12:['aus','jpn','mia','mon','
 /* 트랙 성격 · 팀 성향 (주말마다 강세 팀이 바뀜) */
 const TTYPE={aus:'bal',chn:'bal',jpn:'df',bhr:'bal',sau:'pw',mia:'bal',can:'pw',mon:'df',esp:'df',aut:'pw',gbr:'df',bel:'pw',hun:'df',ned:'df',ita:'pw',mad:'bal',aze:'pw',sgp:'df',usa:'bal',mex:'pw',bra:'bal',lvg:'pw',qat:'df',abu:'bal'};
 const TTN={pw:'파워 서킷',df:'다운포스 서킷',bal:'밸런스 서킷'};
-const TRAIT={mcl:{pw:-.6,df:.5,st:-.1},mer:{pw:.8,df:-.3,st:.1},rbr:{pw:.4,df:0,st:-.2},fer:{pw:.5,df:.2,st:.7},wil:{pw:1,df:-.9,st:-.3},ast:{pw:-.5,df:.6,st:.2},rb:{pw:.3,df:-.1,st:0},has:{pw:.3,df:-.4,st:-.2},aud:{pw:0,df:.2,st:-.1},alp:{pw:-.3,df:.4,st:.3},cad:{pw:.4,df:-.5,st:.1}};
+/* 트랙 구성 [저속 코너, 중속 코너, 고속 코너, 직선] 비중 (합 1).
+   차량마다 강한 구간이 달라 주말마다 강세 팀이 바뀐다 (F1 매니저의 차량 성능 항목 방식) */
+const TW={aus:[.25,.35,.2,.2],chn:[.3,.3,.15,.25],jpn:[.1,.3,.45,.15],bhr:[.4,.2,.1,.3],sau:[.1,.2,.35,.35],mia:[.35,.25,.15,.25],can:[.45,.15,.05,.35],mon:[.65,.3,0,.05],esp:[.15,.35,.4,.1],aut:[.3,.2,.2,.3],gbr:[.05,.25,.55,.15],bel:[.15,.2,.3,.35],hun:[.45,.4,.05,.1],ned:[.2,.35,.35,.1],ita:[.2,.1,.15,.55],mad:[.35,.3,.15,.2],aze:[.45,.1,.05,.4],sgp:[.6,.25,.05,.1],usa:[.25,.3,.3,.15],mex:[.35,.25,.05,.35],bra:[.3,.3,.15,.25],lvg:[.35,.1,.1,.45],qat:[.05,.3,.5,.15],abu:[.4,.25,.1,.25]};
+const PK=['lo','mi','hi','st'],PKN={lo:'저속 코너',mi:'중속 코너',hi:'고속 코너',st:'직선 속도'};
+const TWM=PK.map((_,i)=>Object.values(TW).reduce((s,w)=>s+w[i],0)/Object.keys(TW).length);
+/* 팀 차량 프로필: 구간별 성능 편차 (1포인트 ≈ 랩당 0.06초) · ty = 타이어 보존 (+면 마모 적음) */
+const PROF={mcl:{lo:3,mi:2,hi:.5,st:-3.5,ty:1},mer:{lo:-2,mi:0,hi:1.5,st:3.5,ty:-1},rbr:{lo:-1.5,mi:.5,hi:3,st:1,ty:0},fer:{lo:2,mi:1,hi:-1.5,st:.5,ty:-1},wil:{lo:-2.5,mi:-1,hi:0,st:4.5,ty:-1},ast:{lo:1.5,mi:1.5,hi:-.5,st:-2.5,ty:.5},rb:{lo:0,mi:.5,hi:.5,st:-.5,ty:0},has:{lo:-1,mi:0,hi:0,st:1,ty:1},aud:{lo:0,mi:1,hi:0,st:-1,ty:0},alp:{lo:1,mi:1,hi:-1,st:-1,ty:0},cad:{lo:-1,mi:-.5,hi:0,st:1.5,ty:0}};
+function profOf(t){if(t.user){const d=((t.power+(t.puGain||0))-t.aero)*.3;const p=t.prof||{};return{lo:(p.lo||0)-d/3,mi:(p.mi||0)-d/3,hi:(p.hi||0)-d/3,st:(p.st||0)+d,ty:0}}
+ if(!t.prof)t.prof=Object.assign({lo:0,mi:0,hi:0,st:0,ty:0},PROF[t.id]||{});return t.prof}
+/* 드라이버 특성 (트랙 위 성향만): wet 우천, ty 타이어 관리, q 원랩, tr 강한 서킷. -1..1 */
+const DTR={VER:{wet:1,ty:.5,q:.8,tr:['jpn','ned','aut','bel','bra']},NOR:{wet:.3,ty:.3,q:.5,tr:['gbr','mia','sgp']},PIA:{wet:0,ty:.7,q:.2,tr:['chn','bhr','sau','aze']},LEC:{wet:0,ty:-.2,q:1,tr:['mon','sgp','aze','ita']},HAM:{wet:.9,ty:.8,q:.1,tr:['gbr','hun','can']},RUS:{wet:.3,ty:.2,q:.7,tr:['can','sgp','lvg']},ANT:{wet:-.3,ty:-.3,q:.3,tr:['can','mia']},ALO:{wet:.8,ty:.8,q:0,tr:['hun','mon','bra']},SAI:{wet:.2,ty:.5,q:.2,tr:['sgp','aus','mex']},ALB:{wet:0,ty:.6,q:0,tr:['ita','can']},HAD:{wet:0,ty:-.2,q:.4,tr:['ned','mon']},GAS:{wet:.4,ty:.2,q:.2,tr:['bra','ita']},OCO:{wet:.3,ty:.4,q:-.2,tr:['mon','hun']},HUL:{wet:.5,ty:.4,q:.5,tr:['gbr','bra']},BOR:{wet:0,ty:.1,q:.2,tr:['hun','bra']},STR:{wet:.5,ty:0,q:-.5,tr:['bra','can']},BEA:{wet:-.2,ty:.2,q:.2,tr:['mex','sau']},LAW:{wet:.2,ty:0,q:0,tr:['mex','aut']},PER:{wet:0,ty:1,q:-.6,tr:['sau','aze','mon']},BOT:{wet:-.3,ty:.3,q:.4,tr:['aut','jpn']}};
+function hsh(s){let h=2166136261;s=String(s);for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return ((h>>>0)%10000)/10000}
+function dtrOf(d){const x=DTR[d.code];if(x)return x;const r=k=>+(hsh(d.code+k)*1.4-.7).toFixed(2);return{wet:r('w'),ty:r('t'),q:r('q'),tr:[]}}
+/* 드라이버·서킷 궁합 (성능 포인트, 약 −0.7 ~ +1.7) */
+function affOf(d,tid){const x=dtrOf(d);return +((x.tr.includes(tid)?1:0)+(hsh(d.code+'@'+tid)-.5)*1.4).toFixed(2)}
+const affWord=a=>a>=.9?'아주 좋음':a>=.3?'좋음':a>-.3?'보통':'약함';
+/* ===== 셋업 (F1 매니저식 숨은 최적 창) ===== */
+const SETK=[['fw','프론트 윙'],['rw','리어 윙'],['su','서스펜션 강성'],['rh','차고']];
+const SETW={fw:1,rw:1.2,su:.8,rh:1};
+function setIdeal(d,tid){const w=TW[tid]||[.25,.25,.25,.25],tr=TR(tid);const c=v=>clamp(Math.round(v),1,9);
+ const rw=2+7*(1-w[3]/.55),su=3+5*w[2]/.55-(tr.st?2:0),rh=6-4*w[2]/.55+(tr.st?2:0);
+ const pf=k=>Math.round((hsh(d.code+'set'+k)-.5)*3),nz=()=>Math.round(gauss()*.8);
+ return{fw:c(rw+pf('fw')+nz()),rw:c(rw+nz()),su:c(su+pf('su')+nz()),rh:c(rh+nz())}}
+function setQ(s,ideal){let a=0,b=0;SETK.forEach(([k])=>{const e=(s[k]-ideal[k]);a+=SETW[k]*e*e;b+=SETW[k]});return clamp(1-Math.sqrt(a/b)/5,0,1)}
+function setFeedback(d,s,ideal){const e={};SETK.forEach(([k])=>e[k]=s[k]-ideal[k]);const sd=clamp((92-d.skill)*.06,.15,.7);const nz=()=>gauss()*sd;
+ const F=[['밸런스',e.fw-.5*e.rw+nz(),'오버스티어 · 프론트가 너무 셉니다','언더스티어 · 앞이 안 돌아갑니다'],
+  ['코너 vs 직선',e.rw+nz(),'드래그 과다 · 직선에서 느립니다','다운포스 부족 · 코너에서 불안합니다'],
+  ['연석·노면',e.su+nz(),'너무 딱딱함 · 연석에서 튑니다','너무 무름 · 차가 굼뜹니다'],
+  ['차고·플로어',e.rh+.3*e.su+nz(),'너무 높음 · 플로어 다운포스 손실','너무 낮음 · 바닥이 긁힙니다']];
+ return F.map(([n,v,pos,neg])=>{const a=Math.abs(v);return{n,g:a<.6?0:a<1.6?1:a<3?2:3,t:a<.6?'좋아요, 손대지 마세요':(v>0?pos:neg)}})}
+const SETG=['최적','약간','뚜렷','심각'];
+function ensureSet(){const wk=S.wk;if(!wk)return;wk.set=wk.set||{};wk.aiQ=wk.aiQ||{};
+ S.teams.forEach(t=>t.drivers.forEach(id=>{const d=S.drivers[id];
+  if(t.user){if(!wk.set[id]){const I=setIdeal(d,wk.track);const s={};SETK.forEach(([k])=>s[k]=clamp(I[k]+Math.round(gauss()*1.7),1,9));wk.set[id]={ideal:I,s,runs:[],q:null}}}
+  else if(wk.aiQ[id]==null)wk.aiQ[id]=+clamp(.73+(t.perf-80)*.006+gauss()*.1,.35,1).toFixed(3)}))}
+function setQOf(id){const wk=S.wk;if(!wk)return .7;const d=S.drivers[id];if(d.team!=='usr')return wk.aiQ&&wk.aiQ[id]!=null?wk.aiQ[id]:.75;const x=wk.set&&wk.set[id];if(!x)return .7;return x.q!=null?x.q:setQ(x.s,x.ideal)}
+/* 드라이버 단위 주말 보정: 셋업 완성도 + 서킷 궁합 (+예선은 원랩 특성) */
+function drvBonus(id,ses){const wk=S.wk;if(!wk)return 0;const d=S.drivers[id];return (setQOf(id)-.7)*5+affOf(d,wk.track)+(ses==='q'?dtrOf(d).q*.6:0)}
+/* 결승 타이어 마모 배율: 드라이버 관리 능력 · 셋업이 나쁘면 마모 증가 · 팀 차량 특성 */
+function drvTm(id){const d=S.drivers[id],t=teamById(d.team);return (1-.04*dtrOf(d).ty)*(1+(.7-setQOf(id))*.15)*(1-.02*(profOf(t).ty||0))}
 const DIFF={
- easy:{n:'쉬움',d:'업그레이드 비용 고정 · 라운드당 병합 제한 없음 · 신차 승계 50% · 라이벌 개발 완만',cost:1,step:0,earn:1,grow:1,carry:.5,riv:.7,cat:0,slots:9,dim:1,par:0},
- normal:{n:'보통',d:'레벨이 오를수록 비용 상승 · 라운드당 병합 2건 · 신차 승계 30% · 상위 팀은 타이어·에너지 기술도 성숙 · 앞서가면 라이벌이 추격 개발',cost:1,step:.25,earn:.65,grow:.6,carry:.3,riv:1,cat:.015,slots:2,dim:.7,par:1},
- hard:{n:'어려움',d:'비용 가파르게 상승 · 라운드당 병합 1건 · 신차 승계 20% · 라이벌 개발 공격적',cost:1.1,step:.4,earn:.5,grow:.45,carry:.2,riv:1.3,cat:.025,slots:1,dim:.55,par:1}};
+ easy:{n:'쉬움',d:'업그레이드 비용 고정 · 동시 설계 3건 · 풍동 시간 여유 · 신차 승계 50% · 라이벌 개발 완만',cost:1,step:0,earn:1,grow:1,carry:.5,riv:.7,cat:0,slots:9,dim:1,par:0,cap:3,atr:14},
+ normal:{n:'보통',d:'레벨이 오를수록 비용 상승 · 동시 설계 2건 · 풍동 시간 제한 · 신차 승계 30% · 상위 팀은 타이어·에너지 기술도 성숙 · 앞서가면 라이벌이 추격 개발',cost:1,step:.25,earn:.65,grow:.6,carry:.3,riv:1,cat:.015,slots:2,dim:.7,par:1,cap:2,atr:10},
+ hard:{n:'어려움',d:'비용 가파르게 상승 · 동시 설계 1건 · 풍동 시간 빠듯 · 신차 승계 20% · 라이벌 개발 공격적',cost:1.1,step:.4,earn:.5,grow:.45,carry:.2,riv:1.3,cat:.025,slots:1,dim:.55,par:1,cap:1,atr:8}};
 const DF=()=>DIFF[(S&&S.diff)||'normal']||DIFF.normal;
 /* 성능 91 이상은 개발 효율 체감 · 상한 약 97.5 (상위권일수록 한 단계 올리기가 어려움) */
 const effP=raw=>{const k=DF().dim;if(k>=1||raw<=91)return raw;return 91+6.5*(1-Math.exp(-(raw-91)*k/6.5))};
@@ -751,10 +812,10 @@ const BORN={NOR:1999,PIA:2001,RUS:1998,ANT:2006,VER:1997,HAD:2004,LEC:1997,HAM:1
  TSU:2000,FOR:2004,OWA:1999,VES:2002,GIO:1993,BRW:2002,IWA:2001,CRA:2005,VAN:1992,DOO:2003,HIR:1994,ARO:2004,ZHO:1999};
 const ageOf=d=>{if(!d.born)d.born=BORN[d.code]||(S.year-23);return S.year-d.born};
 const RIVALS=[
- {id:'mcl',name:'McLaren',color:'#ff8000',perf:92,rel:90,dr:[['NOR','Lando Norris',4,93],['PIA','Oscar Piastri',81,91]]},
- {id:'mer',name:'Mercedes',color:'#27f4d2',perf:91,rel:91,dr:[['RUS','George Russell',63,91],['ANT','Kimi Antonelli',12,86]]},
- {id:'rbr',name:'Red Bull',color:'#3671c6',perf:89,rel:86,dr:[['VER','Max Verstappen',3,96],['HAD','Isack Hadjar',6,84]]},
- {id:'fer',name:'Ferrari',color:'#e8002d',perf:89,rel:88,dr:[['LEC','Charles Leclerc',16,93],['HAM','Lewis Hamilton',44,90]]},
+ {id:'mcl',name:'McLaren',color:'#ff8000',perf:91.3,rel:90,dr:[['NOR','Lando Norris',4,93],['PIA','Oscar Piastri',81,91]]},
+ {id:'mer',name:'Mercedes',color:'#27f4d2',perf:91.2,rel:91,dr:[['RUS','George Russell',63,91],['ANT','Kimi Antonelli',12,86]]},
+ {id:'rbr',name:'Red Bull',color:'#3671c6',perf:89.8,rel:86,dr:[['VER','Max Verstappen',3,96],['HAD','Isack Hadjar',6,84]]},
+ {id:'fer',name:'Ferrari',color:'#e8002d',perf:90,rel:88,dr:[['LEC','Charles Leclerc',16,93],['HAM','Lewis Hamilton',44,90]]},
  {id:'wil',name:'Williams',color:'#64c4ff',perf:82,rel:88,dr:[['ALB','Alexander Albon',23,85],['SAI','Carlos Sainz',55,88]]},
  {id:'ast',name:'Aston Martin',color:'#229971',perf:81,rel:84,dr:[['ALO','Fernando Alonso',14,89],['STR','Lance Stroll',18,79]]},
  {id:'rb',name:'Racing Bulls',color:'#6692ff',perf:80,rel:87,dr:[['LAW','Liam Lawson',30,82],['LIN','Arvid Lindblad',41,80]]},
@@ -809,13 +870,17 @@ function rollProspects(d){const signed=new Set(d.drivers.map(x=>x.pid).filter(Bo
  for(const p of pool){if(pick.length>=4)break;if(!pick.includes(p))pick.push(p)}
  d.cands=pick.slice(0,4).map(p=>p.id);d.rolls=(d.rolls||0)+1}
 const UPG=[
- {id:'aero',t:'공력: 플로어·윙 개선',d:'다운포스 +2 (차량 성능 약 +1.1)',cost:8,max:6},
- {id:'power',t:'파워유닛: 연소·ERS 매핑',d:'출력 +2 (차량 성능 약 +0.9)',cost:8,max:6},
- {id:'rel',t:'신뢰성: 냉각·유압 보강',d:'신뢰성 +4 · 기계 고장 확률 감소',cost:5,max:4},
- {id:'crew',t:'피트 크루: 정식 훈련',d:'정지 시간 −0.12초 · 느린 스톱 확률 감소',cost:5,max:4},
- {id:'tyre',t:'타이어: 열 관리 소프트웨어',d:'타이어 마모 −5%',cost:6,max:3},
- {id:'energy',t:'에너지: 배터리 회생 맵',d:'배터리 회복 +20%',cost:5,max:2},
+ {id:'aero',t:'공력: 플로어·윙 개선',d:'다운포스 약 +2 기대 (풍동·트랙 상관성에 따라 결과가 달라짐)',cost:8,max:6,atr:14,rd:3},
+ {id:'power',t:'파워유닛: 연소·ERS 매핑',d:'출력 약 +2 기대 · 다이노 결과에 따라 변동',cost:8,max:6,atr:12,rd:3},
+ {id:'rel',t:'신뢰성: 냉각·유압 보강',d:'신뢰성 약 +4 기대 · 기계 고장 확률 감소',cost:5,max:4,atr:6,rd:2},
+ {id:'crew',t:'피트 크루: 정식 훈련',d:'정지 시간 약 −0.12초 기대 · 느린 스톱 확률 감소',cost:5,max:4,atr:2,rd:1},
+ {id:'tyre',t:'타이어: 열 관리 소프트웨어',d:'타이어 마모 약 −5% 기대',cost:6,max:3,atr:8,rd:2},
+ {id:'energy',t:'에너지: 배터리 회생 맵',d:'배터리 회복 약 +20% 기대',cost:5,max:2,atr:6,rd:2},
 ];
+/* 설계 리스크: 기대 효과·분산·실패 확률·비용·기간이 함께 움직인다 */
+const RISK={safe:{n:'보수적',mu:.8,sd:.1,fail:.05,cost:.8,atr:.8,dr:-1,d:'검증된 개념 · 효과 작지만 안정'},std:{n:'표준',mu:1,sd:.22,fail:.12,cost:1,atr:1,dr:0,d:'일반적인 개발 사이클'},agg:{n:'공격적',mu:1.4,sd:.4,fail:.25,cost:1.3,atr:1.3,dr:1,d:'큰 개념 변경 · 대박 또는 실패'}};
+/* 공력 개발 방향: 구간별 성능을 바꾼다 (am = 다운포스 총량 배율) */
+const FOCUS={bal:{n:'균형',d:{},am:1,t:'전 구간 고르게'},lo:{n:'저속 코너',d:{lo:1.2,mi:.4,st:-.5},am:1,t:'모나코·싱가포르·헝가리형'},hi:{n:'고속 코너',d:{hi:1.2,mi:.4,lo:-.4},am:1,t:'실버스톤·스즈카·카타르형'},st:{n:'저드래그',d:{st:1.6,lo:-.4,mi:-.3,hi:-.3},am:.5,t:'몬차·라스베이거스·바쿠형'}};
 const SWATCH=['#2f6fed','#00a19c','#7b3fe4','#ff5a1f','#e6007e','#1db954','#f2c200','#5e6ad2'];
 const SPEED={1:3000,2:1600,4:800};
 const TABS=[['overview','패독'],['race','레이스'],['commits','커밋'],['pulls','풀 리퀘스트'],['sponsors','스폰서'],['contracts','계약'],['insights','인사이트'],['records','기록실'],['settings','설정']];
@@ -857,42 +922,63 @@ const POOL=20;
 function spent(d){return d.alloc.aero+d.alloc.power+d.alloc.rel+d.alloc.crew+d.drivers.reduce((s,x)=>s+drvStat(x).cost,0)}
 function draftSpec(d){const pu=PU[d.pu];return{aero:72+d.alloc.aero,power:72+d.alloc.power+pu.power,rel:80+2*d.alloc.rel+pu.rel,crew:d.alloc.crew}}
 const perfOf=t=>t.user?effP(t.aero*.55+(t.power+(t.puGain||0))*.45):t.perf;
-function trackMod(t,tid){const tr=TR(tid),ty=TTYPE[tid]||'bal';
- if(t.user){const d=(t.power+(t.puGain||0))-t.aero;return clamp(ty==='pw'?d*.12:ty==='df'?-d*.12:0,-1.2,1.2)}
- const T=TRAIT[t.id]||{pw:0,df:0,st:0};return 1.2*((ty==='bal'?0:T[ty])+(tr.st?T.st:0))}
+const PROF_K=1.35;
+function trackMod(t,tid){const w=TW[tid];if(!w)return 0;const p=profOf(t);return PROF_K*PK.reduce((s,k,i)=>s+(w[i]-TWM[i])*(p[k]||0),0)}
 const SPRINT=['chn','mia','can','gbr','ned','sgp'];
 const SPTS=[8,7,6,5,4,3,2,1];
 const FPSET={df:{n:'하이 다운포스',d:'코너 그립↑ · 직선 속도↓'},bal:{n:'균형',d:'어느 서킷에서도 무난하지만 최적은 아님'},pw:{n:'로우 드래그',d:'직선 속도↑ · 코너 그립↓'}};
-const FPPROG={setup:{n:'셋업 최적화',d:'예선·결승 페이스 소폭 향상'},quali:{n:'예선 시뮬레이션',d:'원랩 페이스 향상 · 결승 영향 없음'},long:{n:'롱런 · 타이어 데이터',d:'결승 타이어 마모 −6% · 라이벌 롱런 페이스를 정확히 파악'},parts:{n:'신규 파츠 상관성 테스트',d:'장착 대기 부품의 상관성 문제 예방'}};
+const FPPROG={setup:{n:'셋업 집중',d:'셋업 런 +2회 (최적 창을 찾을 시간이 늘어남)'},quali:{n:'예선 시뮬레이션',d:'원랩 페이스 향상 · 결승 영향 없음'},long:{n:'롱런 · 타이어 데이터',d:'결승 타이어 마모 −6% · 라이벌 롱런 페이스를 정확히 파악'},parts:{n:'신규 파츠 상관성 테스트',d:'장착 대기 부품의 상관성 문제 예방'}};
 function setupFit(st,ty){if(st==='bal')return ty==='bal'?.25:.1;if(ty==='bal')return 0;return st===ty?.35:-.35}
-function fpBonus(t,ses){const f=S.wk&&S.wk.fp;if(!f||!f.done)return 0;let b=setupFit(f.setup,TTYPE[S.wk.track]||'bal')+(f.corr||0);
- if(f.prog==='setup')b+=.25;else if(f.prog==='quali'&&ses==='q')b+=.35;else if(f.prog==='long'&&ses==='r')b+=.1;return b}
+function fpBonus(t,ses){const f=S.wk&&S.wk.fp;if(!f||!f.done)return 0;let b=f.corr||0;
+ if(f.prog==='quali'&&ses==='q')b+=.35;else if(f.prog==='long'&&ses==='r')b+=.1;return b}
 function wkPerf(t,ses){const wk=S.wk;let p=perfOf(t);if(!wk)return p;return p+trackMod(t,wk.track)+((wk.form||{})[t.id]||0)+(t.user?fpBonus(t,ses):0)}
 /* 라이벌의 타이어·에너지·피트 기술 (보통 이상: 상위 팀일수록 성숙) */
 function rivTech(t){if(!DF().par)return{crew:2,tm:1,batR:1};const p=t.perf;return{crew:2+clamp(Math.round((p-84)/4),0,3),tm:1-.05*clamp(Math.round((p-85)/3.5),0,3),batR:1+.2*clamp(Math.round((p-87)/4),0,2)}}
 function weekPreviewHTML(tr){const ut=userTeam();const ord=S.teams.map(t=>({t,p:perfOf(t)+trackMod(t,tr.id)})).sort((a,b)=>b.p-a.p);const um=trackMod(ut,tr.id);
  const nw=rnewsFor(S.year,S.cur+1);
- return `<div class="muted" style="font-size:13px;margin-top:6px">강세 예상: ${ord.slice(0,3).map(x=>esc(x.t.user?teamDisp():x.t.name)).join(' · ')} · 우리 차 궁합 <b style="color:${um>.05?'var(--good)':um<-.05?'var(--bad)':'var(--fg)'}">${um>=0?'+':''}${um.toFixed(1)}</b> · 그리드 내 예상 P${ord.findIndex(x=>x.t.user)+1}</div>${nw.length?`<div class="muted" style="font-size:13px">업그레이드 투입: ${nw.map(n=>esc(teamById(n.t).name)+' '+esc(n.part)).join(' · ')}</div>`:''}`}
-function fpRun(){const wk=S.wk,tr=TR(wk.track),f=wk.fp;const pend=(S.pending||[]).length;const ty=TTYPE[tr.id]||'bal';
+ return `<div class="muted" style="font-size:13px;margin-top:6px">강세 예상: ${ord.slice(0,3).map(x=>esc(x.t.user?teamDisp():x.t.name)).join(' · ')} · 우리 차 궁합 <b style="color:${um>.05?'var(--good)':um<-.05?'var(--bad)':'var(--fg)'}">${um>=0?'+':''}${um.toFixed(1)}</b> · 그리드 내 예상 P${ord.findIndex(x=>x.t.user)+1}</div>${nw.length?`<div class="muted" style="font-size:13px">업그레이드 투입: ${nw.map(n=>esc(teamById(n.t).name)+' '+esc(n.part)+(n.k?' ('+PKN[n.k]+')':'')).join(' · ')}</div>`:''}`}
+const runsOf=()=>{const wk=S.wk,f=wk.fp;return (wk.sprint?2:3)+(f.prog==='setup'?(wk.sprint?1:2):0)};
+function runsLeft(id){const x=S.wk.set[id];return Math.max(0,runsOf()-x.runs.length)}
+function setAdj(id,k,d){ensureSet();const x=S.wk.set[id];if(!x||S.wk.fp.done)return;x.s[k]=clamp(x.s[k]+d,1,9);save();render()}
+/* 셋업 런: 현재 값으로 한 번 달리고 드라이버 피드백을 받는다 */
+function setRun(id){ensureSet();const wk=S.wk,x=wk.set[id],d=S.drivers[id],tr=TR(wk.track),t=teamById(d.team);if(!x||wk.fp.done||runsLeft(id)<=0)return;
+ const q=setQ(x.s,x.ideal);const lap=+(tr.base-.9+(100-wkPerf(t,'q'))*.06+(100-d.skill)*.035-(q-.7)*5*.06+gauss()*.12).toFixed(3);
+ const conf=clamp(Math.round((q*100+gauss()*4)/5)*5,0,100);
+ x.runs.push({s:{...x.s},fb:setFeedback(d,x.s,x.ideal),lap,conf});save();render()}
+function fpRun(){const wk=S.wk,tr=TR(wk.track),f=wk.fp;const pend=(S.pending||[]).length;ensureSet();
  f.corr=pend&&f.prog!=='parts'&&rnd()<.3?-.3:0;f.done=true;
+ userDrivers().forEach(d=>{const x=wk.set[d.id];x.q=+setQ(x.s,x.ideal).toFixed(3)});
  const ids=S.teams.flatMap(t=>t.drivers);
- f.one=ids.map(id=>{const d=S.drivers[id],t=teamById(d.team);const sand=t.user?0:Math.abs(gauss())*.35;return[id,+(tr.base-1.1+(100-wkPerf(t,'q'))*.06+(100-d.skill)*.035+gauss()*.22+sand).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
+ f.one=ids.map(id=>{const d=S.drivers[id],t=teamById(d.team);const sand=t.user?0:Math.abs(gauss())*.35;return[id,+(tr.base-1.1+(100-wkPerf(t,'q')-drvBonus(id,'q'))*.06+(100-d.skill)*.035+gauss()*.22+sand).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
  const acc=f.prog==='long'?.08:.3;
- f.lr=S.teams.map(t=>[t.id,+(tr.base+1.2+(100-wkPerf(t,'r'))*.06+gauss()*acc).toFixed(3)]).sort((a,b)=>a[1]-b[1]);
- const fit=setupFit(f.setup,ty);const N=[];
- N.push(`${FPSET[f.setup].n} 셋업 · ${TTN[ty]} 궁합 ${fit>=.25?'아주 좋음':fit>0?'무난':fit===0?'보통':'나쁨 — 직선/코너 밸런스가 안 맞습니다'}`);
- if(f.prog==='setup')N.push('셋업 작업 완료 · 예선·결승 페이스 향상');if(f.prog==='quali')N.push('예선 시뮬레이션 완료 · 원랩 페이스 향상');
+ f.lr=S.teams.map(t=>{const db=t.drivers.reduce((s,id)=>s+drvBonus(id,'r'),0)/Math.max(1,t.drivers.length);return[t.id,+(tr.base+1.2+(100-wkPerf(t,'r')-db)*.06+gauss()*acc).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
+ const N=[];
+ userDrivers().forEach(d=>{const x=wk.set[d.id],q=x.q,a=affOf(d,tr.id);const tested=x.runs.length&&SETK.every(([k])=>x.runs[x.runs.length-1].s[k]===x.s[k]);
+  N.push(`${d.code} 셋업 완성도 ${Math.round(q*100)}% (${q>=.9?'최적 창 안':q>=.75?'좋음':q>=.55?'타협안':'창 밖 — 페이스 손실'}) · 랩당 ${((q-.7)*5*.06)>=0?'−':'+'}${Math.abs((q-.7)*5*.06).toFixed(3)}초 · 타이어 마모 ${q<.7?'+':'−'}${Math.abs((.7-q)*15).toFixed(0)}%${tested?'':' · 마지막 변경은 검증되지 않은 값'}`);
+  N.push(`${d.code} 서킷 궁합 ${affWord(a)} (${a>=0?'+':''}${(a*.06).toFixed(3)}초 상당)${dtrOf(d).tr.includes(tr.id)?' · 이 서킷에서 강한 드라이버':''}`)});
+ if(f.prog==='quali')N.push('예선 시뮬레이션 완료 · 원랩 페이스 향상');
  if(f.prog==='long')N.push('롱런 데이터 확보 · 결승 타이어 마모 −6% · 롱런 순위 신뢰도 높음');
  if(f.prog==='parts')N.push(`신규 파츠 ${pend}개 상관성 확인 완료`);if(f.corr)N.push('신규 파츠 상관성 문제 발견 · 이번 주말 성능 −0.3');
+ {const ut=userTeam(),p=profOf(ut),w=TW[tr.id];if(w){const best=PK.map((k,i)=>[k,w[i]]).sort((a,b)=>b[1]-a[1])[0][0];const rk=S.teams.map(t=>profOf(t)[best]||0).sort((a,b)=>b-a).indexOf(p[best])+1;N.push(`이 서킷의 핵심 구간: ${PKN[best]} (${Math.round(w[PK.indexOf(best)]*100)}%) · 우리 차 이 항목 그리드 ${rk}위`)}}
  f.notes=N;save();render()}
-function fpHTML(){const wk=S.wk,f=wk.fp,tr=TR(wk.track),ty=TTYPE[tr.id]||'bal';const pend=(S.pending||[]).length;
+/* 연습 건너뛰기: 엔지니어가 시뮬레이터 기반으로 무난한 셋업을 고른다 */
+function fpAuto(){ensureSet();userDrivers().forEach(d=>{const x=S.wk.set[d.id];SETK.forEach(([k])=>{const e=x.s[k]-x.ideal[k];if(Math.abs(e)>1)x.s[k]-=Math.sign(e)*(Math.abs(e)-1)})})}
+function setPanelHTML(d){const x=S.wk.set[d.id],left=runsLeft(d.id),last=x.runs[x.runs.length-1];
+ const dirty=last&&SETK.some(([k])=>last.s[k]!==x.s[k]);
+ return `<div class="pc setp"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:15px">#${d.num} ${esc(d.code)}</b><span class="muted" style="font-size:12px">남은 런 ${left} / ${runsOf()}</span></div>
+  ${SETK.map(([k,n])=>`<div class="setr"><span>${n}</span><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="-1" aria-label="${n} 낮추기">−</button><span class="setbar" aria-hidden="true">${Array.from({length:9},(_,i)=>`<i class="${i<x.s[k]?'on':''}"></i>`).join('')}</span><b class="num">${x.s[k]}</b><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="1" aria-label="${n} 높이기">+</button></div>`).join('')}
+  <button class="btn primary" data-act="setrun" data-i="${d.id}" ${left?'':'disabled'}>${left?'런 실행 · 피드백 받기':'런 소진'}</button>
+  ${last?`<div class="fb">${last.fb.map(f=>`<div data-g="${f.g}"><span class="lbl">${f.n}</span><b>${SETG[f.g]}</b><span>${esc(f.t)}</span></div>`).join('')}<small class="muted">드라이버 자신감 약 ${last.conf}% · 랩 ${fmtLap(last.lap)}${dirty?' · 지금 값은 아직 안 달려봤습니다':''}</small></div>`:'<small class="muted">엔지니어 시뮬레이터 기본값입니다. 런을 돌려 보세요.</small>'}
+  ${x.runs.length>1?`<div class="tscroll"><table class="setlog"><thead><tr><th>런</th>${SETK.map(([k,n])=>`<th>${n.split(' ')[0].slice(0,2)}</th>`).join('')}<th>자신감</th><th>랩</th></tr></thead><tbody>${x.runs.map((r,i)=>`<tr><td class="num">${i+1}</td>${SETK.map(([k])=>`<td class="num">${r.s[k]}</td>`).join('')}<td class="num">${r.conf}%</td><td class="num">${fmtLap(r.lap)}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`}
+function fpHTML(){const wk=S.wk,f=wk.fp,tr=TR(wk.track),ty=TTYPE[tr.id]||'bal';const pend=(S.pending||[]).length;ensureSet();
  const ttl=wk.sprint?'FP1 · 스프린트 주말 유일한 연습 세션':'프리 프랙티스 · FP1–FP3';
  if(!f.done)return `<div class="card"><header>${ttl}</header><div class="body plan">
   <div class="muted" style="font-size:13px">${TTN[ty]}${tr.st?' · 스트리트':''} · ${ty==='pw'?'긴 직선이 많아 드래그가 중요합니다':ty==='df'?'중저속 코너가 많아 다운포스가 중요합니다':'직선과 코너가 고르게 섞여 있습니다'}${wk.sprint?' · 이 세션 뒤 곧바로 스프린트 예선입니다':''}</div>
-  <div style="display:grid;gap:6px"><span class="lbl">셋업 방향</span><div class="seg">${Object.entries(FPSET).map(([k,x])=>`<button data-act="fpset" data-v="${k}" aria-pressed="${f.setup===k}">${x.n}</button>`).join('')}</div><small class="muted">${esc(FPSET[f.setup].d)}</small></div>
   <div style="display:grid;gap:6px"><span class="lbl">세션 프로그램</span><div class="qchoice" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${Object.entries(FPPROG).map(([k,x])=>`<button data-act="fpprog" data-v="${k}" aria-pressed="${f.prog===k}" ${k==='parts'&&!pend?'disabled':''}><b>${x.n}</b><span>${esc(k==='parts'&&!pend?'장착 대기 부품 없음':x.d)}</span></button>`).join('')}</div>
   ${pend?`<small class="warn">장착 대기 부품 ${pend}개 · 상관성 테스트를 하지 않으면 30% 확률로 이번 주말 성능 손실</small>`:''}</div>
-  <div class="row-flex"><button class="btn red big" data-act="fprun">연습 주행 시작</button><button class="btn" data-act="fpskip">기본값으로 건너뛰기</button></div></div></div>`;
+  <div style="display:grid;gap:6px"><span class="lbl">셋업 · 드라이버별 최적 창 찾기</span><small class="muted">값을 바꾸고 런을 돌리면 드라이버가 피드백을 줍니다. 최적값은 드라이버·서킷마다 다르고, 항목끼리 서로 영향을 줍니다 (리어 윙을 바꾸면 밸런스도 변함). 연습이 끝날 때의 값이 예선·결승에 고정됩니다.</small>
+   <div class="setg">${userDrivers().map(d=>setPanelHTML(d)).join('')}</div></div>
+  <div class="row-flex"><button class="btn red big" data-act="fprun">연습 종료 · 셋업 확정</button><button class="btn" data-act="fpskip">엔지니어에게 맡기고 건너뛰기</button></div></div></div>`;
  const row=(id,t,i,b)=>{const d=S.drivers[id],tm=teamById(d.team);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(tm.name)}</span></td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-b).toFixed(3):''}</td></tr>`};
  const b0=f.one[0][1],l0=f.lr[0][1];
  return `<div class="qgrid wide"><div class="card"><header>${ttl} · 원랩 기록</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>베스트</th><th>차이</th></tr></thead><tbody>${f.one.slice(0,12).map(([id,t],i)=>row(id,t,i,b0)).join('')}${f.one.slice(12).map(([id,t],i)=>teamById(S.drivers[id].team).user?row(id,t,i+12,b0):'').join('')}</tbody></table></div></div>
@@ -935,12 +1021,22 @@ function driverMarket(){const L=[];const yr=S.year;
   L.push(`${t.name} · ${d.name} ${why} (${a}세) → ${p.name} (${p.cat}${p.org?' · '+p.org:''}) 승격`)})});
  return L}
 function atrMul(){if(!DF().par||!S.results.length)return 1;const tm=standings().tm;const r=tm.findIndex(x=>x.id==='usr');return +(1.25-.45*r/Math.max(1,tm.length-1)).toFixed(2)}
-function upgCost(u){const f=DF();return Math.round(u.cost*f.cost*(1+f.step*lvl(u.id))*atrMul())}
-function slotsLeft(){return Math.max(0,DF().slots-S.merged.filter(m=>m.year===S.year&&m.round===S.cur+1).length)}
+function upgCost(u,rk){const f=DF();return Math.round(u.cost*f.cost*(1+f.step*lvl(u.id))*RISK[rk||'std'].cost)}
+/* 풍동·CFD·다이노 시간: 컨스트럭터 순위가 높을수록 적게 받는다 (ATR) */
+function atrCost(u,rk){return Math.round(u.atr*RISK[rk||'std'].atr*(1+.1*lvl(u.id)))}
+function atrPerRound(){return Math.round((DF().atr||10)*(2.05-atrMul()))}
+const ATR_CAP=40;
+function projOf(id){return (S.proj||[]).find(p=>p.id===id)}
+function slotsLeft(){return Math.max(0,(DF().cap||2)-(S.proj||[]).length)}
+function needRounds(u,rk){const sc=clamp(S.cal.length/24,.5,1);return Math.max(1,Math.round((u.rd+RISK[rk].dr)*sc))}
+function expOf(id){return (S.dexp||{})[id]||0}
+function riskNow(id,rk){const R=RISK[rk],e=expOf(id);return{mu:R.mu,sd:R.sd/(1+.12*e),fail:R.fail*Math.pow(.88,e)}}
 function rivalDev(){const df=DF();const riv=S.teams.filter(t=>!t.user);const up=perfOf(userTeam());const sc=24/Math.max(6,S.cal.length);
  const ord=riv.slice().sort((a,b)=>b.perf-a.perf);const news=[];const stt=standings().tm;const atr=id=>.65+.7*(stt.findIndex(x=>x.id===id))/Math.max(1,stt.length-1);
- ord.forEach((t,i)=>{let g=atr(t.id)*(rnd()*.05*df.riv+(up>90&&i<5?df.cat*Math.max(0,up-t.perf):0))*sc;
-  if(rnd()<(.05+.016*i)*df.riv*Math.sqrt(sc)){const sz=+((.45+rnd()*.75)*(1+i*.03)*Math.sqrt(sc)).toFixed(2);g+=sz;news.push({t:t.id,part:pick(RPK),sz})}
+ ord.forEach((t,i)=>{if(t.dvY!==S.year){t.dvY=S.year;t.dv=+clamp(1+gauss()*.4,.4,1.9).toFixed(2)}/* 팀마다 시즌 개발 속도가 다르다 */
+  let g=atr(t.id)*t.dv*(rnd()*.05*df.riv+(up>90&&i<5?df.cat*Math.max(0,up-t.perf):0))*sc;
+  if(rnd()<(.05+.016*i)*df.riv*t.dv*Math.sqrt(sc)){let sz=+((.45+rnd()*.75)*(1+i*.03)*Math.sqrt(sc)).toFixed(2);const fail=rnd()<.14;if(fail)sz=-+(.15+rnd()*.3).toFixed(2);g+=sz;
+   const pf=profOf(t),k=pick(PK);pf[k]=+clamp((pf[k]||0)+(fail?-.3:.4+rnd()*.7),-5,6).toFixed(2);news.push({t:t.id,part:pick(RPK),sz,fail,k})}
   t.perf=Math.min(97.5,t.perf+g*clamp((97.5-t.perf)/5,.15,1))});
  S.rnews=S.rnews||[];news.forEach(n=>S.rnews.unshift({...n,y:S.year,r:S.cur+2}));if(S.rnews.length>40)S.rnews.length=40;return news}
 const rnewsFor=(y,r)=>(S.rnews||[]).filter(n=>n.y===y&&n.r===r);
@@ -950,7 +1046,7 @@ const userDrivers=()=>userTeam().drivers.map(id=>S.drivers[id]);
 
 function createTeam(){
  const d=D, sp=draftSpec(d), pu=PU[d.pu];
- S={v:1,diff:'normal',year:2027,owner:d.owner.trim()||'director',budget:10,prNo:1,merged:[],drivers:{},teams:[],cal:LEN[d.len].slice(),cur:0,results:[],commits:[],seasons:[],wk:null,
+ S={v:1,diff:'normal',year:2027,owner:d.owner.trim()||'director',budget:10,atr:20,proj:[],ci:[],dexp:{},prNo:1,merged:[],drivers:{},teams:[],cal:LEN[d.len].slice(),cur:0,results:[],commits:[],seasons:[],wk:null,
   ui:{tab:'overview',speed:1,autoPause:true,gapMode:'leader'}};
  const ut={id:'usr',user:true,name:d.name.trim()||'My Team',slug:slug(d.name),desc:d.desc,color:d.color,pu:d.pu,aero:sp.aero,power:sp.power,rel:sp.rel,crew:sp.crew,tyre:0,energy:0,puGain:0,puGrow:pu.grow,drivers:[]};
  S.teams.push(ut);
@@ -983,8 +1079,8 @@ function render(){
  $('#crumbs').innerHTML=`<span>${esc(S.owner)}</span><span>/</span><b>${esc(ut.slug)}</b>`;
  $('#avatar').textContent=S.owner.slice(0,2).toUpperCase();
  const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint')&&S.wk.race&&!S.wk.race.done;
- const openPR=UPG.filter(u=>lvl(u.id)<u.max).length;
- sponOf();const cnt={commits:S.commits.length,pulls:openPR};if(S.spon.offers.length)cnt.sponsors=S.spon.offers.length;
+ const openPR=(S.proj||[]).length+(S.ci||[]).length;
+ sponOf();const cnt={commits:S.commits.length};if(openPR)cnt.pulls=openPR;if(S.spon.offers.length)cnt.sponsors=S.spon.offers.length;
  app.innerHTML=`<div class="repo"><div class="repo-h"><h1>${esc(S.owner)} / <b>${esc(ut.slug)}</b></h1>
   <span class="pill">season-${S.year}</span>${(()=>{const t=S.spon.active.find(a=>a.slot==='title');return t?`<span class="pill" style="border-color:${spById(t.sid).c};color:#fff">presented by ${esc(spById(t.sid).n)}</span>`:''})()}<span class="pill">${S.cur<S.cal.length?'R'+(S.cur+1)+' / '+S.cal.length:'시즌 종료'}</span>${live?'<span class="pill live">LIVE</span>':''}</div>
   <nav class="tabs" aria-label="저장소 탭">${TABS.map(([k,l])=>`<button data-act="tab" data-v="${k}" ${S.ui.tab===k?'aria-current="page"':''}><svg viewBox="0 0 16 16" aria-hidden="true">${ICON[k]}</svg>${l}${cnt[k]!=null?`<span class="cnt">${cnt[k]}</span>`:''}${k==='race'&&live?'<span class="cnt" style="background:var(--f1red)">LIVE</span>':''}</button>`).join('')}</nav></div>
@@ -1042,10 +1138,11 @@ function lvl(id){return S.merged.filter(m=>m.id===id&&m.year===S.year).length}
 const CARRY={aero:{inc:2,keep:.5,n:'다운포스'},power:{inc:2,keep:.5,n:'출력'},rel:{inc:4,keep:.5,n:'신뢰성'},crew:{inc:1,keep:.5,n:'피트 크루'},tyre:{inc:1,keep:0,n:'타이어 마모'},energy:{inc:1,keep:0,n:'배터리 회복'}};
 function seasonCarry(year){const ut=userTeam();if(!ut||(S.devCarried||0)>=year)return null;
  const out=[];Object.keys(CARRY).forEach(id=>{const c=CARRY[id];const L=S.merged.filter(m=>m.id===id&&m.year===year).length;if(!L)return;
-  const gain=c.inc*L,keep=Math.floor(gain*(c.keep?DF().carry:0)),lose=gain-keep;ut[id]=(ut[id]||0)-lose;out.push({id,L,gain,keep})});
+  const gain=+gainOf(id,year).toFixed(2),keep=c.keep?+(gain*DF().carry).toFixed(2):0,lose=+(gain-keep).toFixed(2);ut[id]=+((ut[id]||0)-lose).toFixed(2);out.push({id,L,gain,keep})});
+ if(ut.prof)PK.forEach(k=>{ut.prof[k]=+((ut.prof[k]||0)*.5).toFixed(2)});
  if(DF().par)['aero','power'].forEach(id=>{const v=ut[id];const r=Math.round(1.4+Math.max(0,v-76)*.15);if(r>0){ut[id]=v-r;const o=out.find(x=>x.id===id);if(o)o.reg=r;else out.push({id,L:0,gain:0,keep:0,reg:r})}});
  S.devCarried=year;return out}
-function carryLines(out){const f=(id,x)=>id==='tyre'?x*5+'%':id==='energy'?x*20+'%':id==='crew'?x+'단계':String(x);
+function carryLines(out){const f=(id,x)=>id==='tyre'?Math.round(x*5)+'%':id==='energy'?Math.round(x*20)+'%':id==='crew'?(+x).toFixed(1)+'단계':(+x).toFixed(1);
  return out.map(o=>(o.L?`${CARRY[o.id].n}: 개발 +${f(o.id,o.gain)} 중 +${f(o.id,o.keep)} 신차 승계 (Lv.${o.L} → Lv.0)`:`${CARRY[o.id].n}: 지난 시즌 개발 없음`)+(o.reg?` · 규정 변경으로 기본 사양 −${o.reg}`:''))}
 /* ============ 스폰서 ============ */
 const SLOTS={title:{n:'타이틀 · 엔진 커버'},side:{n:'사이드포드'},rw:{n:'리어 윙'},fw:{n:'프론트 윙'},halo:{n:'헤일로 · 미러'}};
@@ -1204,11 +1301,11 @@ function viewOverview(m){
  const {cur,perf,perf0}=devStats();const crank=gridRank(perf);
  const nextTr=S.cur<S.cal.length?TR(S.cal[S.cur]):null;
  const hl=S.lastMerge&&S.lastMerge.id;const pend=new Set((S.pending||[]).map(p=>p.id));
- const valTxt={aero:String(cur.aero),power:cur.power.toFixed(1),rel:String(cur.rel),crew:'Lv.'+cur.crew,tyre:(cur.tyre?'−'+cur.tyre*5:0)+'%',energy:'+'+cur.energy*20+'%'};
+ const valTxt={aero:cur.aero.toFixed(1),power:cur.power.toFixed(1),rel:String(Math.round(cur.rel)),crew:'Lv.'+cur.crew.toFixed(1),tyre:(cur.tyre?'−'+Math.round(cur.tyre*5):0)+'%',energy:'+'+Math.round(cur.energy*20)+'%'};
  const statN={aero:'다운포스',power:'출력',rel:'신뢰성',crew:'정지 시간',tyre:'타이어 마모',energy:'배터리 회복'};
- const part=u=>{const lv=lvl(u.id),done=lv>=u.max,isP=pend.has(u.id),uc=upgCost(u),can=!done&&S.budget>=uc&&slotsLeft()>0;
+ const part=u=>{const lv=lvl(u.id),done=lv>=u.max,isP=pend.has(u.id),uc=upgCost(u),pj=projOf(u.id),ci=(S.ci||[]).find(x=>x.id===u.id),can=!done&&!pj&&S.budget>=uc&&slotsLeft()>0&&(S.atr||0)>=atrCost(u);
   const lm=S.merged.filter(x=>x.id===u.id&&x.year===S.year).slice(-1)[0];
-  const stt=done?['done','개발 완료']:isP?['pend','장착 대기 · 다음 결승']:can?['can','개발 가능 · '+uc]:!slotsLeft()&&!done?['lock','이번 라운드 슬롯 소진']:['lock','예산 '+uc+' 필요'];
+  const stt=done?['done','개발 완료']:isP?['pend','장착 대기 · 다음 결승']:ci?['lock','CI 실패 · 결정 필요']:pj?['pend',`설계 중 · ${pj.need-pj.left}/${pj.need}R`]:can?['can','개발 가능 · '+uc]:!slotsLeft()?['lock','설계 부서 가동 중']:(S.atr||0)<atrCost(u)?['lock','풍동 시간 부족']:['lock','예산 '+uc+' 필요'];
   return `<button class="part-c ${hl===u.id?'hl':''}" data-act="tab" data-v="pulls" data-part="${u.id}"><span class="pi">${'<svg viewBox="0 0 16 16" aria-hidden="true">'+PART_IC[u.id]+'</svg>'}</span>
    <span class="pn"><b>${esc(UPGX[u.id].where.split(' (')[0])}</b><small class="muted">${statN[u.id]} <span class="num" style="color:var(--fg)">${valTxt[u.id]}</span></small></span>
    <span class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv&&!done?'nx':''}"></i>`).join('')}</span>
@@ -1275,11 +1372,11 @@ function makeWeather(tr){
 }
 function startWeekend(){
  const tr=TR(S.cal[S.cur]);
- S.wk={round:S.cur+1,track:tr.id,phase:'fp',fp:{setup:'bal',prog:'setup',done:false},sprint:S.cal.length>=12&&SPRINT.includes(tr.id),qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.6).toFixed(2)]))};
- userDrivers().forEach(d=>{qsOf(d.id);S.wk.startTyre[d.id]='M'});
+ S.wk={round:S.cur+1,track:tr.id,phase:'fp',fp:{prog:'setup',done:false},sprint:S.cal.length>=12&&SPRINT.includes(tr.id),qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.8).toFixed(2)]))};
+ userDrivers().forEach(d=>{qsOf(d.id);S.wk.startTyre[d.id]='M'});ensureSet();
  save();go('race');
 }
-function carPace(id){const d=S.drivers[id],t=teamById(d.team);return{perf:wkPerf(t,'q'),skill:d.skill,sigma:d.sigma,rel:t.rel}}
+function carPace(id){const d=S.drivers[id],t=teamById(d.team);return{perf:wkPerf(t,'q')+drvBonus(id,'q'),skill:d.skill,sigma:d.sigma,rel:t.rel}}
 function runQuali(){
  const wk=S.wk;const r=qualiSim(true);wk.quali=r.q;wk.grid=r.grid;const ud=userDrivers();const n=r.grid.length;const L=[];
  if(wk.tow&&wk.tow!=='none'){const rc=S.drivers[wk.tow],gv=ud.find(d=>d.id!==wk.tow);if(rc&&gv)L.push({k:'radio',t:`토우 운영: ${gv.code} → ${rc.code} 슬립스트림 제공`})}
@@ -1324,12 +1421,16 @@ function qualiLine(p,n){
 }
 
 /* ============ 결승 전략 (기본 계획) ============ */
-function stintCum(tr,tm,laps){const T={};['S','M','H'].forEach(k=>{const C=COMP[k],w=tr.deg*tm/C.life;T[k]=[0,1].map(u=>{const a=[0];let s=0,we=u?.12:0;for(let n=0;n<=laps;n++){s+=C.off+C.deg*C.life*we+(we>1?(we-1)*C.life*.4:0);we+=w;a.push(s)}return a})});return T}
-function stratCtx(id){const wk=S.wk,tr=TR(wk.track),ut=userTeam();const tm=1-.05*(ut.tyre||0);const sets=(wk.sets&&wk.sets[id])||{S:2,M:3,H:2};
- return{tr,tm,laps:tr.laps,sets,pit:tr.pit-.05-.12*ut.crew,cum:stintCum(tr,tm,tr.laps)}}
+function stintCum(tr,tm,laps){const T={};['S','M','H'].forEach(k=>{const C=COMP[k],w=tr.deg*tm/C.life;T[k]=[0,1].map(u=>{const a=[0];let s=0,we=u?.12:0;for(let n=0;n<=laps;n++){s+=tyreLoss(k,we);we+=w;a.push(s)}return a})});return T}
+function stratCtx(id){const wk=S.wk,tr=TR(wk.track),ut=userTeam();const tm=userTm(id);const sets=(wk.sets&&wk.sets[id])||{S:2,M:3,H:2};
+ return{tr,tm,laps:tr.laps,sets,pit:tr.pit-2.5+expStop({user:true,crew:ut.crew}),stop:expStop({user:true,crew:ut.crew}),traf:trafCost(tr),cum:stintCum(tr,tm,tr.laps)}}
 const tyreLife=(k,x)=>Math.floor(COMP[k].life/(x.tr.deg*x.tm));
 function usedFlags(seq,sets){const c={S:0,M:0,H:0};return seq.map(k=>{c[k]++;return c[k]>sets[k]?1:0})}
-function planTime(seq,laps,x){const u=usedFlags(seq,x.sets);const b=[0,...laps,x.laps];let t=0;for(let i=0;i<seq.length;i++){const n=b[i+1]-b[i];if(n<1)return Infinity;t+=x.cum[seq[i]][u[i]][n]}return t+x.pit*(seq.length-1)}
+/* 레이스 시간 분해 (모든 전략에 똑같은 기준 랩타임·연료 효과는 제외한 '차이' 부분) */
+function planBreak(seq,laps,x){const u=usedFlags(seq,x.sets);const b=[0,...laps,x.laps];let ty=0,wm=0;
+ for(let i=0;i<seq.length;i++){const n=b[i+1]-b[i];if(n<1)return null;ty+=x.cum[seq[i]][u[i]][n];wm+=warmOf(seq[i],0,!i,x.tr)+(n>1?warmOf(seq[i],1,!i,x.tr):0)}
+ const st=seq.length-1;return{tyre:ty,warm:wm,pit:x.pit*st,traf:x.traf*st,total:ty+wm+(x.pit+x.traf)*st}}
+function planTime(seq,laps,x){const r=planBreak(seq,laps,x);return r?r.total:Infinity}
 function bestFor(seq,x){const u=usedFlags(seq,x.sets),L=x.laps;const mx=seq.map((k,i)=>Math.floor((1.08-(u[i]?.12:0))*COMP[k].life/(x.tr.deg*x.tm)));let best=null;
  if(seq.length===2){for(let p=1;p<L;p++){if(p>mx[0]||L-p>mx[1])continue;const t=planTime(seq,[p],x);if(!best||t<best.t)best={seq,laps:[p],t}}}
  else for(let p=1;p<L-1&&p<=mx[0];p++)for(let q=p+1;q<L&&q-p<=mx[1];q++){if(L-q>mx[2])continue;const t=planTime(seq,[p,q],x);if(!best||t<best.t)best={seq,laps:[p,q],t}}
@@ -1356,7 +1457,8 @@ function stratPanelHTML(d){
    <span class="muted" style="font-size:12px">${COMP[st].n} 출발 최선 ${forStart[0]?(forStart[0].d<.05?'= 전체 최선':'+'+forStart[0].d.toFixed(1)+'초'):'—'}${st==='S'&&sets.S<=0?' · 신품 없음':''}</span></div></div>
   <div><span class="lbl">전략</span><div class="sopts">${list.map(o=>`<button class="sopt" data-act="stratpick" data-i="${d.id}" data-v="${o.seq.join('')}" aria-pressed="${o.seq.join('')===curKey}"><b>${o.seq.length-1}스톱</b><span class="sq">${seqHTML(o.seq)}</span><span class="num">${o.d<.05?'최선':'+'+o.d.toFixed(1)+'s'}</span></button>`).join('')}</div></div>
   <div class="stints">${stints.join('')}</div>
-  <div class="stops">${stops}<span class="muted" style="font-size:12px">이 계획: 최선 대비 ${ct-top<.05?'±0.0':'+'+(ct-top).toFixed(1)}초</span></div></div>`;
+  <div class="stops">${stops}<span class="muted" style="font-size:12px">이 계획: 최선 대비 ${ct-top<.05?'±0.0':'+'+(ct-top).toFixed(1)}초</span></div>
+  ${(()=>{const br=planBreak(cur.seq,cur.laps,x);return br?`<div class="tbreak"><span>타이어 마모 <b class="num">${br.tyre.toFixed(1)}</b></span><span>워밍업 <b class="num">${br.warm.toFixed(1)}</b></span><span>피트 <b class="num">${br.pit.toFixed(1)}</b></span><span>복귀 트래픽 예상 <b class="num">${br.traf.toFixed(1)}</b></span><span>합계 <b class="num">${br.total.toFixed(1)}초</b></span></div>`:''})()}</div>`;
 }
 function briefingHTML(){
  const ud=userDrivers();const x=stratCtx(ud[0].id);const opts=stratOptions(ud[0].id);
@@ -1366,7 +1468,8 @@ function briefingHTML(){
  return `<div class="brief"><div class="lbl">전략 브리핑 · 엔지니어</div>
   <div class="lifes">${['S','M','H'].map(k=>`<div>${tyreHTML(k,'lg')}<span><b class="num">${tyreLife(k,x)}랩</b><small class="muted">${k==='S'?'예선·짧은 스틴트':k==='M'?'균형':'롱런'} · 한계 약 ${Math.floor(tyreLife(k,x)*1.08)}랩</small></span></div>`).join('')}</div>
   <div class="bl">기본 계획 ${base}</div>
-  <div class="muted" style="font-size:12px">${cmp}${cmp?' · ':''}피트 손실 약 ${x.tr.pit}초 · SC 중 약 10초. 추월 ${x.tr.ot<.6?'어려움 → 트랙 포지션 우선':x.tr.ot<1?'보통':'쉬움 → 2스톱도 고려'}.</div></div>`;
+  <div class="muted" style="font-size:12px">${cmp}${cmp?' · ':''}스톱 1회 비용 = 피트레인 ${(x.tr.pit-2.5).toFixed(1)}초 + 정지 기대 ${x.stop.toFixed(1)}초 + 복귀 트래픽 예상 ${x.traf.toFixed(1)}초 · SC 중 피트 약 10초. 새 타이어 워밍업: 미디엄 첫 두 랩 약 ${(WARM.M[0]+WARM.M[1]).toFixed(1)}초, 하드 약 ${(WARM.H[0]+WARM.H[1]).toFixed(1)}초 손해. 추월 ${x.tr.ot<.6?'어려움 → 트랙 포지션 우선':x.tr.ot<1?'보통':'쉬움 → 2스톱도 고려'} · 앞차 1초 이내 더티 에어 랩당 약 ${dirtyAir(x.tr).toFixed(2)}초.</div>
+  ${b1&&b2?(()=>{const r1=planBreak(b1.seq,b1.laps,x),r2=planBreak(b2.seq,b2.laps,x);const row=(n,r)=>`<tr><td>${n}</td><td class="num">${r.tyre.toFixed(1)}</td><td class="num">${r.warm.toFixed(1)}</td><td class="num">${r.pit.toFixed(1)}</td><td class="num">${r.traf.toFixed(1)}</td><td class="num"><b>${r.total.toFixed(1)}</b></td></tr>`;return `<div class="tscroll"><table class="setlog"><thead><tr><th>최선안</th><th>마모</th><th>워밍업</th><th>피트</th><th>트래픽</th><th>합계(초)</th></tr></thead><tbody>${row('1스톱',r1)}${row('2스톱',r2)}</tbody></table></div>`})():''}</div>`;
 }
 
 /* ============ 계획 실행 ============ */
@@ -1537,15 +1640,19 @@ function opp(c,k,v,force){const R=S.wk.race;if(c.user)return;if(!force&&R.oppAt!
  let t=pick(arr);for(const x in (v||{}))t=t.split('{'+x+'}').join(v[x]);R.oppAt=R.lap;log('opp',t,0,d.code+' · '+teamById(d.team).name)}
 
 /* ============ 엔지니어 조언 ============ */
-function prefix(k,w0,n,wpl){const C=COMP[k];const a=[0];let s=0,w=w0;for(let i=0;i<n;i++){s+=C.off+C.deg*C.life*w+(w>1?(w-1)*C.life*.4:0);w+=wpl;a.push(s)}return a}
+function prefix(k,w0,n,wpl,age0,first,tr){const a=[0];let s=0,w=w0;for(let i=0;i<n;i++){s+=tyreLoss(k,w)+warmOf(k,(age0||0)+i,first,tr);w+=wpl;a.push(s)}return a}
+/* 언더컷 이득: 상대가 헌 타이어로 n랩 도는 동안 우리가 새 타이어(워밍업 포함)로 버는 시간 */
+function ucGain(a,k,n,c,tr){let g=0;const wa=tr.deg*(a.tm||1)/COMP[a.tyre].life,wk=tr.deg*(c.tm||1)/COMP[k].life;for(let j=0;j<n;j++)g+=tyreLoss(a.tyre,a.wear+j*wa)-tyreLoss(k,j*wk)-warmOf(k,j,false,tr);return g}
+/* AI가 바로 뒤 차의 언더컷을 따라 들어올 확률 (상위 팀일수록 반응이 빠름) */
+const coverP=a=>a.user?0:(a.wear>.38?.3+.4*clamp((a.perf-82)/10,0,1):0);
 function remBest(c,R,tr,first,w0,boxNow,o){
  o=o||{};const mxS=o.max==null?9:o.max;
- const rem=R.laps-R.lap;const wpl=k=>tr.deg*c.tm/COMP[k].life;const pit=tr.pit-.05-.12*c.crew;
+ const rem=R.laps-R.lap;const wpl=k=>tr.deg*c.tm/COMP[k].life;const pit=tr.pit-2.5+expStop(c)+trafCost(tr);
  // cap: 타이어 수명 한계(마모 108%)를 넘는 스틴트는 후보에서 제외
  const capF=o.cap?Math.floor((1.08-w0)/wpl(first)):1e9;const cap=k=>o.cap?Math.floor(1.08/wpl(k)):1e9;
  const used=new Set(c.used);if(boxNow)used.add(first);const wet=c.used.includes('I')||c.used.includes('W');
  const ok=seq=>wet||new Set([...used,...seq]).size>=2;
- const P0=prefix(first,w0,rem,wpl(first));const F={};['S','M','H'].forEach(k=>F[k]=prefix(k,0,rem,wpl(k)));
+ const P0=prefix(first,w0,rem,wpl(first),boxNow?0:c.age,boxNow?false:!c.stops,tr);const F={};['S','M','H'].forEach(k=>F[k]=prefix(k,0,rem,wpl(k),0,false,tr));
  let best={t:Infinity,seq:[first],laps:[]};
  if(ok([first])&&rem<=capF)best={t:P0[rem],seq:[first],laps:[]};
  if(mxS>=1)['S','M','H'].forEach(a=>{if(!ok([first,a]))return;for(let p=1;p<rem;p++){if(p>capF||rem-p>cap(a))continue;const t=P0[p]+pit+F[a][rem-p];if(t<best.t)best={t,seq:[first,a],laps:[R.lap+p]}}});
@@ -1556,7 +1663,7 @@ const STOPN=n=>['노스톱','원스톱','투스톱','스리스톱'][n]||n+'스�
    base = 계획상 남은 스톱 수 (계획이 없으면 지금 타이어로 가는 최적안의 스톱 수) */
 function pitNowCheck(c,R,tr,k){
  const P=c.plan;const base=P&&!P.off?Math.max(0,P.laps.length-P.idx):remBest(c,R,tr,c.tyre,c.wear,false,{cap:true}).laps.length;
- const sets=c.sets||{S:9,M:9,H:9};const w0=sets[k]>0?0:.12;const now=pitLoss(R,tr)-2.5+2.45-.12*c.crew;
+ const sets=c.sets||{S:9,M:9,H:9};const w0=sets[k]>0?0:.12;const now=pitLoss(R,tr)-2.5+expStop(c)+trafCost(tr)*(R.flag?.3:1);
  const life=Math.floor((1.08-w0)*COMP[k].life/(tr.deg*c.tm));
  if(base>=1){const same=remBest(c,R,tr,k,w0,true,{cap:true,max:base-1});if(same.t<Infinity)return{k,extra:false,base,np:same,life}}
  let stay=remBest(c,R,tr,c.tyre,c.wear,false,{cap:true,max:base});if(stay.t===Infinity)stay=remBest(c,R,tr,c.tyre,c.wear,false,{cap:true});
@@ -1574,7 +1681,7 @@ function advise(c){
  if(R.wet>.8&&c.tyre==='I'){out.rec='추천: 웨트 박스 검토 — 폭우 구간입니다. 인터는 물을 다 못 뺍니다.';out.act='W';return out}
  if((c.tyre==='I'||c.tyre==='W')&&R.wet<.25){const k=rem>22?'M':'S';out.rec=`추천: ${COMP[k].n} 박스 — 라인이 말랐습니다. 인터가 과열되며 랩당 1초 이상 느려지는 구간입니다.`;out.act=k;return out}
  if(c.tyre==='I'||c.tyre==='W'){out.rec='추천: 스테이 아웃 — 아직 젖은 노면입니다. 레이더를 보며 크로스오버를 기다리세요.';return out}
- const loss=pitLoss(R,tr)-2.5+2.45-.12*c.crew;const normal=tr.pit-.05-.12*c.crew;
+ const loss=pitLoss(R,tr)-2.5+expStop(c)+trafCost(tr)*(f?.3:1);const normal=tr.pit-2.5+expStop(c)+trafCost(tr);
  const stay=remBest(c,R,tr,c.tyre,c.wear,false);
  out.opts.push({k:null,label:'스테이 아웃',t:stay.t,plan:stay});
  ['S','M','H'].forEach(k=>{if(k===c.tyre&&c.wear<.15)return;const sets=c.sets||{S:9,M:9,H:9};const w0=sets[k]>0?0:.12;const bst=remBest(c,R,tr,k,w0,true);
@@ -1584,13 +1691,15 @@ function advise(c){
  const adds=o=>o.k&&o.plan.laps.length+1>baseStops;const pitKs=out.opts.filter(o=>o.k&&!adds(o));const bestFresh=pitKs.slice().sort((x,y)=>x.t-y.t)[0];
  if(f)out.why.push(`${f==='SC'?'세이프티카':'VSC'} 중 피트 손실 약 ${loss.toFixed(1)}초 (평소 ${normal.toFixed(1)}초) → 박스 비용이 싸집니다.`);
  if(rainIn<=6){out.why.push(`레이더상 ${rainIn}랩 안에 비 가능성 → 슬릭 교체는 보류하는 편이 안전합니다.`);pitKs.forEach(o=>o.t+=6)}
- if(a&&!f&&bestFresh){const gap=c.T-a.T;const ac=COMP[a.tyre];const k=bestFresh.k;const gainLap=ac.off+ac.deg*ac.life*a.wear-COMP[k].off-(k==='H'?.35:0);
-  if(gap<3&&a.wear>c.wear-.15&&a.tyre!=='I'&&a.tyre!=='W'){if(gainLap*2>gap+.4){out.why.push(`언더컷 성립: ${nm(a)}와 ${gap.toFixed(1)}초, 새 타이어로 첫 두 랩에 약 ${(gainLap*2).toFixed(1)}초 이득 예상.`);pitKs.forEach(o=>o.t-=1.5)}
-   else out.why.push(`${nm(a)}와 ${gap.toFixed(1)}초 — 언더컷 이득 약 ${(gainLap*2).toFixed(1)}초로 부족합니다.`)}}
+ if(a&&!f&&bestFresh){const gap=c.T-a.T;const k=bestFresh.k;
+  if(gap<3&&a.wear>c.wear-.15&&a.tyre!=='I'&&a.tyre!=='W'){const g2=ucGain(a,k,2,c,tr);const cov=coverP(a);
+   if(g2>gap+.3){const v=trafCost(tr)*(1-cov*.8);out.why.push(`언더컷 성립: ${nm(a)}와 ${gap.toFixed(1)}초, 새 ${COMP[k].n}이 워밍업을 빼고도 두 랩에 약 ${g2.toFixed(1)}초 이득. 상대가 바로 따라 들어올(커버) 확률 약 ${Math.round(cov*100)}% → 자리 가치 약 ${v.toFixed(1)}초로 반영.`);pitKs.forEach(o=>o.t-=v)}
+   else out.why.push(`${nm(a)}와 ${gap.toFixed(1)}초 — ${COMP[k].n} 워밍업(첫 두 랩 약 ${(warmOf(k,0,false,tr)+warmOf(k,1,false,tr)).toFixed(1)}초)을 빼면 언더컷 이득 약 ${g2.toFixed(1)}초로 부족합니다.`)}}
  if(b&&!f){const gap=b.T-c.T;if(gap<loss*.25&&b.wear>.5&&b.tyre!=='I'&&b.tyre!=='W'){out.why.push(`뒤 ${nm(b)}(${gap.toFixed(1)}초, 마모 ${Math.round(b.wear*100)}%)가 언더컷을 노릴 수 있습니다 → 먼저 박스하면 커버.`);pitKs.forEach(o=>o.t-=1)}}
  if(c.wear>.95)out.why.push(`마모 ${Math.round(c.wear*100)}% — 절벽 구간입니다. 랩당 손실이 빠르게 커집니다.`);
  const pr=projRejoin(c,R,tr);
- if(pr.ahead&&!f){const g=pr.T-pr.ahead.T;if(g<1.2){out.why.push(`지금 박스하면 P${pr.p}, ${nm(pr.ahead)} 바로 뒤 ${g.toFixed(1)}초로 복귀 → 더티 에어 트래픽.`);pitKs.forEach(o=>o.t+=1.2*tr.ot<1?1.5:.8)}}
+ if(!f){const g=pr.ahead?pr.T-pr.ahead.T:99;if(pr.ahead&&g<1.2){const add=Math.max(.5,dirtyAir(tr)*4-trafCost(tr)*.5);out.why.push(`지금 박스하면 P${pr.p}, ${nm(pr.ahead)} 바로 뒤 ${g.toFixed(1)}초로 복귀 → 더티 에어 트래픽 (랩당 약 ${dirtyAir(tr).toFixed(2)}초 손해, 약 +${add.toFixed(1)}초 반영).`);pitKs.forEach(o=>o.t+=add)}
+  else if(g>2.5){const sv=trafCost(tr)*.6;out.why.push(`지금 박스하면 P${pr.p} 클린 에어 복귀 → 예상 트래픽 손실 일부(약 ${sv.toFixed(1)}초)를 아낍니다.`);pitKs.forEach(o=>o.t-=sv)}}
  if(tr.ot<.6&&!f)out.why.push('추월이 어려운 서킷 → 트랙 포지션 가치가 큽니다.');
  const P=c.plan;if(P&&!P.off&&P.idx<P.laps.length)out.why.push(`기본 계획: L${P.laps[P.idx]} ${COMP[P.seq[P.idx+1]].n} (${P.laps[P.idx]-R.lap>0?P.laps[P.idx]-R.lap+'랩 뒤':'지금'})`);
  out.opts.sort((x,y)=>x.t-y.t);const st0=out.opts.find(o=>!o.k).t;out.opts.forEach(o=>o.d=o.t-st0);
@@ -1897,12 +2006,15 @@ function answer(v){const R=S.wk.race;const A=R.ask;if(!A)return;const c=R.cars.f
 
 /* ============ race engine ============ */
 function aiStart(i,tr){if(tr.deg>=1.2)return i<10?(rnd()<.6?'M':'H'):(rnd()<.5?'H':'M');return i<10?(rnd()<.65?'M':'S'):(rnd()<.45?'H':(rnd()<.5?'M':'S'))}
+/* 우리 차 타이어 마모 배율 — 결승 엔진과 전략 계획이 같은 값을 쓴다 */
+function userTm(id,sp){const wk=S.wk,ut=userTeam();const lr=!sp&&wk&&wk.fp&&wk.fp.done&&wk.fp.prog==='long'?.94:1;return (1-.05*(ut.tyre||0))*lr*drvTm(id)}
 function initRace(sp){
- const wk=S.wk,tr=TR(wk.track),ut=userTeam();sp=!!sp;const lr=!sp&&wk.fp&&wk.fp.done&&wk.fp.prog==='long'?.94:1;
+ const wk=S.wk,tr=TR(wk.track),ut=userTeam();sp=!!sp;ensureSet();
  const cars=(sp?wk.sgrid:wk.grid).map((id,i)=>{const d=S.drivers[id],t=teamById(d.team),u=!!t.user;const ty=u?(sp?(wk.sTyre&&wk.sTyre[id])||'M':wk.startTyre[id]):sp?(i<10?(rnd()<.7?'M':'S'):(rnd()<.5?'S':'M')):aiStart(i,tr);
   return{id,team:t.id,user:u,grid:i+1,T:i*.22,tyre:ty,wear:0,age:0,used:[ty],stints:[{c:ty,from:0}],stops:0,st:'run',reason:'',outLap:0,
    mode:'std',en:'auto',bat:3,frm:gauss()*.1,pitReq:null,auto:false,pitAt:.78+rnd()*.2,last:null,best:Infinity,hist:[i+1],w85:false,
-   perf:wkPerf(t,'r'),skill:d.skill,sigma:d.sigma,rel:t.rel,...(u?{crew:ut.crew,tm:(1-.05*ut.tyre)*lr,batR:1+.2*ut.energy}:rivTech(t))}});
+   perf:wkPerf(t,'r')+drvBonus(id,'r'),skill:d.skill,sigma:d.sigma,rel:t.rel,wet:dtrOf(d).wet,...(u?{crew:ut.crew,tm:userTm(id,sp),batR:1+.2*ut.energy}:rivTech(t))}});
+ cars.forEach(c=>{if(!c.user)c.tm*=drvTm(c.id)});
  cars.filter(c=>c.user).forEach(c=>{if(sp){c.plan=null;return}const p=wk.strat&&wk.strat[c.id];c.plan=p&&p.seq[0]===c.tyre?{seq:p.seq.slice(),laps:p.laps.slice(),idx:0,off:false}:null;c.sets=Object.assign({S:2,M:3,H:2},wk.sets&&wk.sets[c.id]);if(c.sets[c.tyre]>0)c.sets[c.tyre]--;else c.wear=.12});
  mapHist=null;mapW=null;
  wk.race={lap:0,laps:sp?Math.max(10,Math.round(tr.laps/3)):tr.laps,sprint:sp,cars,oppAt:null,flag:null,wet:0,restart:false,standing:true,feed:[],done:false,pause:null,red:null,redUsed:false,wetAlert:false,events:[],prevPos:{}};
@@ -1910,7 +2022,7 @@ function initRace(sp){
  log('rc',sp?`${tr.n} 스프린트 · ${wk.race.laps}랩 · 의무 피트 없음 · 출발 준비.`:`${tr.n} 그랑프리 · ${tr.laps}랩 · 포메이션 랩 완료. 출발 준비.`);
  if(sp){mapHist=null;save();return}
  if(S.pending&&S.pending.length){S.pending.forEach(p=>log('crew',`신규 파츠 장착: ${p.t} v${p.lv}${p.dp>0?` · 랩당 약 −${(p.dp*.06).toFixed(3)}초 예상`:''}`,1,CREW_N.aero));S.pending=[]}
- rnewsFor(S.year,S.cur+1).forEach(n=>log('rc',`${teamById(n.t).name} 업그레이드 투입: ${n.part} (성능 +${n.sz.toFixed(1)} 추정)`));
+ rnewsFor(S.year,S.cur+1).forEach(n=>log('rc',n.fail?`${teamById(n.t).name} 신규 ${n.part} 상관성 문제 · 페이스 하락 추정`:`${teamById(n.t).name} 업그레이드 투입: ${n.part}${n.k?' · '+PKN[n.k]+' 강화':''} (성능 +${n.sz.toFixed(1)} 추정)`));
  S.lastMerge=null;
  save();
 }
@@ -1923,7 +2035,8 @@ function lapTime(c,R,tr){
  const w=R.wet;
  if(c.tyre==='I'){t+=3+1.5*w+(w>.72?(w-.72)*9:0)+(w<.25?(.25-w)*10+c.age*.1:0)}
  else if(c.tyre==='W'){t+=5+(w<.55?(.55-w)*9+c.age*.12:0)}
- else{t+=C.off+C.deg*C.life*c.wear+(c.wear>1?(c.wear-1)*C.life*.4:0)+12*Math.pow(w,1.3)}
+ else{t+=tyreLoss(c.tyre,c.wear)+warmOf(c.tyre,c.age,!c.stops,tr)+12*Math.pow(w,1.3)*(1-.1*(c.wet||0));if(R.restart&&WARM[c.tyre])t+=WARM[c.tyre][1]*.8}
+ if(w>.2)t-=w*.45*(c.wet||0);
  t+=(R.laps-R.lap)*.035;
  if(c.mode==='push')t-=.22;else if(c.mode==='save')t+=.28;
  if(c.boost>0)t-=.06;
@@ -1933,6 +2046,8 @@ function lapTime(c,R,tr){
 }
 function pitLoss(R,tr){const f=R.flag&&R.flag.type;return f==='SC'?10.5:f==='VSC'?13.5:tr.pit}
 function stopTime(c){let s=2.45-.12*c.crew+Math.abs(gauss())*.18;const slowP=c.user?.06-.01*c.crew:.05;if(rnd()<slowP)s+=2+rnd()*4;return s}
+/* 정지 시간 기대값 = 기본 + |정규분포| 평균(0.144) + 느린 스톱 확률 × 평균 지연 4초 */
+function expStop(c){const crew=c.crew||0;const slowP=Math.max(0,c.user?.06-.01*crew:.05);return 2.45-.12*crew+.144+slowP*4}
 function needsSecond(c){if(S.wk&&S.wk.race&&S.wk.race.sprint)return false;if(c.used.includes('I')||c.used.includes('W'))return false;return new Set(c.used).size<2}
 function aiPit(c,R,tr){
  const rem=R.laps-R.lap;if(rem<1)return null;const f=R.flag&&R.flag.type;const w=R.wet;
@@ -1943,6 +2058,9 @@ function aiPit(c,R,tr){
  if(c.tyre==='I'||c.tyre==='W')return null;
  const need=needsSecond(c);
  const pick=()=>{let o=rem>28?['H','M']:rem>14?['M','H']:['S','M'];if(need){return o.find(x=>!c.used.includes(x))||(c.tyre==='S'?'M':'S')}return o[0]};
+ const uc=R.uc&&R.uc[c.id];
+ if(uc&&!f&&!R.sprint){delete R.uc[c.id];if(R.lap-uc.lap<=1&&c.wear>.38&&rem>8&&c.stops<3&&rnd()<coverP(c)){const by=S.drivers[uc.by];if(by&&by.team==='usr')log('room',`${nm(c)} 커버 피트 — ${by.code}의 언더컷에 바로 반응했습니다`,1,'전략실');return pick()}}
+ if(!f&&!R.sprint&&(c.stuck||0)>=3&&c.wear>.5&&rem>10&&rnd()<.2)return pick();
  if(!R.sprint&&(f==='SC'||f==='VSC')&&c.wear>.35&&rem>6&&rnd()<.75)return pick();
  if(c.wear>=c.pitAt){if(!need&&c.wear+rem*wearPerLap(c,tr)<1.12)return null;return pick()}
  if(need&&rem<=2)return pick();
@@ -1992,7 +2110,9 @@ function stepLap(){
  else if(f==='VSC'){const lt=tr.base*1.3;run.forEach(c=>{c.T+=lt+gauss()*.04;c.last=lt;c.wear+=wearPerLap(c,tr)*.4;c.age++;c.bat=Math.min(4,c.bat+.8)})}
  else{
   const mult=(R.standing||L===1)?1.6:R.restart?1.4:1;
-  run.forEach(c=>{const t=lapTime(c,R,tr)+(R.standing?5:0);c._raw=t;c._n=c.T+t+(R.standing&&L===1?gauss()*.35:0)});
+  run.forEach((c,ix)=>{let t=lapTime(c,R,tr)+(R.standing?5:0);c._da=0;const ah=run[ix-1];
+   if(ah&&L>1&&!R.restart){const g=c.T-ah.T;if(g<1){t+=dirtyAir(tr);c._da=1}else if(g<2)t+=dirtyAir(tr)*.35}
+   c._raw=t;c._n=c.T+t+(R.standing&&L===1?gauss()*.35:0)});
   if(R.swap&&L>R.swap.until){R.swap=null;log('radio','자리 교체 미실행 · 간격이 벌어져 취소')}
   for(let i=1;i<run.length;i++){const a=run[i-1],b=run[i];
    if(a.user&&b.user){
@@ -2003,8 +2123,8 @@ function stepLap(){
     const within=(prevT.get(b.id)-prevT.get(a.id))<1||mult>1;
     const atk=within&&b.bat>=1&&(b.user?b.en!=='save':rnd()<.75);
     const def=a.bat>=.5&&(a.user?(a.en==='save'||(a.en==='auto'&&rnd()<.5)):rnd()<.4);
-    let p=(.22+Math.max(0,a._n-b._n)*.5)*tr.ot*mult;
-    if(atk){p+=.2*tr.ot;b.bat-=1}if(def){p-=.12;a.bat-=.5}
+    let p=(.06+Math.max(0,a._n-b._n)*.75)*tr.ot*mult;
+    if(atk){p+=.16*tr.ot;b.bat-=1}if(def){p-=.12;a.bat-=.5}
     p=clamp(p*(R.wet>.3?1.1:1),.03,.9);
     if(rnd()<p){if(b._n>=a._n)b._n=a._n-.05-rnd()*.15;a._n=Math.max(a._n,b._n+.12);run[i-1]=b;run[i]=a;if(rnd()<.028*(R.wet>.3?1.5:1)*(mult>1?1.6:1))investigate(b,a,R);
      if(b.user){log('radio',`${cd(b)} → ${nm(a)} 추월! P${i}`,1);if(i<=3)log('crew',i===1?'선두다!!! 피트월 전원 기립!':`P${i}! 포디움권 진입, 다들 숨 참아!`,0,CREW_N.ops);if(rnd()<.6)dr(b,'pass',{o:nm(a)});if(!a.user&&rnd()<.35)opp(a,'lost',{o:nm(b)})}else if(a.user){log('radio',`${cd(a)} ← ${nm(b)}에게 추월 허용 · P${i+1}`);if(rnd()<.6)dr(a,'lost',{o:nm(b)});if(rnd()<.25)opp(b,'pass',{o:nm(a)})}
@@ -2012,9 +2132,10 @@ function stepLap(){
     else b._n=a._n+.2+rnd()*.3;
    }
   }
-  run.forEach(c=>{c.last=c._n-c.T;c.T=c._n;if(c._raw<c.best)c.best=c._raw;delete c._n;delete c._raw;c.wear+=wearPerLap(c,tr);c.age++;
+  run.forEach(c=>{c.last=c._n-c.T;c.T=c._n;if(c._raw<c.best)c.best=c._raw;delete c._n;delete c._raw;c.wear+=wearPerLap(c,tr)*(c._da?1.08:1);c.age++;
    c.bat=Math.min(4,c.bat+.5*c.batR*(c.mode==='save'?1.5:c.mode==='push'?.8:1))});
   R.restart=false;R.standing=false;
+  {const o=run.slice().sort((a,b)=>a.T-b.T);o.forEach((c,i)=>{const a=o[i-1];c.stuck=a&&c.T-a.T<1?(c.stuck||0)+1:0})}
   stewards(R,L,run);
  }
  // incidents
@@ -2032,7 +2153,9 @@ function stepLap(){
  else if(!R.flag&&!R.red&&L>2&&L<R.laps-1&&rnd()<tr.sc/R.laps*.45){rnd()<.5?trigger('SC',3+Math.floor(rnd()*2),R,'트랙 위 파편'):trigger('VSC',2,R,'트랙 위 파편')}
  // pits
  if(!R.red){
-  run.forEach(c=>{if(c.st!=='run')return;if(c.pitNow)c.pitNow--;const want=c.user?(c.auto?planPit(c,R,tr):c.pitReq):aiPit(c,R,tr);if(want&&L<R.laps)doPit(c,want,R,tr)});
+  const ordNow=run.filter(c=>c.st==='run').sort((a,b)=>a.T-b.T);R.uc=R.uc||{};
+  run.forEach(c=>{if(c.st!=='run')return;if(c.pitNow)c.pitNow--;const want=c.user?(c.auto?planPit(c,R,tr):c.pitReq):aiPit(c,R,tr);
+   if(want&&L<R.laps){const i=ordNow.indexOf(c),a=ordNow[i-1];if(a&&!f&&c.T-a.T<2.5&&'SMH'.includes(want)&&'SMH'.includes(a.tyre))R.uc[a.id]={by:c.id,lap:L};doPit(c,want,R,tr)}});
   run.forEach(c=>{if(!c.user&&c.st==='run'&&c.wear>1.05&&!c.cl){c.cl=1;if(rnd()<.3)opp(c,'cliff')}if(c.wear<.5)c.cl=0});
  }
  // user alerts
@@ -2118,7 +2241,7 @@ function finishRace(){
  S.cur--;S.commits[0].round=S.cur+1;
  SPR.commits.forEach(c=>{addCommit(c);S.commits[0].round=S.cur+1});
  // between-race evolution
- rivalDev();
+ rivalDev();devTick();
  if(ut.puGrow&&(ut.puGain||0)<6)ut.puGain=Math.min(6,(ut.puGain||0)+ut.puGrow);
  Object.values(S.drivers).forEach(d=>{if(d.growth)d.skill=Math.min(d.cap,d.skill+d.growth*DF().grow)});
  pause();save();
@@ -2310,15 +2433,18 @@ const UPGX={aero:{parts:['fw','rw','floor'],where:'프론트 윙 · 리어 윙 �
  crew:{parts:['hub'],where:'휠 너트 · 피트 장비',stat:'피트 크루',inc:1,perf:0},
  tyre:{parts:['tyre'],where:'타이어 (열 관리 소프트웨어)',stat:'마모',inc:1,perf:0},
  energy:{parts:['bat'],where:'배터리 · ERS 회생',stat:'배터리 회복',inc:1,perf:0}};
-function devStats(t){t=t||userTeam();const L=id=>lvl(id);
+function gainOf(id,year){const c=UPGX[id].inc;return S.merged.filter(m=>m.id===id&&m.year===year).reduce((s,m)=>s+(m.gain!=null?m.gain:c),0)}
+function devStats(t){t=t||userTeam();const G=id=>gainOf(id,S.year);
  const cur={aero:t.aero,power:t.power+(t.puGain||0),rel:t.rel,crew:t.crew,tyre:t.tyre||0,energy:t.energy||0};
- const base={aero:t.aero-2*L('aero'),power:t.power-2*L('power')+(t.puGain||0),rel:t.rel-4*L('rel'),crew:t.crew-L('crew'),tyre:0,energy:0};
+ const base={aero:t.aero-G('aero'),power:t.power-G('power')+(t.puGain||0),rel:t.rel-G('rel'),crew:t.crew-G('crew'),tyre:Math.max(0,(t.tyre||0)-G('tyre')),energy:Math.max(0,(t.energy||0)-G('energy'))};
  const pf=x=>effP(x.aero*.55+x.power*.45);return{cur,base,perf:pf(cur),perf0:pf(base)}}
 function gridRank(perf){return S.teams.filter(t=>!t.user&&perfOf(t)>perf).length+1}
-function upgPreview(id){const ut=userTeam();const {cur,perf}=devStats();const u=UPGX[id];const nx={...cur};nx[id]+=u.inc;
+function upgPreview(id,rk,fc,mult){const {cur,perf}=devStats();const u=UPGX[id];const am=id==='aero'&&FOCUS[fc||'bal']?FOCUS[fc||'bal'].am:1;
+ const inc=u.inc*(mult!=null?mult:RISK[rk||'std'].mu)*am;const nx={...cur};nx[id]+=inc;
  const p2=effP(nx.aero*.55+nx.power*.45);const dp=p2-perf;const laps=S.cal[S.cur]?TR(S.cal[S.cur]).laps:57;
- const fx={aero:`다운포스 ${cur.aero} → ${nx.aero}`,power:`출력 ${cur.power.toFixed(1)} → ${nx.power.toFixed(1)}`,rel:`신뢰성 ${cur.rel} → ${nx.rel} · 기계 고장 확률 약 −${(4*.12).toFixed(1)}%p`,crew:`정지 시간 −0.12초 (현재 Lv.${cur.crew} → ${nx.crew})`,tyre:`타이어 마모 ${cur.tyre?'−'+cur.tyre*5:0}% → −${nx.tyre*5}%`,energy:`배터리 회복 +${cur.energy*20}% → +${nx.energy*20}%`}[id];
- return{fx,dp,lap:dp*.06,race:dp*.06*laps,r0:gridRank(perf),r1:gridRank(p2),laps}}
+ const f1=x=>x.toFixed(1);
+ const fx={aero:`다운포스 ${f1(cur.aero)} → ${f1(nx.aero)}`,power:`출력 ${f1(cur.power)} → ${f1(nx.power)}`,rel:`신뢰성 ${Math.round(cur.rel)} → ${Math.round(nx.rel)} · 기계 고장 확률 약 −${(inc*.12).toFixed(1)}%p`,crew:`정지 시간 약 −${(inc*.12).toFixed(2)}초 (Lv.${f1(cur.crew)} → ${f1(nx.crew)})`,tyre:`타이어 마모 −${Math.round(cur.tyre*5)}% → −${Math.round(nx.tyre*5)}%`,energy:`배터리 회복 +${Math.round(cur.energy*20)}% → +${Math.round(nx.energy*20)}%`}[id];
+ return{fx,dp,lap:dp*.06,race:dp*.06*laps,r0:gridRank(perf),r1:gridRank(p2),laps,inc}}
 function carSVG(hl){const L=id=>lvl(id),M=id=>UPG.find(u=>u.id===id).max;
  const f=id=>{const l=L(id);return l?`fill="var(--team)" fill-opacity="${(.3+.7*l/M(id)).toFixed(2)}"`:'fill="#23272e"'};
  const cls=id=>`class="part${hl===id?' hl':''}" data-part="${id}"`;
@@ -2341,16 +2467,16 @@ function devPanelHTML(){const ut=userTeam(),{cur,base,perf,perf0}=devStats();con
    <div class="kpis"><div><span class="lbl">차량 성능</span><b class="num">${perf.toFixed(1)}</b>${perf>perf0?`<span class="up num">+${(perf-perf0).toFixed(1)}</span>`:''}</div>
     <div><span class="lbl">그리드 내 차량 순위</span><b class="num">P${r1}</b>${r1<r0?`<span class="up num">▲${r0-r1}</span>`:''}<small class="muted">${S.seasons.length?S.year+' 신차 사양':'창단 사양'} P${r0}</small></div>
     <div><span class="lbl">누적 랩타임 이득</span><b class="num">${gain>0?'−'+gain.toFixed(3):'0.000'}초</b><small class="muted">랩당</small></div></div>
-   ${bar('다운포스 · 윙·플로어',cur.aero,base.aero,65,100,x=>Math.round(x),'aero')}
+   ${bar('다운포스 · 윙·플로어',cur.aero,base.aero,65,100,x=>x.toFixed(1),'aero')}
    ${bar('출력 · 파워유닛',cur.power,base.power,65,100,x=>x.toFixed(1),'power')}
    ${bar('신뢰성 · 냉각',cur.rel,base.rel,70,120,x=>Math.round(x),'rel')}
-   ${bar('피트 크루 · 휠 너트',cur.crew,base.crew,0,10,x=>'Lv.'+Math.round(x),'crew')}
+   ${bar('피트 크루 · 휠 너트',cur.crew,base.crew,0,10,x=>'Lv.'+x.toFixed(1),'crew')}
    ${bar('타이어 마모 감소',cur.tyre*5,0,0,15,x=>Math.round(x)+'%','tyre')}
    ${bar('배터리 회복',cur.energy*20,0,0,40,x=>Math.round(x)+'%','energy')}
   </div></div></div>`}
 function mergeReportHTML(){const m=S.lastMerge;if(!m)return '';const u=UPGX[m.id];
  return `<div class="card mrep"><header>개발 완료 리포트 · PR #${m.no}<span class="sp"></span><span class="pill">다음 결승부터 장착</span></header><div class="body">
-  <div class="mt"><b>${esc(m.t)} v${m.lv}</b><span class="muted">${esc(u.where)}</span></div>
+  <div class="mt"><b>${esc(m.t)} v${m.lv}</b><span class="muted">${esc(u.where)}</span>${m.verdict?`<span class="pill" style="border-color:${m.m>=m.exp*.85?'var(--good)':'var(--warn)'}">${esc(m.verdict)} · 기대 대비 ${Math.round(m.m/m.exp*100)}%</span>`:''}</div>
   <div class="mrow"><div><span class="lbl">${esc(u.stat)}</span><div class="num"><s>${m.b}</s> → <b>${m.a}</b></div></div>
   ${m.dp>0?`<div><span class="lbl">차량 성능</span><div class="num"><s>${m.p0.toFixed(1)}</s> → <b>${m.p1.toFixed(1)}</b></div></div><div><span class="lbl">랩타임</span><div class="num"><b>−${(m.dp*.06).toFixed(3)}초</b>/랩 · 레이스 약 −${(m.dp*.06*m.laps).toFixed(1)}초</div></div><div><span class="lbl">차량 순위</span><div class="num">P${m.r0} → <b>P${m.r1}</b></div></div>`:`<div><span class="lbl">효과</span><div>${esc(m.fx)}</div></div>`}</div>
   <ol class="pipe"><li class="ok">설계 · CFD</li><li class="ok">${m.id==='power'||m.id==='energy'?'다이노 테스트':m.id==='crew'?'피트 스톱 리허설':'풍동 검증'}</li><li class="ok">제작 · 품질 검사</li><li class="now">다음 결승 장착</li></ol>
@@ -2450,7 +2576,7 @@ function introHTML(){const tr=TR(S.cal[S.cur]);const n=S.cal.length,rd=S.cur+1;c
   </div></div>`}
 
 /* ============ 전략실: 언더컷·오버컷 분석 ============ */
-const tyreLap=(ty,w)=>{const C=COMP[ty];return C?C.off+C.deg*C.life*w:0};
+const tyreLap=(ty,w)=>tyreLoss(ty,w);
 function roomPick(c){const A=advise(c);const P=c.plan;if(A&&['S','M','H'].includes(A.act))return A.act;if(P&&!P.off&&P.idx<P.laps.length)return P.seq[P.idx+1];return c.tyre==='H'?'M':'H'}
 function stratRoom(c,R,tr,ord){
  if(c.auto||R.ask||R.flag||c.pitReq||c.st!=='run'||c.tyre==='I'||c.tyre==='W'||R.wet>.3)return;const L=R.lap,rem=R.laps-L;if(L<4||rem<6)return;
@@ -2460,12 +2586,12 @@ function stratRoom(c,R,tr,ord){
  const pr=projRejoin(c,R,tr);const info=[];let kind=null,score=0,cyc=null;
  const myLap=tyreLap(c.tyre,c.wear),fresh=COMP[k].off+warm;
  // 1) 언더컷 기회: 앞차
- if(a&&!a.user&&a.tyre!=='I'&&a.tyre!=='W'&&a.wear>.4){const gap=c.T-a.T;const g=tyreLap(a.tyre,a.wear)-fresh;const n=a.wear>.8?1:2;const margin=g*n+.3-gap;
-  if(gap<4&&g>.4){info.push(`언더컷 대상 ${nm(a)} (${gap.toFixed(1)}초 앞, ${COMP[a.tyre].n} ${a.age}랩·마모 ${Math.round(a.wear*100)}%): 새 ${COMP[k].n}이 랩당 약 ${g.toFixed(1)}초 빠름`);
-   if(margin>.2){kind='uc';score+=2;cyc=i;info.push(`→ 지금 박스하면, ${n}랩 뒤 ${nm(a)} 박스 시 약 ${margin.toFixed(1)}초 앞으로 나옵니다 (P${i+1} → P${i})`)}
+ if(a&&!a.user&&a.tyre!=='I'&&a.tyre!=='W'&&a.wear>.4){const gap=c.T-a.T;const n=a.wear>.8?1:2;const gN=ucGain(a,k,n,c,tr);const g=gN/n;const margin=gN-.2-gap;
+  if(gap<4&&g>.25){info.push(`언더컷 대상 ${nm(a)} (${gap.toFixed(1)}초 앞, ${COMP[a.tyre].n} ${a.age}랩·마모 ${Math.round(a.wear*100)}%): 새 ${COMP[k].n}이 랩당 약 ${g.toFixed(1)}초 빠름`);
+   if(margin>.2){kind='uc';score+=2;cyc=i;info.push(`→ 워밍업 손실 포함, ${n}랩 뒤 ${nm(a)} 박스 시 약 ${margin.toFixed(1)}초 앞으로 나옵니다 (P${i+1} → P${i})`);const cv=coverP(a);if(cv>.2)info.push(`※ ${nm(a)} 팀이 다음 랩 바로 커버할 확률 약 ${Math.round(cv*100)}% — 커버하면 언더컷 무효`)}
    else info.push(`→ 언더컷 이득 ${(g*n).toFixed(1)}초로 ${gap.toFixed(1)}초 간격을 넘기엔 약간 부족 (${(-margin).toFixed(1)}초 모자람)`)}}
  // 2) 언더컷 위협: 뒤차
- if(b&&!b.user&&b.tyre!=='I'&&b.tyre!=='W'&&b.wear>.4){const gap=b.T-c.T;const kb=b.tyre==='H'?'M':'H';const g=myLap-(COMP[kb].off+(kb==='H'?.35:.12));const thr=g*1.5+.3-gap;
+ if(b&&!b.user&&b.tyre!=='I'&&b.tyre!=='W'&&b.wear>.4){const gap=b.T-c.T;const kb=b.tyre==='H'?'M':'H';const g2=ucGain(c,kb,2,b,tr);const g=g2/2;const thr=g2-.2-gap;
   if(gap<4&&g>.3){info.push(`뒤 ${nm(b)} (${gap.toFixed(1)}초, 마모 ${Math.round(b.wear*100)}%) — 먼저 박스하면 새 타이어로 랩당 약 ${g.toFixed(1)}초 빠름`);
    if(thr>0){kind=kind||'threat';score+=2;info.push(`→ 언더컷 위협: 우리가 늦으면 ${nm(b)}에게 약 ${thr.toFixed(1)}초 차로 역전당할 위험. 먼저 들어가면 커버 가능`)}}}
  // 3) 오버컷 위험: 복귀 트래픽 + 잘 버티는 주변 차
@@ -2475,7 +2601,7 @@ function stratRoom(c,R,tr,ord){
   else info.push(`지금 박스하면 P${pr.p} 복귀 · 앞 ${nm(pr.ahead)}와 ${tg.toFixed(1)}초${pr.behind?` · 뒤 ${nm(pr.behind)}와 ${(pr.behind.T-pr.T).toFixed(1)}초`:''} (클린 에어)`)}
  else if(pr.p===1)info.push('지금 박스해도 선두로 복귀합니다 (클린 에어)');
  // 4) 오버컷 기회: 앞차가 막 피트
- if(a&&!a.user&&a.stops>0&&a.age<=1&&c.wear<.75&&!kind){const g=tyreLap(c.tyre,c.wear)-(tyreLap(a.tyre,0)+(a.tyre==='H'?.35:.12));if(g<.25){kind='ocopp';score+=1;info.push(`${nm(a)} 방금 박스 · 새 ${COMP[a.tyre].n} 워밍업 중 → 우리 타이어(마모 ${Math.round(c.wear*100)}%)로 1~2랩 더 밀면 오버컷 가능`)}}
+ if(a&&!a.user&&a.stops>0&&a.age<=1&&c.wear<.75&&!kind){const g=tyreLap(c.tyre,c.wear)-(tyreLap(a.tyre,0)+warmOf(a.tyre,Math.max(0,a.age),false,tr));if(g<.25){kind='ocopp';score+=1;info.push(`${nm(a)} 방금 박스 · 새 ${COMP[a.tyre].n} 워밍업 중 → 우리 타이어(마모 ${Math.round(c.wear*100)}%)로 1~2랩 더 밀면 오버컷 가능`)}}
  if(!kind)return;c.roomAt=L;
  const tot=n=>STOPN(c.stops+n);
  if(kind!=='ocopp'){
@@ -2597,7 +2723,7 @@ function gapText(c,order,idx,tr){
  return '+'+g.toFixed(S.ui.gapMode==='int'?1:3);
 }
 function projRejoin(c,R,tr){
- const loss=pitLoss(R,tr)-2.5+2.45-.12*c.crew;const T=c.T+loss;
+ const loss=pitLoss(R,tr)-2.5+expStop(c);const T=c.T+loss;
  const others=R.cars.filter(x=>x.st==='run'&&x!==c).sort((a,b)=>a.T-b.T);
  let p=1;let ahead=null,behind=null;for(const o of others){if(o.T<T){p++;ahead=o}else{behind=behind||o}}
  return{p,ahead,behind,T,loss};
@@ -2756,7 +2882,7 @@ function commitHTML(c){
    <div><div class="lbl">TOP 10</div><ol class="top10">${b.cls.map(([id,p],i)=>{const d=S.drivers[id],t=teamById(d.team);return `<li class="${t.user?'me':''}"><span class="num">${i+1}</span><span class="stripe" style="background:${t.color}"></span><b>${esc(d.code)}</b><span class="muted">${esc(t.name)}</span><span class="num">${p}</span></li>`}).join('')}</ol></div></div>
    ${b.events.length?`<div><div class="lbl" style="margin-bottom:4px">주요 장면</div><ul class="cev">${b.events.map(x=>{const mm=String(x).match(/^L(\d+)\s+(.*)$/);return `<li>${mm?`<span class="num">${mm[1]}랩</span><span>${esc(mm[2])}</span>`:`<span></span><span>${esc(x)}</span>`}</li>`}).join('')}</ul></div>`:''}`;
  }else if(c.kind==='merge'){const mm=String(c.msg).match(/#(\d+):\s*(.*)$/);const u=UPG.find(x=>x.id===c.upg);const L=lines(c.body);
-  top=`<span class="ck pr">PR #${mm?mm[1]:''}</span><b class="ct">${esc(mm?mm[2]:c.msg)}</b><span class="tag merged">MERGED</span>`;
+  top=`<span class="ck pr">PR #${mm?mm[1]:''}</span><b class="ct">${esc(mm?mm[2]:c.msg)}</b><span class="tag ${c.tagc||'merged'}">${esc(c.tag||'MERGED')}</span>`;
   sub=`<div class="csub">${esc(L[0]||'')}${u?` · <span class="muted">${esc(UPGX[u.id].where)}</span>`:''}</div>`;
   right=u?`<span class="cpart"><svg viewBox="0 0 16 16" aria-hidden="true">${PART_IC[u.id]}</svg></span>`:'';
   body=`<ul class="cli">${L.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`;
@@ -2769,25 +2895,68 @@ function commitHTML(c){
   body=`<ul class="cli">${L.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`;}
  return `<li class="tli" data-k="${k}">${icon}<details class="ci"><summary><div class="cmain"><div class="ctop">${top}</div>${sub}<div class="cmeta">${esc(S.owner)} · ${when} · <span class="mono">${c.hash}</span></div></div><div class="cright">${right}<span class="chev" aria-hidden="true">▾</span></div></summary><div class="cbody">${body}</div></details></li>`;
 }
+/* 차량 구간별 프로필: 우리 차 vs 그리드 평균·최고 */
+function profileHTML(){const ut=userTeam();const all=S.teams.map(t=>({t,p:profOf(t),o:perfOf(t)}));const nx=S.cur<S.cal.length?S.cal[S.cur]:null;const w=nx&&TW[nx];
+ const val=(x,k)=>x.o+(x.p[k]||0);const me=all.find(x=>x.t.user);
+ return `<div class="card" style="margin-top:16px"><header>차량 구간별 성능<span class="sp"></span><span class="muted" style="font-size:12px;font-weight:400">막대 = 우리 차 · 세로선 = 그리드 최고 · 1포인트 ≈ 랩당 0.06초</span></header><div class="body profg">
+  ${PK.map((k,i)=>{const vs=all.map(x=>val(x,k));const mx=Math.max(...vs),mn=Math.min(...vs);const pc=v=>clamp((v-mn+1)/(mx-mn+2)*100,0,100);const mv=val(me,k);const rank=vs.filter(v=>v>mv).length+1;const lead=all.find(x=>val(x,k)===mx);
+   return `<div class="profr"><span>${PKN[k]}${w?` <small class="muted">${Math.round(w[i]*100)}%</small>`:''}</span><span class="profb"><i style="width:${pc(mv)}%"></i><s style="left:${pc(mx)}%"></s></span><b class="num">${rank}위</b></div><small class="muted" style="margin:-4px 0 2px 84px">${esc(lead.t.user?teamDisp():lead.t.name)} 최강 · 우리와 ${(mx-mv).toFixed(1)}포인트</small>`}).join('')}
+  ${w?`<small class="muted">다음 라운드 ${esc(TR(nx).n)}: 구간 비중이 표시된 퍼센트입니다. 우리 차 궁합 ${trackMod(ut,nx)>=0?'+':''}${trackMod(ut,nx).toFixed(1)}포인트.</small>`:''}</div></div>`}
 function viewPulls(m){
- const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint');
- m.innerHTML=`<div class="budget"><div><span class="lbl">개발 예산</span><b class="num">${S.budget}</b></div><div><span class="lbl">이번 라운드 개발 슬롯</span><b class="num">${DF().slots>8?'∞':slotsLeft()+' / '+DF().slots}</b></div><span class="muted" style="font-size:13px">난이도 ${DF().n} · 레이스마다 기본 5 + 팀 포인트의 ${Math.round(25*DF().earn)}% (포디움 +2)에 스폰서 수입이 더해집니다.${DF().step?` 같은 부품은 레벨이 오를 때마다 비용이 ${Math.round(DF().step*100)}%씩 오릅니다.`:''}${atrMul()!==1?` 컨스트럭터 순위에 따른 풍동 시간 규정으로 개발 비용 ×${atrMul()}.`:''} ${DF().dim<1?'차량 성능 91 이상 구간은 개발 효과가 점점 줄어듭니다.':''}${live?' 결승 진행 중에는 병합할 수 없습니다.':''}</span></div>
- ${mergeReportHTML()}${devPanelHTML()}
- <div class="card prs" style="margin-top:16px"><header>Open<span class="sp"></span>${UPG.filter(u=>lvl(u.id)<u.max).length}</header>
- ${UPG.map(u=>{const lv=lvl(u.id);if(lv>=u.max)return '';const pv=upgPreview(u.id);return `<div class="pr" data-part="${u.id}"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-open" aria-hidden="true">${ICON.pulls}</svg><div style="min-width:0"><div class="t">${esc(u.t)} v${lv+1} <span class="pill">${esc(UPGX[u.id].where)}</span></div><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<lv?'on':i===lv?'nx':''}"></i>`).join('')}</div><small>${esc(pv.fx)}${pv.dp>0?` · 차량 성능 +${pv.dp.toFixed(2)} · 랩당 −${pv.lap.toFixed(3)}초 (레이스 약 −${pv.race.toFixed(1)}초)${pv.r1<pv.r0?` · 차량 순위 P${pv.r0} → P${pv.r1}`:''}`:''}</small></div><button class="btn primary" data-act="merge" data-v="${u.id}" ${S.budget<upgCost(u)||live||!slotsLeft()?'disabled':''}>병합 · ${upgCost(u)}</button></div>`}).join('')}</div>
- <div class="card prs" style="margin-top:16px"><header>Merged · season-${S.year}<span class="sp"></span>${S.merged.filter(x=>x.year===S.year).length}</header>${S.merged.some(x=>x.year===S.year)?S.merged.filter(x=>x.year===S.year).reverse().map(x=>`<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-merged" aria-hidden="true">${ICON.pulls}</svg><div><div class="t">#${x.no} ${esc(x.t)} v${x.lv}</div><small>season-${x.year} · R${x.round} 전 병합 · ${esc(UPGX[x.id].where)} · ${esc(UPG.find(u=>u.id===x.id).d)}</small></div><span></span></div>`).join(''):`<div class="body muted">${S.year} 신차에 아직 병합한 업그레이드가 없습니다.${S.seasons.length?' 지난 시즌 업그레이드는 신차 기본 사양에 일부 승계됐고, 레벨은 Lv.0부터 다시 시작합니다.':''}</div>`}</div>`;
+ const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint');const cap=DF().cap||2;const proj=S.proj||[],ci=S.ci||[];S.ui.risk=S.ui.risk||{};S.ui.focus=S.ui.focus||{};
+ const head=`<div class="budget"><div><span class="lbl">개발 예산</span><b class="num">${S.budget}</b></div><div><span class="lbl">풍동·CFD 시간</span><b class="num">${S.atr||0}h</b><small class="muted">라운드당 +${atrPerRound()}h · 최대 ${ATR_CAP}h</small></div><div><span class="lbl">설계 부서</span><b class="num">${proj.length} / ${cap}</b></div>
+  <span class="muted" style="font-size:13px">돈만으로는 개발되지 않습니다. 설계마다 예산과 풍동 시간이 들고, 몇 라운드 뒤에야 결과가 나오며, 풍동과 실제 트랙이 어긋나면 실패할 수 있습니다. 컨스트럭터 순위가 높을수록 풍동 시간이 줄어듭니다(현재 ×${(2.05-atrMul()).toFixed(2)}). 같은 부품을 개발할수록 노하우가 쌓여 결과가 안정됩니다.${live?' 결승 진행 중에는 새 설계를 시작할 수 없습니다.':''}</span></div>`;
+ const ciHTML=ci.length?`<div class="card prs" style="margin-top:16px"><header>CI 실패 · 결정 필요<span class="sp"></span>${ci.length}</header>${ci.map(p=>{const u=UPG.find(x=>x.id===p.id);const fc=Math.ceil(p.cost*.4);return `<div class="prj"><div class="t"><span class="tag fail" style="margin:0 6px 0 0">CI FAILED</span><b>#${p.no} ${esc(u.t)}</b> <span class="muted">${RISK[p.rk].n}${p.fc?' · '+FOCUS[p.fc].n:''}</span></div>
+   <small class="muted">풍동 결과가 트랙에서 재현되지 않습니다. 그대로 장착하면 효과 ${Math.round(p.m*100)}% (성능 손실).</small>
+   <div class="ctl"><button class="btn" data-act="ci" data-i="${p.no}" data-v="revert">되돌리기 · 풍동 ${Math.round(p.atr*.4)}h 환급</button><button class="btn primary" data-act="ci" data-i="${p.no}" data-v="fix" ${S.budget<fc||!slotsLeft()?'disabled':''}>수정 패치 · 예산 ${fc} · 1라운드</button><button class="btn" data-act="ci" data-i="${p.no}" data-v="ship">그래도 장착</button></div></div>`}).join('')}</div>`:'';
+ const progHTML=`<div class="card prs" style="margin-top:16px"><header>설계 진행 중<span class="sp"></span>${proj.length} / ${cap}</header>${proj.length?proj.map(p=>{const u=UPG.find(x=>x.id===p.id);const r=riskNow(p.id,p.rk);const pv=upgPreview(p.id,p.rk,p.fc);const step=p.need-p.left;
+   return `<div class="prj"><div class="t"><span class="tag open" style="margin:0 6px 0 0">OPEN</span><b>#${p.no} ${esc(u.t)}${p.fix?' · 수정 패치':''}</b> <span class="muted">${RISK[p.rk].n}${p.fc?' · '+FOCUS[p.fc].n:''}</span></div>
+   <div class="pbar"><i style="width:${Math.round(step/p.need*100)}%"></i></div>
+   <small class="muted">${step}/${p.need} 라운드 · ${p.left}라운드 뒤 결과 판정 · ${p.fix?'성공 시 기대치의 약 65%':`기대 ${esc(pv.fx)} · 실패 확률 약 ${Math.round(r.fail*100)}%`}</small></div>`}).join(''):'<div class="body muted">진행 중인 설계가 없습니다.</div>'}</div>`;
+ const openHTML=`<div class="card prs" style="margin-top:16px"><header>새 설계 시작<span class="sp"></span></header>${UPG.map(u=>{const lv=lvl(u.id);const pend=(S.pending||[]).filter(p=>p.id===u.id).length;if(lv+pend>=u.max)return '';const busy=projOf(u.id)||ci.some(x=>x.id===u.id);
+   const rk=S.ui.risk[u.id]||'std',fc=u.id==='aero'?(S.ui.focus.aero||'bal'):null;const R=riskNow(u.id,rk);const cost=upgCost(u,rk),atr=atrCost(u,rk),need=needRounds(u,rk);
+   const lo=upgPreview(u.id,rk,fc,Math.max(.25,R.mu-R.sd*1.3)),hi=upgPreview(u.id,rk,fc,R.mu+R.sd*1.3),mid=upgPreview(u.id,rk,fc);
+   const why=busy?'이 부품은 이미 진행 중':live?'결승 진행 중':!slotsLeft()?'설계 부서 가동 중':S.budget<cost?`예산 ${cost} 필요`:(S.atr||0)<atr?`풍동 ${atr}h 필요`:'';
+   return `<div class="prj" data-part="${u.id}"><div class="t"><b>${esc(u.t)} v${lv+1}</b> <span class="pill">${esc(UPGX[u.id].where)}</span>${expOf(u.id)?` <span class="muted" style="font-size:12px">노하우 ${expOf(u.id)}</span>`:''}</div>
+    <div class="ctl"><span class="lbl">리스크</span><div class="seg">${Object.entries(RISK).map(([k,x])=>`<button data-act="prisk" data-i="${u.id}" data-v="${k}" aria-pressed="${rk===k}">${x.n}</button>`).join('')}</div>
+     ${fc?`<span class="lbl">방향</span><div class="seg">${Object.entries(FOCUS).map(([k,x])=>`<button data-act="pfocus" data-v="${k}" aria-pressed="${fc===k}" title="${esc(x.t)}">${x.n}</button>`).join('')}</div>`:''}</div>
+    <small class="muted">${esc(RISK[rk].d)}${fc?' · '+esc(FOCUS[fc].t)+(fc!=='bal'?' — 다른 구간은 약간 손해':''):''}</small>
+    <small>기대 ${esc(mid.fx)}${mid.dp>0?` · 차량 성능 +${lo.dp.toFixed(2)} ~ +${hi.dp.toFixed(2)} (랩당 −${(lo.dp*.06).toFixed(3)} ~ −${(hi.dp*.06).toFixed(3)}초)`:''} · 실패 확률 ${Math.round(R.fail*100)}%</small>
+    <div class="ctl"><button class="btn primary" data-act="propen" data-v="${u.id}" ${why?'disabled':''}>설계 시작 · 예산 ${cost} · 풍동 ${atr}h · ${need}라운드</button>${why?`<small class="muted">${esc(why)}</small>`:''}</div></div>`}).join('')}</div>`;
+ m.innerHTML=head+mergeReportHTML()+devPanelHTML()+profileHTML()+ciHTML+progHTML+openHTML+
+ `<div class="card prs" style="margin-top:16px"><header>Merged · season-${S.year}<span class="sp"></span>${S.merged.filter(x=>x.year===S.year).length}</header>${S.merged.some(x=>x.year===S.year)?S.merged.filter(x=>x.year===S.year).reverse().map(x=>`<div class="pr"><svg viewBox="0 0 16 16" width="16" height="16" class="ic-merged" aria-hidden="true">${ICON.pulls}</svg><div><div class="t">#${x.no} ${esc(x.t)} v${x.lv}</div><small>season-${x.year} · R${x.round} 후 판정 · ${x.rk?RISK[x.rk].n+(x.fc?' · '+FOCUS[x.fc].n:'')+' · 기대 대비 '+Math.round(x.m/RISK[x.rk].mu*100)+'%':esc(UPG.find(u=>u.id===x.id).d)}</small></div><span></span></div>`).join(''):`<div class="body muted">${S.year} 신차에 아직 장착한 업그레이드가 없습니다.${S.seasons.length?' 지난 시즌 업그레이드는 신차 기본 사양에 일부 승계됐고, 레벨은 Lv.0부터 다시 시작합니다.':''}</div>`}</div>`;
 }
-function merge(id){
- const u=UPG.find(x=>x.id===id),ut=userTeam();const cost=upgCost(u);if(S.budget<cost||!slotsLeft()||lvl(id)>=u.max)return;
- const pv=upgPreview(id),st0=devStats();S.budget-=cost;const lv=lvl(id)+1;
- if(id==='aero')ut.aero+=2;if(id==='power')ut.power+=2;if(id==='rel')ut.rel+=4;if(id==='crew')ut.crew+=1;if(id==='tyre')ut.tyre+=1;if(id==='energy')ut.energy+=1;
- const no=S.prNo++;S.merged.push({no,id,t:u.t,lv,year:S.year,round:S.cur+1});
- {const st1=devStats();const k=id;const fm=x=>k==='tyre'?(x?'−'+x*5+'%':'0%'):k==='energy'?(x?'+'+x*20+'%':'0%'):k==='crew'?'Lv.'+x:k==='power'?x.toFixed(1):String(x);
-  S.lastMerge={no,id,t:u.t,lv,b:fm(st0.cur[k]),a:fm(st1.cur[k]),p0:st0.perf,p1:st1.perf,dp:st1.perf-st0.perf,r0:pv.r0,r1:pv.r1,laps:pv.laps,fx:pv.fx,note:pick(DEVNOTE[id]),round:S.cur+1};
-  (S.pending=S.pending||[]).push({id,t:u.t,lv,dp:st1.perf-st0.perf})}
- addCommit({kind:'merge',upg:id,msg:`Merge pull request #${no}: ${u.t} v${lv}`,body:`${u.d}\n예산 −${cost} → 남은 예산 ${S.budget}`});
- save();render();
-}
+/* ===== 개발 파이프라인: 설계(PR 오픈) → 풍동·다이노(CI) → 결과 판정 → 장착 ===== */
+function startProject(id){const u=UPG.find(x=>x.id===id);const rk=(S.ui.risk||{})[id]||'std',fc=id==='aero'?((S.ui.focus||{}).aero||'bal'):null;
+ const cost=upgCost(u,rk),atr=atrCost(u,rk);const live=S.wk&&(S.wk.phase==='race'||S.wk.phase==='sprint');
+ if(live||S.budget<cost||(S.atr||0)<atr||!slotsLeft()||projOf(id)||(S.ci||[]).some(x=>x.id===id)||lvl(id)+(S.pending||[]).filter(p=>p.id===id).length>=u.max)return;
+ S.budget-=cost;S.atr-=atr;const need=needRounds(u,rk);const no=S.prNo++;
+ (S.proj=S.proj||[]).push({no,id,rk,fc,need,left:need,cost,atr,y:S.year,r:S.cur+1});
+ addCommit({kind:'merge',upg:id,tag:'OPEN',tagc:'open',msg:`Open pull request #${no}: ${u.t} v${lvl(id)+1}`,body:`설계 시작 · ${RISK[rk].n}${fc?' · 방향 '+FOCUS[fc].n:''} · ${need}라운드 소요\n예산 −${cost} · 풍동·CFD −${atr}h → 남은 예산 ${S.budget} · 풍동 ${S.atr}h`});
+ save();render()}
+function sampleMult(p){const r=riskNow(p.id,p.rk);if(p.fix)return rnd()<.05?{fail:true,m:-(.1+rnd()*.2)}:{fail:false,m:clamp(.65+gauss()*.15,.3,1)};
+ if(rnd()<r.fail)return{fail:true,m:-(.15+rnd()*.35)};return{fail:false,m:clamp(r.mu+gauss()*r.sd*(1+.4*(p.rk==='agg')),.25,2.2)}}
+function applyUpg(p,m){const u=UPG.find(x=>x.id===p.id),ut=userTeam();const pv=upgPreview(p.id,p.rk,p.fc,m),st0=devStats();
+ const am=p.id==='aero'&&p.fc?FOCUS[p.fc].am:1;const gain=+(UPGX[p.id].inc*m*am).toFixed(2);ut[p.id]=+((ut[p.id]||0)+gain).toFixed(2);
+ if(p.id==='aero'&&p.fc&&FOCUS[p.fc]){ut.prof=ut.prof||{lo:0,mi:0,hi:0,st:0};Object.entries(FOCUS[p.fc].d).forEach(([k,v])=>ut.prof[k]=+((ut.prof[k]||0)+v*m).toFixed(2))}
+ const lv=lvl(p.id)+1;S.merged.push({no:p.no,id:p.id,t:u.t,lv,year:S.year,round:S.cur+1,gain,m:+m.toFixed(2),rk:p.rk,fc:p.fc});
+ S.dexp=S.dexp||{};S.dexp[p.id]=(S.dexp[p.id]||0)+1;
+ const st1=devStats();const k=p.id;const fm=x=>k==='tyre'?(x?'−'+Math.round(x*5)+'%':'0%'):k==='energy'?(x?'+'+Math.round(x*20)+'%':'0%'):k==='crew'?'Lv.'+x.toFixed(1):x.toFixed(1);
+ const exp=RISK[p.rk].mu;const verdict=m>=exp*1.15?'기대 이상':m>=exp*.85?'기대 수준':m>0?'기대 이하':'역효과';
+ S.lastMerge={no:p.no,id:k,t:u.t,lv,b:fm(st0.cur[k]),a:fm(st1.cur[k]),p0:st0.perf,p1:st1.perf,dp:st1.perf-st0.perf,r0:pv.r0,r1:pv.r1,laps:pv.laps,fx:pv.fx,note:pick(DEVNOTE[k]),round:S.cur+1,m,exp,verdict,rk:p.rk,fc:p.fc};
+ (S.pending=S.pending||[]).push({id:k,t:u.t,lv,dp:st1.perf-st0.perf});
+ addCommit({kind:'merge',upg:k,msg:`Merge pull request #${p.no}: ${u.t} v${lv}`,body:`CI 통과 · ${verdict} (기대 대비 ${Math.round(m/exp*100)}%)\n${RISK[p.rk].n}${p.fc?' · '+FOCUS[p.fc].n:''} · ${pv.fx}`})}
+/* 라운드가 끝날 때마다: 풍동 시간 지급, 설계 진행, 끝난 설계는 결과 판정 */
+function devTick(){S.atr=Math.min(ATR_CAP,(S.atr||0)+atrPerRound());const done=[];
+ (S.proj||[]).forEach(p=>{p.left--;if(p.left<=0)done.push(p)});S.proj=(S.proj||[]).filter(p=>p.left>0);
+ done.forEach(p=>{const r=sampleMult(p);const u=UPG.find(x=>x.id===p.id);
+  if(r.fail){(S.ci=S.ci||[]).push({...p,m:r.m});addCommit({kind:'merge',upg:p.id,tag:'CI FAILED',tagc:'fail',msg:`CI failed #${p.no}: ${u.t}`,body:`풍동·트랙 상관성 불일치 · 장착하면 효과 ${Math.round(r.m*100)}% (역효과)\n풀 리퀘스트 탭에서 되돌리기 또는 수정 패치를 결정하세요`})}
+  else applyUpg(p,r.m)})}
+function ciAct(no,act){const i=(S.ci||[]).findIndex(x=>x.no===+no);if(i<0)return;const p=S.ci[i];const u=UPG.find(x=>x.id===p.id);
+ if(act==='revert'){S.ci.splice(i,1);const back=Math.round(p.atr*.4);S.atr=Math.min(ATR_CAP,(S.atr||0)+back);addCommit({kind:'merge',upg:p.id,tag:'REVERTED',tagc:'fail',msg:`Revert #${p.no}: ${u.t}`,body:`장착 취소 · 데이터 일부 재활용으로 풍동 ${back}h 환급`})}
+ else if(act==='fix'){const c=Math.ceil(p.cost*.4);if(S.budget<c||!slotsLeft())return;S.budget-=c;S.ci.splice(i,1);(S.proj=S.proj||[]).push({...p,fix:true,left:1,need:1});addCommit({kind:'merge',upg:p.id,tag:'OPEN',tagc:'open',msg:`Hotfix #${p.no}: ${u.t}`,body:`상관성 수정 패치 · 1라운드 · 예산 −${c}\n성공해도 원래 기대치의 약 65%`})}
+ else if(act==='ship'){S.ci.splice(i,1);applyUpg(p,p.m)}
+ save();render()}
 function lineChart(series,labels){
  const W=760,H=300,pl=40,pr=110,pt=14,pb=28;const n=labels.length;
  const max=Math.max(10,...series.flatMap(s=>s.vals));const step=max>300?100:max>120?50:max>50?20:10;const top=Math.ceil(max/step)*step;
@@ -2908,10 +3077,11 @@ document.addEventListener('click',e=>{
   case 'stayout':if(car&&car.st==='run'&&!car.auto)dirMsg(car,'stay');break;
   case 'stire':{S.wk.startTyre[i]=v;const o=stratOptions(i).find(x=>x.seq[0]===v);if(o)setStrat(i,o);save();render();break}
   case 'start':initRace();render();break;
-  case 'fpset':S.wk.fp.setup=v;save();render();break;
+  case 'setadj':setAdj(i,b.dataset.k,+b.dataset.d);break;
+  case 'setrun':setRun(i);break;
   case 'fpprog':S.wk.fp.prog=v;save();render();break;
   case 'fprun':fpRun();break;
-  case 'fpskip':S.wk.fp.setup='bal';S.wk.fp.prog='setup';fpRun();S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
+  case 'fpskip':S.wk.fp.prog='setup';fpAuto();fpRun();S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
   case 'fpdone':S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
   case 'sqrun':sqRun();break;
   case 'sstire':S.wk.sTyre[i]=v;save();render();break;
@@ -2933,7 +3103,10 @@ document.addEventListener('click',e=>{
   case 'redgo':applyRed();updateRace();break;
   case 'next':nextRound();break;
   case 'newseason':newSeason();break;
-  case 'merge':merge(v);break;
+  case 'propen':startProject(v);break;
+  case 'prisk':S.ui.risk=S.ui.risk||{};S.ui.risk[i]=v;save();render();break;
+  case 'pfocus':S.ui.focus=S.ui.focus||{};S.ui.focus.aero=v;save();render();break;
+  case 'ci':ciAct(i,v);break;
   case 'diff':if(DIFF[v]){S.diff=v;addCommit({kind:'init',msg:`난이도 변경: ${DIFF[v].n}`,body:DIFF[v].d});save();render()}break;
   case 'spacc':acceptOffer(v);break;
   case 'spdec':declineOffer(v);break;
@@ -2972,6 +3145,7 @@ window.addEventListener('resize',()=>{if($('#lapchart'))sizeChart()});
 
 /* ============ boot ============ */
 load();
+if(S&&S.teams){if(S.atr==null)S.atr=20;S.proj=S.proj||[];S.ci=S.ci||[];S.dexp=S.dexp||{}}
 if(S&&S.wk&&S.wk.race&&!S.wk.race.done&&S.ui)S.wk.race.pause=S.wk.race.pause||null;
 if(S&&S.teams&&S.merged&&S.devCarried===undefined){
  const yrs=[...new Set(S.merged.map(m=>m.year).filter(y=>y<S.year))].sort((a,b)=>a-b);S.devCarried=0;
