@@ -800,7 +800,7 @@ function setFeedback(d,s,ideal){const e={};SETK.forEach(([k])=>e[k]=s[k]-ideal[k
   ['코너 vs 직선',e.rw+nz(),'드래그 과다 · 직선에서 느립니다','다운포스 부족 · 코너에서 불안합니다'],
   ['연석·노면',e.su+nz(),'너무 딱딱함 · 연석에서 튑니다','너무 무름 · 차가 굼뜹니다'],
   ['차고·플로어',e.rh+.3*e.su+nz(),'너무 높음 · 플로어 다운포스 손실','너무 낮음 · 바닥이 긁힙니다']];
- return F.map(([n,v,pos,neg])=>{const a=Math.abs(v);return{n,g:a<.6?0:a<1.6?1:a<3?2:3,t:a<.6?'좋아요, 손대지 마세요':(v>0?pos:neg)}})}
+ return F.map(([n,v,pos,neg])=>{const a=Math.abs(v);return{n,g:a<.6?0:a<1.6?1:a<3?2:3,s:v>0?1:-1,t:a<.6?'좋아요, 손대지 마세요':(v>0?pos:neg)}})}
 const SETG=['최적','약간','뚜렷','심각'];
 function ensureSet(){const wk=S.wk;if(!wk)return;wk.set=wk.set||{};wk.aiQ=wk.aiQ||{};
  S.teams.forEach(t=>t.drivers.forEach(id=>{const d=S.drivers[id];
@@ -944,60 +944,100 @@ const FPSET={df:{n:'하이 다운포스',d:'코너 그립↑ · 직선 속도↓
 const FPPROG={setup:{n:'셋업 집중',d:'셋업 런 +2회 (최적 창을 찾을 시간이 늘어남)'},quali:{n:'예선 시뮬레이션',d:'원랩 페이스 향상 · 결승 영향 없음'},long:{n:'롱런 · 타이어 데이터',d:'결승 타이어 마모 −6% · 라이벌 롱런 페이스를 정확히 파악'},parts:{n:'신규 파츠 상관성 테스트',d:'장착 대기 부품의 상관성 문제 예방'}};
 function setupFit(st,ty){if(st==='bal')return ty==='bal'?.25:.1;if(ty==='bal')return 0;return st===ty?.35:-.35}
 function fpBonus(t,ses){const f=S.wk&&S.wk.fp;if(!f||!f.done)return 0;let b=f.corr||0;
- if(f.prog==='quali'&&ses==='q')b+=.35;else if(f.prog==='long'&&ses==='r')b+=.1;return b}
+ if(fpHas('quali')&&ses==='q')b+=.35;if(fpHas('long')&&ses==='r')b+=.1;return b}
 function wkPerf(t,ses){const wk=S.wk;let p=perfOf(t);if(!wk)return p;return p+trackMod(t,wk.track)+((wk.form||{})[t.id]||0)+(t.user?fpBonus(t,ses):0)}
 /* 라이벌의 타이어·에너지·피트 기술 (보통 이상: 상위 팀일수록 성숙) */
 function rivTech(t){if(!DF().par)return{crew:2,tm:1,batR:1};const p=t.perf;return{crew:2+clamp(Math.round((p-84)/4),0,3),tm:1-.05*clamp(Math.round((p-85)/3.5),0,3),batR:1+.2*clamp(Math.round((p-87)/4),0,2)}}
 function weekPreviewHTML(tr){const ut=userTeam();const ord=S.teams.map(t=>({t,p:perfOf(t)+trackMod(t,tr.id)})).sort((a,b)=>b.p-a.p);const um=trackMod(ut,tr.id);
  const nw=rnewsFor(S.year,S.cur+1);
  return `<div class="muted" style="font-size:13px;margin-top:6px">강세 예상: ${ord.slice(0,3).map(x=>esc(x.t.user?teamDisp():x.t.name)).join(' · ')} · 우리 차 궁합 <b style="color:${um>.05?'var(--good)':um<-.05?'var(--bad)':'var(--fg)'}">${um>=0?'+':''}${um.toFixed(1)}</b> · 그리드 내 예상 P${ord.findIndex(x=>x.t.user)+1}</div>${nw.length?`<div class="muted" style="font-size:13px">업그레이드 투입: ${nw.map(n=>esc(teamById(n.t).name)+' '+esc(n.part)+(n.k?' ('+PKN[n.k]+')':'')).join(' · ')}</div>`:''}`}
-const runsOf=()=>{const wk=S.wk,f=wk.fp;return (wk.sprint?2:3)+(f.prog==='setup'?(wk.sprint?1:2):0)+simRuns()};
-function runsLeft(id){const x=S.wk.set[id];return Math.max(0,runsOf()-x.runs.length)}
+/* 연습 세션: FP1→FP2→FP3 (스프린트 주말은 FP1만). 세션마다 결과를 보고 다음 세션 전에 셋업·프로그램을 바꿀 수 있다 */
+const FPN=()=>S.wk.sprint?1:3;
+function fpS(){const f=S.wk.fp;if(f.ses==null)f.ses=f.done?FPN():0;f.hist=f.hist||[];f.progs=f.progs||[];return f}
+function fpHas(k){const f=S.wk&&S.wk.fp;if(!f)return false;const L=f.progs&&f.progs.length?f.progs:[f.prog];return L.includes(k)}
+const fpNm=i=>S.wk.sprint?'FP1':'FP'+(i+1);
+function fpPer(i,p){return (S.wk.sprint?2:1)+(p==='setup'?1:0)+(i===0?simRuns():0)}
+const runsOf=()=>{const f=fpS();let n=0;for(let i=0;i<=Math.min(f.ses,FPN()-1);i++)n+=fpPer(i,i<f.ses?f.progs[i]:f.prog);return n};
+function runsLeft(id){const f=fpS();if(f.done||f.ses>=FPN())return 0;const x=S.wk.set[id];return Math.max(0,runsOf()-x.runs.filter(r=>!r.ses).length)}
 function setAdj(id,k,d){ensureSet();const x=S.wk.set[id];if(!x||S.wk.fp.done)return;x.s[k]=clamp(x.s[k]+d,1,9);save();render()}
 /* 셋업 런: 현재 값으로 한 번 달리고 드라이버 피드백을 받는다 */
 function setRun(id){ensureSet();const wk=S.wk,x=wk.set[id],d=S.drivers[id],tr=TR(wk.track),t=teamById(d.team);if(!x||wk.fp.done||runsLeft(id)<=0)return;
  const q=setQ(x.s,x.ideal);const lap=+(tr.base-.9+(100-wkPerf(t,'q'))*.06+(100-d.skill)*.035-(q-.7)*5*.06+gauss()*.12).toFixed(3);
  const conf=clamp(Math.round((q*100+gauss()*4)/5)*5,0,100);
  x.runs.push({s:{...x.s},fb:setFeedback(d,x.s,x.ideal),lap,conf});save();render()}
-function fpRun(){const wk=S.wk,tr=TR(wk.track),f=wk.fp;const pend=(S.pending||[]).length;ensureSet();
- f.corr=pend&&f.prog!=='parts'&&rnd()<.3?-.3:0;f.done=true;
- userDrivers().forEach(d=>{const x=wk.set[d.id];x.q=+setQ(x.s,x.ideal).toFixed(3)});
+const FBK={'밸런스':'fw','코너 vs 직선':'rw','연석·노면':'su','차고·플로어':'rh'};
+function fpSuggest(fb){const w=fb.filter(x=>x.g>0).sort((a,b)=>b.g-a.g)[0];if(!w)return '엔지니어: 지금 창 안입니다 · 큰 변경 없이 미세 조정만';
+ const k=FBK[w.n],nm=SETK.find(x=>x[0]===k)[1];return `엔지니어 제안: ${nm} ${w.s>0?'낮추기':'높이기'} ${w.g>=2?'2단 안팎':'1단'} (${w.n} ${SETG[w.g]})`}
+/* 한 세션을 진행하고 결과를 기록한다 */
+function fpSim(){const wk=S.wk,tr=TR(wk.track),f=fpS();if(f.done||f.ses>=FPN())return;ensureSet();
+ const pend=(S.pending||[]).length,i=f.ses,prog=f.prog,nm=fpNm(i),N=[];
+ if(prog==='parts'&&pend){if(f.corr)N.push('신규 파츠 상관성 문제 해결 · 성능 손실 제거');f.partsOk=true;f.corr=0}
+ else if(pend&&!f.partsOk&&!f.corrRolled){f.corrRolled=1;f.corr=rnd()<.3?-.3:0}
+ const evo=-.25*i,sb=[.35,.3,.18][i]||.3,ufuel={quali:-.12,setup:0,long:.5,parts:.25}[prog]||0;
  const ids=S.teams.flatMap(t=>t.drivers);
- f.one=ids.map(id=>{const d=S.drivers[id],t=teamById(d.team);const sand=t.user?0:Math.abs(gauss())*.35;return[id,+(tr.base-1.1+(100-wkPerf(t,'q')-drvBonus(id,'q'))*.06+(100-d.skill)*.035+gauss()*.22+sand).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
- const acc=f.prog==='long'?.08:.3;
- f.lr=S.teams.map(t=>{const db=t.drivers.reduce((s,id)=>s+drvBonus(id,'r'),0)/Math.max(1,t.drivers.length);return[t.id,+(tr.base+1.2+(100-wkPerf(t,'r')-db)*.06+gauss()*acc).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
- const N=[];
- userDrivers().forEach(d=>{const x=wk.set[d.id],q=x.q,a=affOf(d,tr.id);const tested=x.runs.length&&SETK.every(([k])=>x.runs[x.runs.length-1].s[k]===x.s[k]);
-  N.push(`${d.code} 셋업 완성도 ${Math.round(q*100)}% (${q>=.9?'최적 창 안':q>=.75?'좋음':q>=.55?'타협안':'창 밖 — 페이스 손실'}) · 랩당 ${((q-.7)*5*.06)>=0?'−':'+'}${Math.abs((q-.7)*5*.06).toFixed(3)}초 · 타이어 마모 ${q<.7?'+':'−'}${Math.abs((.7-q)*15).toFixed(0)}%${tested?'':' · 마지막 변경은 검증되지 않은 값'}`);
-  N.push(`${d.code} 서킷 궁합 ${affWord(a)} (${a>=0?'+':''}${(a*.06).toFixed(3)}초 상당)${dtrOf(d).tr.includes(tr.id)?' · 이 서킷에서 강한 드라이버':''}`)});
- if(f.prog==='quali')N.push('예선 시뮬레이션 완료 · 원랩 페이스 향상');
- if(f.prog==='long')N.push('롱런 데이터 확보 · 결승 타이어 마모 −6% · 롱런 순위 신뢰도 높음');
- if(f.prog==='parts')N.push(`신규 파츠 ${pend}개 상관성 확인 완료`);if(f.corr)N.push('신규 파츠 상관성 문제 발견 · 이번 주말 성능 −0.3');
- {const ut=userTeam(),p=profOf(ut),w=TW[tr.id];if(w){const best=PK.map((k,i)=>[k,w[i]]).sort((a,b)=>b[1]-a[1])[0][0];const rk=S.teams.map(t=>profOf(t)[best]||0).sort((a,b)=>b-a).indexOf(p[best])+1;N.push(`이 서킷의 핵심 구간: ${PKN[best]} (${Math.round(w[PK.indexOf(best)]*100)}%) · 우리 차 이 항목 그리드 ${rk}위`)}}
- f.notes=N;save();render()}
+ const one=ids.map(id=>{const d=S.drivers[id],t=teamById(d.team);const pf=wkPerf(t,'q')+(t.user?(f.corr||0):0);
+  const off=t.user?ufuel+(i<2?.2:0):Math.abs(gauss())*sb+(i<2?rnd()*.25:0);
+  return[id,+(tr.base-1.1+evo+(100-pf-drvBonus(id,'q'))*.06+(100-d.skill)*.035+gauss()*.18+off).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
+ const acc=prog==='long'?.08:.3;
+ const lr=S.teams.map(t=>{const db=t.drivers.reduce((s,id)=>s+drvBonus(id,'r'),0)/Math.max(1,t.drivers.length);const pf=wkPerf(t,'r')+(t.user?(f.corr||0):0);return[t.id,+(tr.base+1.2+evo*.6+(100-pf-db)*.06+gauss()*acc).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
+ const prevH=f.hist[f.hist.length-1];
+ userDrivers().forEach(d=>{const x=wk.set[d.id],q=setQ(x.s,x.ideal),a=affOf(d,tr.id);const fb=setFeedback(d,x.s,x.ideal);
+  const lap=one.find(o=>o[0]===d.id)[1];const conf=clamp(Math.round((q*100+gauss()*4)/5)*5,0,100);
+  x.runs.push({s:{...x.s},fb,lap,conf,ses:nm});
+  const pq=prevH&&prevH.q&&prevH.q[d.id];const dq=pq!=null?Math.round((q-pq)*100):null;
+  N.push(`${d.code} 원랩 P${one.findIndex(o=>o[0]===d.id)+1} · 셋업 완성도 ${Math.round(q*100)}%${dq!=null?` (${dq>=0?'+':''}${dq}%p)`:''} · ${q>=.9?'최적 창 안':q>=.75?'좋음':q>=.55?'타협안':'창 밖 — 페이스 손실'} · 랩당 ${((q-.7)*5*.06)>=0?'−':'+'}${Math.abs((q-.7)*5*.06).toFixed(3)}초`);
+  N.push(`${d.code} ${fpSuggest(fb)}`);
+  if(i===0)N.push(`${d.code} 서킷 궁합 ${affWord(a)} (${a>=0?'+':''}${(a*.06).toFixed(3)}초 상당)${dtrOf(d).tr.includes(tr.id)?' · 이 서킷에서 강한 드라이버':''}`)});
+ const ur=lr.findIndex(x=>teamById(x[0]).user)+1;N.push(`롱런 페이스 팀 ${ur}위${prog==='long'?' · 신뢰도 높음':' · 추정치 (오차 큼)'}`);
+ if(prog==='quali')N.push('예선 시뮬레이션 완료 · 원랩 페이스 향상 (예선 적용)');
+ if(prog==='long')N.push('롱런 데이터 확보 · 결승 타이어 마모 −6%');
+ if(prog==='long'||prog==='parts')N.push('연료를 많이 싣고 달려 원랩 기록은 실제보다 느리게 나왔습니다');
+ if(prog==='parts'&&pend)N.push(`신규 파츠 ${pend}개 상관성 확인 완료`);
+ else if(f.corr)N.push('신규 파츠 상관성 문제 발견 · 이번 주말 성능 −0.3'+(f.ses<FPN()-1?' · 다음 세션에서 상관성 테스트를 하면 해결됩니다':''));
+ if(i===0){const ut=userTeam(),p=profOf(ut),w=TW[tr.id];if(w){const best=PK.map((k,j)=>[k,w[j]]).sort((a,b)=>b[1]-a[1])[0][0];const rk=S.teams.map(t=>profOf(t)[best]||0).sort((a,b)=>b-a).indexOf(p[best])+1;N.push(`이 서킷의 핵심 구간: ${PKN[best]} (${Math.round(w[PK.indexOf(best)]*100)}%) · 우리 차 이 항목 그리드 ${rk}위`)}}
+ f.hist.push({nm,prog,one,lr,notes:N,q:Object.fromEntries(userDrivers().map(d=>[d.id,setQ(wk.set[d.id].s,wk.set[d.id].ideal)]))});
+ f.progs.push(prog);f.ses++;
+ if(f.ses<FPN()){const nx=f.ses===2?'quali':'long';f.prog=nx==='parts'&&!pend?'setup':nx}}
+function fpSesEnd(){fpSim();save();render()}
+/* 셋업 확정: 남은 세션을 진행하고 값을 예선·결승에 고정 */
+function fpLock(){const wk=S.wk,f=fpS();ensureSet();while(!f.done&&f.ses<FPN())fpSim();
+ userDrivers().forEach(d=>{const x=wk.set[d.id];x.q=+setQ(x.s,x.ideal).toFixed(3)});
+ const h=f.hist[f.hist.length-1];if(h){f.one=h.one;f.lr=h.lr;f.notes=h.notes}f.done=true;save()}
+function fpRun(){fpLock();render()}
 /* 연습 건너뛰기: 엔지니어가 시뮬레이터 기반으로 무난한 셋업을 고른다 */
 function fpAuto(){ensureSet();userDrivers().forEach(d=>{const x=S.wk.set[d.id];SETK.forEach(([k])=>{const e=x.s[k]-x.ideal[k];if(Math.abs(e)>1)x.s[k]-=Math.sign(e)*(Math.abs(e)-1)})})}
 function setPanelHTML(d){const x=S.wk.set[d.id],left=runsLeft(d.id),last=x.runs[x.runs.length-1];
  const dirty=last&&SETK.some(([k])=>last.s[k]!==x.s[k]);
- return `<div class="pc setp"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:15px">#${d.num} ${esc(d.code)}</b><span class="muted" style="font-size:12px">남은 런 ${left} / ${runsOf()}</span></div>
+ return `<div class="pc setp"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:15px">#${d.num} ${esc(d.code)}</b><span class="muted" style="font-size:12px">${fpS().ses>=FPN()?'연습 종료 · 값 조정만 가능':`이번 세션 남은 런 ${left}`}</span></div>
   ${SETK.map(([k,n])=>`<div class="setr"><span>${n}</span><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="-1" aria-label="${n} 낮추기">−</button><span class="setbar" aria-hidden="true">${Array.from({length:9},(_,i)=>`<i class="${i<x.s[k]?'on':''}"></i>`).join('')}</span><b class="num">${x.s[k]}</b><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="1" aria-label="${n} 높이기">+</button></div>`).join('')}
-  <button class="btn primary" data-act="setrun" data-i="${d.id}" ${left?'':'disabled'}>${left?'런 실행 · 피드백 받기':'런 소진'}</button>
+  <button class="btn primary" data-act="setrun" data-i="${d.id}" ${left?'':'disabled'}>${left?'런 실행 · 피드백 받기':fpS().ses>=FPN()?'남은 세션 없음':'런 소진 · 세션 종료 때 자동 피드백'}</button>
   ${last?`<div class="fb">${last.fb.map(f=>`<div data-g="${f.g}"><span class="lbl">${f.n}</span><b>${SETG[f.g]}</b><span>${esc(f.t)}</span></div>`).join('')}<small class="muted">드라이버 자신감 약 ${last.conf}% · 랩 ${fmtLap(last.lap)}${dirty?' · 지금 값은 아직 안 달려봤습니다':''}</small></div>`:'<small class="muted">엔지니어 시뮬레이터 기본값입니다. 런을 돌려 보세요.</small>'}
-  ${x.runs.length>1?`<div class="tscroll"><table class="setlog"><thead><tr><th>런</th>${SETK.map(([k,n])=>`<th>${n.split(' ')[0].slice(0,2)}</th>`).join('')}<th>자신감</th><th>랩</th></tr></thead><tbody>${x.runs.map((r,i)=>`<tr><td class="num">${i+1}</td>${SETK.map(([k])=>`<td class="num">${r.s[k]}</td>`).join('')}<td class="num">${r.conf}%</td><td class="num">${fmtLap(r.lap)}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`}
-function fpHTML(){const wk=S.wk,f=wk.fp,tr=TR(wk.track),ty=TTYPE[tr.id]||'bal';const pend=(S.pending||[]).length;ensureSet();
- const ttl=wk.sprint?'FP1 · 스프린트 주말 유일한 연습 세션':'프리 프랙티스 · FP1–FP3';
- if(!f.done)return `<div class="card"><header>${ttl}</header><div class="body plan">
-  <div class="muted" style="font-size:13px">${TTN[ty]}${tr.st?' · 스트리트':''} · ${ty==='pw'?'긴 직선이 많아 드래그가 중요합니다':ty==='df'?'중저속 코너가 많아 다운포스가 중요합니다':'직선과 코너가 고르게 섞여 있습니다'}${wk.sprint?' · 이 세션 뒤 곧바로 스프린트 예선입니다':''}</div>
-  <div style="display:grid;gap:6px"><span class="lbl">세션 프로그램</span><div class="qchoice" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${Object.entries(FPPROG).map(([k,x])=>`<button data-act="fpprog" data-v="${k}" aria-pressed="${f.prog===k}" ${k==='parts'&&!pend?'disabled':''}><b>${x.n}</b><span>${esc(k==='parts'&&!pend?'장착 대기 부품 없음':x.d)}</span></button>`).join('')}</div>
-  ${pend?`<small class="warn">장착 대기 부품 ${pend}개 · 상관성 테스트를 하지 않으면 30% 확률로 이번 주말 성능 손실</small>`:''}</div>
-  <div style="display:grid;gap:6px"><span class="lbl">셋업 · 드라이버별 최적 창 찾기</span><small class="muted">값을 바꾸고 런을 돌리면 드라이버가 피드백을 줍니다. 최적값은 드라이버·서킷마다 다르고, 항목끼리 서로 영향을 줍니다 (리어 윙을 바꾸면 밸런스도 변함). 연습이 끝날 때의 값이 예선·결승에 고정됩니다.</small>
+  ${x.runs.length>1?`<div class="tscroll"><table class="setlog"><thead><tr><th>런</th>${SETK.map(([k,n])=>`<th>${n.split(' ')[0].slice(0,2)}</th>`).join('')}<th>자신감</th><th>랩</th></tr></thead><tbody>${x.runs.map((r,i)=>`<tr><td class="num">${r.ses||i+1}</td>${SETK.map(([k])=>`<td class="num">${r.s[k]}</td>`).join('')}<td class="num">${r.conf}%</td><td class="num">${fmtLap(r.lap)}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`}
+function fpResHTML(h,last){const row=(id,t,i,b)=>{const d=S.drivers[id],tm=teamById(d.team);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(tm.name)}</span></td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-b).toFixed(3):''}</td></tr>`};
+ const b0=h.one[0][1],l0=h.lr[0][1];
+ return `<div class="qgrid wide" style="margin-bottom:16px"><div class="card"><header>${h.nm} 결과 · 원랩 기록 · ${esc(FPPROG[h.prog]?FPPROG[h.prog].n:'')}</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>베스트</th><th>차이</th></tr></thead><tbody>${h.one.slice(0,12).map(([id,t],i)=>row(id,t,i,b0)).join('')}${h.one.slice(12).map(([id,t],i)=>teamById(S.drivers[id].team).user?row(id,t,i+12,b0):'').join('')}</tbody></table></div></div>
+  <div style="display:grid;gap:16px;min-width:0"><div class="card"><header>${h.nm} 롱런 페이스 · 팀별 평균${h.prog==='long'?' · 신뢰도 높음':' · 추정치'}</header><div class="tscroll"><table><tbody>${h.lr.map(([id,t],i)=>{const tm=teamById(id);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span>${esc(tm.user?teamDisp():tm.name)}</td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-l0).toFixed(3):''}</td></tr>`}).join('')}</tbody></table></div></div>
+  <div class="card"><header>${h.nm} 엔지니어 디브리핑</header><div class="body plan"><ul class="news">${h.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>${last||''}</div></div></div></div>`}
+function fpHTML(){const wk=S.wk,f=fpS(),tr=TR(wk.track),ty=TTYPE[tr.id]||'bal';const pend=(S.pending||[]).length;ensureSet();
+ const n=FPN(),ttl=wk.sprint?'FP1 · 스프린트 주말 유일한 연습 세션':'프리 프랙티스 · FP1–FP3';
+ if(f.done){const h=f.hist[f.hist.length-1]||{nm:'FP',prog:f.prog,one:f.one,lr:f.lr,notes:f.notes||[]};return fpResHTML(h,`<button class="btn red big" data-act="fpdone">${wk.sprint?'스프린트 예선으로':'예선으로'}</button>`)}
+ const steps=Array.from({length:n},(_,i)=>`<span style="padding:2px 8px;border:1px solid var(--line-2);border-radius:3px;font-family:var(--f-disp);font-size:12px;${i===f.ses?'border-color:var(--team);color:var(--fg)':i<f.ses?'opacity:.6':'opacity:.4'}">${fpNm(i)}${i<f.ses?' ✓':i===f.ses?' · 다음':''}</span>`).join('');
+ const hist=f.hist.length>1?`<div class="tscroll" style="margin-top:4px"><table class="setlog"><thead><tr><th>세션</th><th>프로그램</th>${userDrivers().map(d=>`<th>${d.code} 원랩</th><th>${d.code} 셋업</th>`).join('')}<th>롱런 팀</th></tr></thead><tbody>${f.hist.map(h=>`<tr><td>${h.nm}</td><td>${esc(FPPROG[h.prog]?FPPROG[h.prog].n:'')}</td>${userDrivers().map(d=>`<td class="num">P${h.one.findIndex(o=>o[0]===d.id)+1}</td><td class="num">${h.q&&h.q[d.id]!=null?Math.round(h.q[d.id]*100)+'%':'—'}</td>`).join('')}<td class="num">${h.lr.findIndex(x=>teamById(x[0]).user)+1}위</td></tr>`).join('')}</tbody></table></div>`:'';
+ const last=f.hist[f.hist.length-1];const fin=f.ses>=n;
+ const plan=fin?`<div class="card"><header>${ttl} · 예선 전 최종 조정</header><div class="body plan">
+   <div class="row-flex" style="gap:6px">${steps}</div>${hist}
+   <small class="muted">모든 연습 세션이 끝났습니다. 디브리핑을 보고 값을 더 바꿀 수 있지만, 바꾼 값은 달려보지 않은 상태로 예선·결승에 고정됩니다.</small>
+   <div class="setg">${userDrivers().map(d=>setPanelHTML(d)).join('')}</div>
+   <div class="row-flex"><button class="btn red big" data-act="fplock">셋업 확정 · ${wk.sprint?'스프린트 예선으로':'예선으로'}</button></div></div></div>`
+  :`<div class="card"><header>${ttl} · ${fpNm(f.ses)} 준비</header><div class="body plan">
+  <div class="row-flex" style="gap:6px">${steps}</div>${hist}
+  ${f.ses===0?`<div class="muted" style="font-size:13px">${TTN[ty]}${tr.st?' · 스트리트':''} · ${ty==='pw'?'긴 직선이 많아 드래그가 중요합니다':ty==='df'?'중저속 코너가 많아 다운포스가 중요합니다':'직선과 코너가 고르게 섞여 있습니다'}${wk.sprint?' · 이 세션 뒤 곧바로 스프린트 예선입니다':' · 세션마다 결과를 보고 다음 세션 전에 셋업을 바꿀 수 있습니다'}</div>`:''}
+  <div style="display:grid;gap:6px"><span class="lbl">${fpNm(f.ses)} 세션 프로그램</span><div class="qchoice" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${Object.entries(FPPROG).map(([k,x])=>`<button data-act="fpprog" data-v="${k}" aria-pressed="${f.prog===k}" ${k==='parts'&&(!pend||f.partsOk)?'disabled':''}><b>${x.n}</b><span>${esc(k==='parts'&&!pend?'장착 대기 부품 없음':k==='parts'&&f.partsOk?'이미 테스트 완료':k==='setup'?`이번 세션 셋업 런 +1회`:x.d)}</span></button>`).join('')}</div>
+  ${pend&&!f.partsOk?`<small class="warn">장착 대기 부품 ${pend}개 · 상관성 테스트를 하지 않으면 30% 확률로 이번 주말 성능 손실</small>`:''}</div>
+  <div style="display:grid;gap:6px"><span class="lbl">셋업 · 드라이버별 최적 창 찾기</span><small class="muted">값을 바꾸고 런을 돌리면 드라이버가 피드백을 줍니다. 세션을 끝내면 그 시점 값으로 기록과 피드백이 나오고, 다음 세션 전에 다시 바꿀 수 있습니다. 쓰지 않은 런은 다음 세션으로 넘어갑니다.</small>
    <div class="setg">${userDrivers().map(d=>setPanelHTML(d)).join('')}</div></div>
-  <div class="row-flex"><button class="btn red big" data-act="fprun">연습 종료 · 셋업 확정</button><button class="btn" data-act="fpskip">엔지니어에게 맡기고 건너뛰기</button></div></div></div>`;
- const row=(id,t,i,b)=>{const d=S.drivers[id],tm=teamById(d.team);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(tm.name)}</span></td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-b).toFixed(3):''}</td></tr>`};
- const b0=f.one[0][1],l0=f.lr[0][1];
- return `<div class="qgrid wide"><div class="card"><header>${ttl} · 원랩 기록</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>베스트</th><th>차이</th></tr></thead><tbody>${f.one.slice(0,12).map(([id,t],i)=>row(id,t,i,b0)).join('')}${f.one.slice(12).map(([id,t],i)=>teamById(S.drivers[id].team).user?row(id,t,i+12,b0):'').join('')}</tbody></table></div></div>
-  <div style="display:grid;gap:16px;min-width:0"><div class="card"><header>롱런 페이스 · 팀별 평균${f.prog==='long'?' · 신뢰도 높음':' · 추정치'}</header><div class="tscroll"><table><tbody>${f.lr.map(([id,t],i)=>{const tm=teamById(id);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span>${esc(tm.user?teamDisp():tm.name)}</td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-l0).toFixed(3):''}</td></tr>`}).join('')}</tbody></table></div></div>
-  <div class="card"><header>엔지니어 디브리핑</header><div class="body plan"><ul class="news">${f.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><button class="btn red big" data-act="fpdone">${wk.sprint?'스프린트 예선으로':'예선으로'}</button></div></div></div></div>`}
+  <div class="row-flex"><button class="btn red big" data-act="fpses">${fpNm(f.ses)} 종료 · 결과 보기</button><button class="btn" data-act="fpskip">엔지니어에게 맡기고 건너뛰기</button></div></div></div>`;
+ return (last?fpResHTML(last):'')+plan}
 function sqRun(){const wk=S.wk;const r=qualiSim(false);wk.sgrid=r.grid;wk.sq=r.q;wk.sTyre=wk.sTyre||{};userDrivers().forEach(d=>{wk.sTyre[d.id]=wk.sTyre[d.id]||'M'});save();render()}
 function sqHTML(){const wk=S.wk,tr=TR(wk.track);const L=Math.max(10,Math.round(tr.laps/3));
  if(!wk.sgrid)return `<div class="card"><header>스프린트 예선 · SQ1–SQ3</header><div class="body plan"><div class="muted" style="font-size:13px">스프린트 그리드를 정하는 짧은 예선입니다. 본 예선 런 계획(안정·표준·한계 공격)이 그대로 적용됩니다. 스프린트는 ${L}랩 · 의무 피트 스톱 없음 · 상위 8명 8–1점.</div><div class="row-flex"><button class="btn red big" data-act="sqrun">스프린트 예선 진행</button></div></div></div>`;
@@ -1392,7 +1432,7 @@ function makeWeather(tr){
 }
 function startWeekend(){
  const tr=TR(S.cal[S.cur]);
- S.wk={round:S.cur+1,track:tr.id,phase:'fp',fp:{prog:'setup',done:false},sprint:S.cal.length>=12&&SPRINT.includes(tr.id),qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.8).toFixed(2)]))};
+ S.wk={round:S.cur+1,track:tr.id,phase:'fp',fp:{prog:'setup',done:false,ses:0,hist:[],progs:[]},sprint:S.cal.length>=12&&SPRINT.includes(tr.id),qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.8).toFixed(2)]))};
  userDrivers().forEach(d=>{qsOf(d.id);S.wk.startTyre[d.id]='M'});ensureSet();initMgmt();puWeekend();
  save();go('race');
 }
@@ -2027,7 +2067,7 @@ function answer(v){const R=S.wk.race;const A=R.ask;if(!A)return;const c=R.cars.f
 /* ============ race engine ============ */
 function aiStart(i,tr){if(tr.deg>=1.2)return i<10?(rnd()<.6?'M':'H'):(rnd()<.5?'H':'M');return i<10?(rnd()<.65?'M':'S'):(rnd()<.45?'H':(rnd()<.5?'M':'S'))}
 /* 우리 차 타이어 마모 배율 — 결승 엔진과 전략 계획이 같은 값을 쓴다 */
-function userTm(id,sp){const wk=S.wk,ut=userTeam();const lr=!sp&&wk&&wk.fp&&wk.fp.done&&wk.fp.prog==='long'?.94:1;return (1-.05*(ut.tyre||0))*lr*drvTm(id)}
+function userTm(id,sp){const wk=S.wk,ut=userTeam();const lr=!sp&&wk&&wk.fp&&wk.fp.done&&fpHas('long')?.94:1;return (1-.05*(ut.tyre||0))*lr*drvTm(id)}
 function initRace(sp){
  const wk=S.wk,tr=TR(wk.track),ut=userTeam();sp=!!sp;ensureSet();
  const cars=(sp?wk.sgrid:wk.grid).map((id,i)=>{const d=S.drivers[id],t=teamById(d.team),u=!!t.user;const ty=u?(sp?(wk.sTyre&&wk.sTyre[id])||'M':wk.startTyre[id]):sp?(i<10?(rnd()<.7?'M':'S'):(rnd()<.5?'S':'M')):aiStart(i,tr);
@@ -3166,7 +3206,9 @@ document.addEventListener('click',e=>{
   case 'setrun':setRun(i);break;
   case 'fpprog':S.wk.fp.prog=v;save();render();break;
   case 'fprun':fpRun();break;
-  case 'fpskip':S.wk.fp.prog='setup';fpAuto();fpRun();S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
+  case 'fpses':fpSesEnd();break;
+  case 'fplock':fpLock();S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
+  case 'fpskip':S.wk.fp.prog='setup';fpAuto();fpLock();S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
   case 'fpdone':S.wk.phase=S.wk.sprint?'sq':'quali';save();render();break;
   case 'sqrun':sqRun();break;
   case 'sstire':S.wk.sTyre[i]=v;save();render();break;
