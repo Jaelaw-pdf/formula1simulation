@@ -672,7 +672,11 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 .setp{display:grid;gap:8px}
 .setr{display:grid;grid-template-columns:92px 28px 1fr 22px 28px;align-items:center;gap:6px;font-size:13px}
 .setbar{display:grid;grid-template-columns:repeat(9,1fr);gap:2px}.setbar i{height:8px;border-radius:2px;background:var(--line-2)}.setbar i.on{background:var(--team)}
-.fb{display:grid;gap:4px;font-size:12.5px}.fb>div{display:grid;grid-template-columns:78px 38px 1fr;gap:6px;align-items:baseline}
+.fb{display:grid;gap:6px;font-size:12.5px}.fb>div{display:grid;grid-template-columns:78px 34px 1fr auto;gap:6px;align-items:center}
+.fb .fbto{display:block;color:var(--team);font-size:11.5px;margin-top:1px}.fb .fbto.ok{color:var(--muted,#8a8f98)}
+.fb .fbfix{white-space:nowrap;font-size:11px;padding:2px 7px}
+.sgd{border:1px solid var(--line-2);border-radius:4px;font-size:12.5px}.sgd>summary{cursor:pointer;padding:6px 8px;color:var(--fg)}
+.sgdb{display:grid;gap:8px;padding:4px 8px 8px}.sgdb>div{display:grid;gap:1px}.sgdb .sgk{color:var(--team);font-weight:600}
 .fb>div[data-g="0"] b{color:var(--good)}.fb>div[data-g="1"] b{color:var(--fg)}.fb>div[data-g="2"] b{color:var(--warn)}.fb>div[data-g="3"] b{color:var(--bad)}
 table.setlog{font-size:12px}table.setlog td,table.setlog th{padding:2px 6px}
 .mgg{display:grid;gap:16px}.mgk{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
@@ -966,6 +970,13 @@ function setRun(id){ensureSet();const wk=S.wk,x=wk.set[id],d=S.drivers[id],tr=TR
  const conf=clamp(Math.round((q*100+gauss()*4)/5)*5,0,100);
  x.runs.push({s:{...x.s},fb:setFeedback(d,x.s,x.ideal),lap,conf});save();render()}
 const FBK={'밸런스':'fw','코너 vs 직선':'rw','연석·노면':'su','차고·플로어':'rh'};
+/* 피드백 → 조정할 값·방향 (v>0이면 값이 높다 → 낮추기) */
+const FBFIX=f=>{const k=FBK[f.n],nm=SETK.find(x=>x[0]===k)[1],d=-f.s*Math.max(1,f.g);return{k,nm,d}};
+const SETGUIDE=[['밸런스','프론트 윙','오버스티어(프론트가 셈) → 프론트 윙 ↓ · 언더스티어(앞이 안 돎) → 프론트 윙 ↑','리어 윙을 올리면 밸런스도 언더스티어 쪽으로 절반쯤 움직입니다'],
+ ['코너 vs 직선','리어 윙','직선에서 느림(드래그 과다) → 리어 윙 ↓ · 코너에서 불안(다운포스 부족) → 리어 윙 ↑','파워 서킷은 낮게, 다운포스 서킷은 높게 시작'],
+ ['연석·노면','서스펜션 강성','연석에서 튐(딱딱함) → 서스펜션 ↓ · 차가 굼뜸(무름) → 서스펜션 ↑','스트리트 서킷은 무르게 시작'],
+ ['차고·플로어','차고','플로어 다운포스 손실(높음) → 차고 ↓ · 바닥이 긁힘(낮음) → 차고 ↑','서스펜션을 단단하게 하면 차고 피드백도 \'높음\' 쪽으로 조금 움직입니다']];
+function setGuideHTML(){return `<details class="sgd"><summary>어떤 값을 만져야 하나요? · 조정 가이드</summary><div class="sgdb">${SETGUIDE.map(([f,k,t,n])=>`<div><b>${f}</b><span class="sgk">→ ${k}</span><span>${t}</span><small class="muted">${n}</small></div>`).join('')}<small class="muted">순서 팁: ① 리어 윙으로 코너·직선 → ② 프론트 윙으로 밸런스 → ③ 서스펜션 → ④ 차고. 한 런에 한두 개만 바꿔야 어떤 변경이 효과였는지 알 수 있습니다. 피드백 옆 버튼을 누르면 엔지니어 제안만큼 바로 조정됩니다.</small></div></details>`}
 function fpSuggest(fb){const w=fb.filter(x=>x.g>0).sort((a,b)=>b.g-a.g)[0];if(!w)return '엔지니어: 지금 창 안입니다 · 큰 변경 없이 미세 조정만';
  const k=FBK[w.n],nm=SETK.find(x=>x[0]===k)[1];return `엔지니어 제안: ${nm} ${w.s>0?'낮추기':'높이기'} ${w.g>=2?'2단 안팎':'1단'} (${w.n} ${SETG[w.g]})`}
 /* 한 세션을 진행하고 결과를 기록한다 */
@@ -1010,8 +1021,9 @@ function setPanelHTML(d){const x=S.wk.set[d.id],left=runsLeft(d.id),last=x.runs[
  const dirty=last&&SETK.some(([k])=>last.s[k]!==x.s[k]);
  return `<div class="pc setp"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:15px">#${d.num} ${esc(d.code)}</b><span class="muted" style="font-size:12px">${fpS().ses>=FPN()?'연습 종료 · 값 조정만 가능':`이번 세션 남은 런 ${left}`}</span></div>
   ${SETK.map(([k,n])=>`<div class="setr"><span>${n}</span><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="-1" aria-label="${n} 낮추기">−</button><span class="setbar" aria-hidden="true">${Array.from({length:9},(_,i)=>`<i class="${i<x.s[k]?'on':''}"></i>`).join('')}</span><b class="num">${x.s[k]}</b><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="1" aria-label="${n} 높이기">+</button></div>`).join('')}
+  ${setGuideHTML()}
   <button class="btn primary" data-act="setrun" data-i="${d.id}" ${left?'':'disabled'}>${left?'런 실행 · 피드백 받기':fpS().ses>=FPN()?'남은 세션 없음':'런 소진 · 세션 종료 때 자동 피드백'}</button>
-  ${last?`<div class="fb">${last.fb.map(f=>`<div data-g="${f.g}"><span class="lbl">${f.n}</span><b>${SETG[f.g]}</b><span>${esc(f.t)}</span></div>`).join('')}<small class="muted">드라이버 자신감 약 ${last.conf}% · 랩 ${fmtLap(last.lap)}${dirty?' · 지금 값은 아직 안 달려봤습니다':''}</small></div>`:'<small class="muted">엔지니어 시뮬레이터 기본값입니다. 런을 돌려 보세요.</small>'}
+  ${last?`<div class="fb">${last.fb.map(f=>{const x2=FBFIX(f);return `<div data-g="${f.g}"><span class="lbl">${f.n}</span><b>${SETG[f.g]}</b><span>${esc(f.t)}${f.g?`<small class="fbto">조정할 값: ${x2.nm} ${x2.d>0?'↑ 높이기':'↓ 낮추기'} ${Math.abs(x2.d)}단</small>`:`<small class="fbto ok">조정할 값: ${x2.nm} · 그대로 두기</small>`}</span>${f.g?`<button class="btn sm fbfix" data-act="setadj" data-i="${d.id}" data-k="${x2.k}" data-d="${x2.d}" title="${x2.nm} ${x2.d>0?'+':''}${x2.d}">${x2.nm.replace(' 강성','')} ${x2.d>0?'+':''}${x2.d}</button>`:'<span></span>'}</div>`}).join('')}<small class="muted">드라이버 자신감 약 ${last.conf}% · 랩 ${fmtLap(last.lap)}${dirty?' · 지금 값은 아직 안 달려봤습니다':''}</small></div>`:'<small class="muted">엔지니어 시뮬레이터 기본값입니다. 런을 돌려 보세요.</small>'}
   ${x.runs.length>1?`<div class="tscroll"><table class="setlog"><thead><tr><th>런</th>${SETK.map(([k,n])=>`<th>${n.split(' ')[0].slice(0,2)}</th>`).join('')}<th>자신감</th><th>랩</th></tr></thead><tbody>${x.runs.map((r,i)=>`<tr><td class="num">${r.ses||i+1}</td>${SETK.map(([k])=>`<td class="num">${r.s[k]}</td>`).join('')}<td class="num">${r.conf}%</td><td class="num">${fmtLap(r.lap)}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`}
 function fpResHTML(h,last){const row=(id,t,i,b)=>{const d=S.drivers[id],tm=teamById(d.team);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(tm.name)}</span></td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-b).toFixed(3):''}</td></tr>`};
  const b0=h.one[0][1],l0=h.lr[0][1];
@@ -1095,7 +1107,8 @@ function rivalDev(){const df=DF();const riv=S.teams.filter(t=>!t.user);const up=
   t.perf=Math.min(97.5,t.perf+g*clamp((97.5-t.perf)/5,.15,1))});
  S.rnews=S.rnews||[];news.forEach(n=>S.rnews.unshift({...n,y:S.year,r:S.cur+2}));if(S.rnews.length>40)S.rnews.length=40;return news}
 const rnewsFor=(y,r)=>(S.rnews||[]).filter(n=>n.y===y&&n.r===r);
-const teamById=id=>S.teams.find(t=>t.id===id);
+const RET_T={id:'ret',name:'은퇴·무소속',color:'#5a5f6a',perf:0,rel:0,drivers:[]};
+const teamById=id=>S.teams.find(t=>t.id===id)||(id==='ret'?RET_T:undefined);
 const userTeam=()=>S.teams.find(t=>t.user);
 const userDrivers=()=>userTeam().drivers.map(id=>S.drivers[id]);
 
@@ -2299,7 +2312,7 @@ function finishRace(){
  const desc=mine.map(e=>`#${S.drivers[e.id].num} ${e.st==='run'?'P'+e.pos:e.st==='dsq'?'DSQ':'DNF'}`).join(', ');
  const tags=[];if(mine.some(e=>e.pos===1&&e.st==='run'))tags.push('win');else if(pod)tags.push('pod');if(mine.some(e=>e.st!=='run'))tags.push('dnf');
  S.cur++;
- addCommit({kind:'race',msg:`R${S.cur} ${tr.n} GP: ${desc} (+${tp}${tps?' · 스프린트 +'+tps:''})`,tags,body:{cls:cls.slice(0,10).map(e=>[e.id,e.pts]),mine,smine:smine.map(e=>({id:e.id,pos:e.pos,pts:e.pts,st:e.st,grid:e.grid})),events:R.events.slice(0,10),earn,spay:SPR.pay,track:tr.id}});
+ addCommit({kind:'race',msg:`R${S.cur} ${tr.n} GP: ${desc} (+${tp}${tps?' · 스프린트 +'+tps:''})`,tags,body:{cls:cls.slice(0,10).map(e=>[e.id,e.pts,S.drivers[e.id].team]),mine,smine:smine.map(e=>({id:e.id,pos:e.pos,pts:e.pts,st:e.st,grid:e.grid})),events:R.events.slice(0,10),earn,spay:SPR.pay,track:tr.id}});
  S.cur--;S.commits[0].round=S.cur+1;
  SPR.commits.forEach(c=>{addCommit(c);S.commits[0].round=S.cur+1});
  // between-race evolution
@@ -2987,8 +3000,9 @@ function viewCommits(m){
   const w=rs.filter(c=>(c.tags||[]).includes('win')).length;return `${rs.length}라운드 · ${pts}점${w?' · '+w+'승':''}`};
  m.innerHTML=`<div class="cfil"><div class="seg">${K.map(([k,l])=>`<button data-act="cf" data-v="${k}" aria-pressed="${f===k}">${l} <span class="num muted">${k==='all'?S.commits.length:(cnt[k]||0)}</span></button>`).join('')}</div>
   <span class="muted" style="font-size:12px">항목을 누르면 상세 기록이 펼쳐집니다</span></div>
- <div class="commits">${Object.keys(groups).sort((a,b)=>b-a).map(y=>`<div class="cgroup"><h3><span>season-${y}</span><span class="muted" style="font-weight:400">${seasonSum(y)}</span></h3><ol class="tl">${groups[y].map(commitHTML).join('')}</ol></div>`).join('')||'<div class="card"><div class="body muted">이 분류의 기록이 없습니다.</div></div>'}</div>`;
+ <div class="commits">${Object.keys(groups).sort((a,b)=>b-a).map(y=>`<div class="cgroup"><h3><span>season-${y}</span><span class="muted" style="font-weight:400">${seasonSum(y)}</span></h3><ol class="tl">${groups[y].map(safeCommitHTML).join('')}</ol></div>`).join('')||'<div class="card"><div class="body muted">이 분류의 기록이 없습니다.</div></div>'}</div>`;
 }
+function safeCommitHTML(c){try{return commitHTML(c)}catch(e){return `<li class="tli" data-k="init"><span class="node" data-k="init"></span><details class="ci"><summary><div class="cmain"><div class="ctop"><b class="ct">${esc(c.msg||'기록')}</b></div><div class="cmeta">상세 기록을 표시하지 못했습니다 · <span class="mono">${esc(c.hash||'')}</span></div></div></summary></details></li>`}}
 function commitHTML(c){
  const k=['race','merge','sponsor'].includes(c.kind)?c.kind:'init';
  const icon=`<span class="node" data-k="${k}"><svg viewBox="0 0 16 16" aria-hidden="true">${ICON[{race:'race',merge:'pulls',sponsor:'sponsors',init:'overview'}[k]]}</svg></span>`;
@@ -2997,11 +3011,11 @@ function commitHTML(c){
  let top='',sub='',right='',body='';
  if(c.kind==='race'){const b=c.body;const tr=TR(b.track);const tp=b.mine.reduce((s,e)=>s+e.pts,0);
   top=`<span class="ck">R${c.round}</span><b class="ct">${tr?(FLAG[tr.id]||'')+' '+esc(tr.n)+' 그랑프리':esc(c.msg)}</b>${(c.tags||[]).map(t=>`<span class="tag ${t}">${{win:'WIN',pod:'PODIUM',dnf:'DNF'}[t]}</span>`).join('')}`;
-  sub=`<div class="cres">${b.mine.map(e=>{const d=S.drivers[e.id];const dd=e.st==='run'?e.grid-e.pos:0;return `<span class="rgrp">${rchip(e,d)}<small class="muted num">그리드 P${e.grid}${dd?` <span style="color:${dd>0?'var(--good)':'var(--bad)'}">${dd>0?'▲'+dd:'▼'+(-dd)}</span>`:''}</small></span>`}).join('')}</div>`;
+  sub=`<div class="cres">${b.mine.map(e=>{const d=S.drivers[e.id]||{num:'',code:'???'};const dd=e.st==='run'?e.grid-e.pos:0;return `<span class="rgrp">${rchip(e,d)}<small class="muted num">그리드 P${e.grid}${dd?` <span style="color:${dd>0?'var(--good)':'var(--bad)'}">${dd>0?'▲'+dd:'▼'+(-dd)}</span>`:''}</small></span>`}).join('')}</div>`;
   right=`<span class="cpts ${tp?'':'z'}">+${tp}<small>pts</small></span>`;
-  body=`<div class="cgrid"><div><div class="lbl">우리 팀</div><div class="tscroll"><table class="ctab"><thead><tr><th>드라이버</th><th>그리드</th><th>결과</th><th>타이어</th><th>PTS</th></tr></thead><tbody>${b.mine.map(e=>{const d=S.drivers[e.id];return `<tr><td><b>#${d.num} ${esc(d.code)}</b></td><td class="num">P${e.grid}</td><td>${e.st==='run'?'<b class="num">P'+e.pos+'</b>':'<span style="color:var(--bad)">'+(e.st==='dsq'?'실격':'리타이어')+'</span> <small class="muted">'+esc(e.reason||'')+'</small>'}</td><td>${String(e.strat||'').split(' → ').filter(Boolean).map(s=>tyreHTML(s[0])).join('<span class="arr">▶</span>')}</td><td class="num">${e.pts||''}</td></tr>`}).join('')}</tbody></table></div>
+  body=`<div class="cgrid"><div><div class="lbl">우리 팀</div><div class="tscroll"><table class="ctab"><thead><tr><th>드라이버</th><th>그리드</th><th>결과</th><th>타이어</th><th>PTS</th></tr></thead><tbody>${b.mine.map(e=>{const d=S.drivers[e.id]||{num:'',code:'???'};return `<tr><td><b>#${d.num} ${esc(d.code)}</b></td><td class="num">P${e.grid}</td><td>${e.st==='run'?'<b class="num">P'+e.pos+'</b>':'<span style="color:var(--bad)">'+(e.st==='dsq'?'실격':'리타이어')+'</span> <small class="muted">'+esc(e.reason||'')+'</small>'}</td><td>${String(e.strat||'').split(' → ').filter(Boolean).map(s=>tyreHTML(s[0])).join('<span class="arr">▶</span>')}</td><td class="num">${e.pts||''}</td></tr>`}).join('')}</tbody></table></div>
    <div class="cearn"><span class="pill">개발 예산 +${b.earn}</span>${b.spay?`<span class="pill">스폰서 수입 포함 +${b.spay}</span>`:''}</div></div>
-   <div><div class="lbl">TOP 10</div><ol class="top10">${b.cls.map(([id,p],i)=>{const d=S.drivers[id],t=teamById(d.team);return `<li class="${t.user?'me':''}"><span class="num">${i+1}</span><span class="stripe" style="background:${t.color}"></span><b>${esc(d.code)}</b><span class="muted">${esc(t.name)}</span><span class="num">${p}</span></li>`}).join('')}</ol></div></div>
+   <div><div class="lbl">TOP 10</div><ol class="top10">${b.cls.map(([id,p,tid],i)=>{const d=S.drivers[id]||{code:'???'},t=teamById(tid)||teamById(d.team)||RET_T;return `<li class="${t.user?'me':''}"><span class="num">${i+1}</span><span class="stripe" style="background:${t.color}"></span><b>${esc(d.code)}</b><span class="muted">${esc(t.name)}</span><span class="num">${p}</span></li>`}).join('')}</ol></div></div>
    ${b.events.length?`<div><div class="lbl" style="margin-bottom:4px">주요 장면</div><ul class="cev">${b.events.map(x=>{const mm=String(x).match(/^L(\d+)\s+(.*)$/);return `<li>${mm?`<span class="num">${mm[1]}랩</span><span>${esc(mm[2])}</span>`:`<span></span><span>${esc(x)}</span>`}</li>`}).join('')}</ul></div>`:''}`;
  }else if(c.kind==='merge'){const mm=String(c.msg).match(/#(\d+):\s*(.*)$/);const u=UPG.find(x=>x.id===c.upg);const L=lines(c.body);
   top=`<span class="ck pr">PR #${mm?mm[1]:''}</span><b class="ct">${esc(mm?mm[2]:c.msg)}</b><span class="tag ${c.tagc||'merged'}">${esc(c.tag||'MERGED')}</span>`;
