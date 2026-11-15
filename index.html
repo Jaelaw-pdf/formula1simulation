@@ -493,6 +493,85 @@ textarea{width:100%;min-height:90px;background:#000;color:var(--fg);border:1px s
 .yt li{display:grid;gap:5px}.yth{aspect-ratio:16/9;background:linear-gradient(135deg,#1a1d22,color-mix(in srgb,var(--team) 45%,#000));border-radius:8px;position:relative;display:grid;place-items:center}
 .yth .play{width:44px;height:30px;border-radius:8px;background:#f00;color:#fff;display:grid;place-items:center;font-size:13px}.yth .dur{position:absolute;right:6px;bottom:6px;background:#000c;font-size:11px;padding:1px 5px;border-radius:3px;font-family:var(--f-mono)}
 .ytt{font-weight:700;line-height:1.35}.ytm{font-size:11.5px}.ytr{font-size:12px;padding-left:8px;border-left:2px solid var(--line)}
+.brk{position:fixed;inset:0;z-index:210;background:#050608;color:#fff;overflow:auto;animation:inFade .3s ease-out;--tc:var(--team,#e10600)}
+.brk-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.brk-bg i{position:absolute;top:-30%;height:160%;width:22%;left:-40%;transform:skewX(-18deg);background:linear-gradient(180deg,var(--f1red),#5a0200);opacity:.85;animation:brkSweep 1s cubic-bezier(.2,.8,.2,1) forwards}
+.brk-bg i:nth-child(2){background:var(--tc);opacity:.45;width:9%;animation-delay:.07s}
+.brk-bg i:nth-child(3){background:#fff;opacity:.07;width:3%;animation-delay:.14s}
+@keyframes brkSweep{to{left:200%}}
+.brk-grid{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse at 50% 40%,#000 30%,transparent 75%)}
+.brk-w{position:relative;max-width:1240px;margin:0 auto;padding:24px 28px 28px;min-height:100%;box-sizing:border-box;display:grid;grid-template-rows:auto 1fr auto;gap:18px}
+.brk-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;animation:inUp .45s .2s both}
+.brk-tag{background:var(--f1red);font-family:var(--f-disp);font-weight:900;letter-spacing:.2em;font-size:12px;padding:4px 10px}
+.brk-rt{font-family:var(--f-disp);font-weight:700;font-size:clamp(18px,2.6vw,26px);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brk-rt small{font-size:12px;color:#8b929c;letter-spacing:.18em;font-weight:700}
+.brk-rt .arr{color:var(--f1red);font-weight:900}
+.brk-skip{margin-left:auto;background:transparent;border:1px solid #33373e;color:#aeb4bd;font:inherit;font-size:12px;padding:6px 12px;border-radius:3px;cursor:pointer}
+.brk-skip:hover{border-color:#fff;color:#fff}
+.brk-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.bst{background:rgba(12,13,16,.92);border:1px solid #1f2228;border-top:3px solid #2a2e35;border-radius:4px;min-width:0;opacity:.35;transform:translateY(10px);transition:opacity .4s,transform .4s,border-color .4s}
+.bst.on,.bst.ok{opacity:1;transform:none}
+.bst.on{border-top-color:var(--f1red)}
+.bst.ok{border-top-color:var(--tc)}
+.bst>header{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #1f2228;font-family:var(--f-disp);font-weight:700;letter-spacing:.06em}
+.bst>header .no{font-weight:900;color:var(--f1red);font-size:13px}
+.bst>header .stt{margin-left:auto;font-size:10px;letter-spacing:.14em;color:#6b7280;font-weight:700}
+.bst.on>header .stt{color:var(--warn)}
+.bst.ok>header .stt{color:var(--good)}
+.bst .bd{padding:10px 12px;display:grid;gap:8px}
+.bi{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;align-items:start;padding:8px 9px;border-radius:3px;background:#0b0c0f;border:1px solid #1a1d22;opacity:0;transform:translateX(-8px);transition:opacity .35s,transform .35s}
+.bi.in{opacity:1;transform:none}
+.bi .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:900;background:#1b1e24;color:#9aa1ab}
+.bi .tx b{display:block;font-size:13px;line-height:1.35}
+.bi .tx span{display:block;font-size:12px;color:#9aa1ab;line-height:1.45;margin-top:2px}
+.bi .rs{display:none}.bi.res .rs{display:block}.bi.res .pd{display:none}
+.bi .pd{font-size:12px;color:#8b929c}
+.bi .pd::after{content:"";display:inline-block;width:10px;height:10px;margin-left:6px;vertical-align:-1px;border:2px solid #444;border-top-color:var(--warn);border-radius:50%;animation:spin .7s linear infinite}
+.bi.pend .ic{border:2px solid #333;border-top-color:var(--warn);background:transparent;animation:spin .7s linear infinite;color:transparent}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bi.good .ic{background:rgba(46,204,113,.18);color:var(--good)}.bi.good{border-left:3px solid var(--good)}
+.bi.bad .ic{background:rgba(255,77,77,.18);color:var(--bad)}.bi.bad{border-left:3px solid var(--bad)}
+.bi.warn .ic{background:rgba(255,207,51,.16);color:var(--warn)}.bi.warn{border-left:3px solid var(--warn)}
+.bi.info .ic{background:rgba(255,255,255,.07);color:#cfd3d9}
+.bi.res.good{animation:bflash .7s}.bi.res.bad{animation:bflashb .7s}
+@keyframes bflash{0%{background:rgba(46,204,113,.3)}}@keyframes bflashb{0%{background:rgba(255,77,77,.3)}}
+.bmeter{height:4px;background:#1b1e24;border-radius:2px;overflow:hidden;margin-top:5px}
+.bmeter i{display:block;height:100%;background:var(--tc);width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bi.in .bmeter i{width:var(--w)}
+.bdrv{display:grid;gap:6px;padding:9px;border-radius:3px;background:#0b0c0f;border:1px solid #1a1d22;border-left:3px solid var(--tc);opacity:0;transform:translateX(-8px);transition:opacity .35s,transform .35s}
+.bdrv.in{opacity:1;transform:none}
+.bdrv .h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.bdrv .h b{font-family:var(--f-disp);font-weight:900;font-size:16px}
+.bdrv .h .r{margin-left:auto;font-family:var(--f-disp);font-weight:700;font-size:12px;color:#9aa1ab}
+.bdrv .prog{font-size:12px;color:#cfd3d9}
+.bdrv .kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bdrv .kv div{background:#111318;border-radius:3px;padding:5px 7px;min-width:0}
+.bdrv .kv span{display:block;font-size:10px;letter-spacing:.08em;color:#6b7280}
+.bdrv .kv em{font-style:normal;font-family:var(--f-disp);font-weight:700;font-size:13px}
+.up{color:var(--good)}.dn{color:var(--bad)}.fl{color:#8b929c}
+.brk-sum{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#9aa1ab}
+.brk-sum b{color:#fff;font-family:var(--f-disp)}
+.brk-bot{display:grid;gap:10px;animation:inUp .45s .3s both}
+.brk-st{display:flex;align-items:center;gap:10px;font-size:13px;color:#cfd3d9;min-height:20px}
+.brk-wheel{width:18px;height:18px;border-radius:50%;border:3px solid #2a2e35;border-top-color:var(--f1red);border-right-color:var(--tc);animation:spin .8s linear infinite;flex:none}
+.brk.done .brk-wheel{animation:none;border-color:var(--good)}
+.brk-pct{margin-left:auto;font-family:var(--f-disp);font-weight:900;font-size:14px}
+.brk-bar{position:relative;height:8px;background:#15171c;border-radius:4px;overflow:hidden}
+.brk-bar i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--f1red),var(--tc));transition:width .5s linear}
+.brk-bar i::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(255,255,255,.12) 0 8px,transparent 8px 16px);animation:bstripe .6s linear infinite}
+.brk.done .brk-bar i::after{display:none}
+@keyframes bstripe{to{background-position:22px 0}}
+.brk-segs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:11px;letter-spacing:.08em;color:#6b7280;font-family:var(--f-disp);font-weight:700}
+.brk-segs span.on{color:#fff}.brk-segs span.ok{color:var(--good)}
+.brk-next{display:none;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:14px 16px;background:#000;border:1px solid #23262c;border-left:6px solid var(--f1red);border-radius:4px}
+.brk.done .brk-next{display:grid;animation:inUp .4s both}
+.brk-next .rd{font-family:var(--f-disp);font-weight:900;color:var(--f1red);letter-spacing:.14em;font-size:12px}
+.brk-next h3{margin:2px 0 0;font-family:var(--f-disp);font-weight:900;font-size:clamp(20px,3vw,30px)}
+.brk-next .muted{color:#8b929c;font-size:12px}
+.brk-go{animation:bpulse 1.6s infinite}
+@keyframes bpulse{50%{box-shadow:0 0 0 6px rgba(225,6,0,.22)}}
+@media (max-width:900px){.brk-cols{grid-template-columns:1fr}.brk-w{padding:18px 14px}.brk-next{grid-template-columns:1fr}.bst{opacity:1;transform:none}.bst:not(.on):not(.ok){display:none}}
+@media (prefers-reduced-motion:reduce){.brk-bg i,.brk-bar i::after,.brk-wheel,.bi.pend .ic,.brk-go{animation:none}}
 .intro{position:fixed;inset:0;z-index:200;background:#050608;color:#fff;overflow:auto;animation:inFade .35s ease-out}
 @keyframes inFade{from{opacity:0}}
 .in-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -2314,13 +2393,109 @@ function finishRace(){
  S.cur++;
  addCommit({kind:'race',msg:`R${S.cur} ${tr.n} GP: ${desc} (+${tp}${tps?' · 스프린트 +'+tps:''})`,tags,body:{cls:cls.slice(0,10).map(e=>[e.id,e.pts,S.drivers[e.id].team]),mine,smine:smine.map(e=>({id:e.id,pos:e.pos,pts:e.pts,st:e.st,grid:e.grid})),events:R.events.slice(0,10),earn,spay:SPR.pay,track:tr.id}});
  S.cur--;S.commits[0].round=S.cur+1;
+ const B0=breakSnap();
  SPR.commits.forEach(c=>{addCommit(c);S.commits[0].round=S.cur+1});
  // between-race evolution
  rivalDev();devTick();try{mgmtAfterRace(RR,R)}catch(e){console.error(e)}
  if(ut.puGrow&&(ut.puGain||0)<6)ut.puGain=Math.min(6,(ut.puGain||0)+ut.puGrow);
  Object.values(S.drivers).forEach(d=>{if(d.growth)d.skill=Math.min(d.cap,d.skill+d.growth*DF().grow)});
+ try{S.brk=S.over?null:buildBreak(B0,RR,tp,tps)}catch(e){console.error(e);S.brk=null}
  pause();save();
 }
+/* ============ 라운드 사이 로딩: 팩토리 · 드라이버 · 패독 이슈 ============ */
+function breakSnap(){initMgmt();const M=S.mg;return{n:S.commits.length,perf:perfOf(userTeam()),atr:S.atr||0,
+ riv:Object.fromEntries(S.teams.filter(t=>!t.user).map(t=>[t.id,perfOf(t)])),
+ dr:Object.fromEntries(userDrivers().map(d=>[d.id,{sk:d.skill,mor:d.mor==null?70:d.mor}])),
+ offer:!!M.offer,conf:M.bd.conf,old:Object.keys(M.old||{}),fac:Object.fromEntries(Object.entries(M.fac).map(([k,f])=>[k,f.lv])),sp:{fw:M.sp.fw,fl:M.sp.fl}}}
+const TRAIN={pw:['파워 서킷 대비','슬립스트림·에너지 배포 시뮬레이터 세션'],df:['다운포스 서킷 대비','고속 코너 시뮬레이터 · 목 근력 훈련'],bal:['밸런스 서킷 대비','롱런 타이어 관리 프로그램']};
+function buildBreak(B0,RR,tp,tps){const M=S.mg,ut=userTeam();const nc=S.commits.slice(0,Math.max(0,S.commits.length-B0.n)).reverse();
+ const nid=S.cal[S.cur+1];const ntr=nid?TR(nid):null;const tt=ntr?(TTYPE[ntr.id]||'bal'):'bal';
+ /* 1. 팩토리 */
+ const dev=[];
+ nc.filter(c=>c.kind==='merge').forEach(c=>{const no=+((c.msg.match(/#(\d+)/)||[])[1]);
+  if(c.tag==='CI FAILED'){const x=(S.ci||[]).find(z=>z.no===no);const u=UPG.find(z=>z.id===c.upg);
+   dev.push({k:'bad',ic:'✕',pd:'풍동·트랙 상관성 검증 중',t:`#${no} ${u?u.t:'업그레이드'} · CI 실패`,d:`풍동과 트랙 데이터가 맞지 않음${x?` · 장착 시 효과 ${Math.round(x.m*100)}%`:''} → 업그레이드 탭에서 되돌리기/수정 결정`})}
+  else if(/^Merge/.test(c.msg)){const x=S.merged.find(z=>z.no===no&&z.year===S.year);if(!x)return;const exp=RISK[x.rk]?RISK[x.rk].mu:1;const pct=Math.round(x.m/exp*100);
+   const v=x.m>=exp*1.15?'기대 이상':x.m>=exp*.85?'기대 수준':x.m>0?'기대 이하':'역효과';const note=DEVNOTE[x.id]?DEVNOTE[x.id][x.no%DEVNOTE[x.id].length]:'';
+   dev.push({k:pct>=85?'good':x.m>0?'warn':'bad',ic:pct>=85?'✓':'!',pd:'다이노·풍동 최종 검증 중',t:`#${no} ${x.t} v${x.lv} · ${pct>=115?'대성공':pct>=85?'장착 성공':x.m>0?'장착 · 효과 미흡':'장착 · 역효과'}`,d:`${v} (기대 대비 ${pct}%)${note?' · '+note:''}`})}});
+ (S.proj||[]).forEach(p=>{const u=UPG.find(z=>z.id===p.id);const done=p.need-p.left;dev.push({k:'info',ic:'⚙',pd:'',t:`#${p.no} ${u?u.t:''} · 설계 진행 중`,d:`${p.need}라운드 중 ${done}라운드 완료 · ${p.left}라운드 뒤 판정`,w:Math.round(done/p.need*100)})});
+ nc.filter(c=>c.kind==='init'&&/^시설 완공/.test(c.msg)).forEach(c=>dev.push({k:'good',ic:'▲',pd:'공사 마무리 중',t:c.msg,d:typeof c.body==='string'?c.body:''}));
+ const sq=(M.sp.q||[]);if(M.sp.fw>B0.sp.fw||M.sp.fl>B0.sp.fl)dev.push({k:'good',ic:'✓',pd:'',t:'스페어 부품 생산 완료',d:`프론트 윙 ${M.sp.fw} · 플로어 ${M.sp.fl} 보유`});
+ sq.forEach(x=>dev.push({k:'info',ic:'⚙',pd:'',t:`${x.k==='fw'?'프론트 윙':'플로어'} 스페어 제작 중`,d:`${x.left}라운드 남음`}));
+ const perf1=perfOf(ut),dp=perf1-B0.perf,atrG=Math.max(0,(S.atr||0)-B0.atr);
+ /* 라이벌 개발 */
+ const riv=S.teams.filter(t=>!t.user).map(t=>({t,d:perfOf(t)-(B0.riv[t.id]||perfOf(t))})).filter(x=>Math.abs(x.d)>=.12).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).slice(0,3);
+ /* 2. 드라이버 */
+ const drv=userDrivers().map(d=>{const b=B0.dr[d.id]||{sk:d.skill,mor:d.mor};const e=RR.cls.find(x=>x.id===d.id)||{};const P=puOf(d.id);
+  const worst=PUEL.map(([k,n])=>({k,n,w:P[k].w,u:P[k].n,al:allocOf(k)})).sort((a,b)=>b.w-a.w)[0];
+  const dsk=d.skill-b.sk,dm=(d.mor==null?70:d.mor)-b.mor;const capped=d.growth&&d.skill>=d.cap-.01;
+  const prog=!ntr?['시즌 결산 준비','데브리핑 · 시즌 리뷰 미팅']:dm<=-4?['멘탈 리셋','스포츠 심리 코치 1:1 세션 · '+TRAIN[tt][1]]:TRAIN[tt];
+  return{id:d.id,num:d.num,code:d.code,name:d.name,res:e.st==='run'?'P'+e.pos:e.st==='dsq'?'DSQ':'DNF',why:e.st==='out'?e.reason||'':'',
+   sk:d.skill,dsk,mor:d.mor==null?70:d.mor,dm,capped,grow:!!d.growth,prog,pu:worst?{n:worst.n,w:worst.w,u:worst.u,al:worst.al}:null}});
+ /* 3. 이슈 */
+ const iss=[];
+ drv.filter(x=>x.why==='기계 결함').forEach(x=>iss.push({k:'bad',ic:'!',t:`${x.code} 기계 결함 리타이어`,d:'공장에서 고장 부품 분해 점검 · 신뢰성 개발을 검토하세요'}));
+ nc.filter(c=>c.kind==='sponsor').forEach(c=>{const b=typeof c.body==='string'?c.body.split('\n')[0]:'';iss.push({k:/이탈|미달/.test(c.msg)?'bad':/달성/.test(c.msg)?'good':'info',ic:'$',t:c.msg.replace(/^Sponsor:\s*/,'스폰서 · '),d:b})});
+ nc.filter(c=>c.kind==='init'&&!/^시설 완공/.test(c.msg)).forEach(c=>iss.push({k:/경고|위반|GAME/.test(c.msg)?'bad':'warn',ic:'!',t:c.msg,d:typeof c.body==='string'?c.body.split('\n')[0]:''}));
+ if(M.offer&&!B0.offer){const s=M.staff[M.offer.role],t=teamById(M.offer.team);if(s&&t)iss.push({k:'bad',ic:'!',t:`${t.name}, ${SROLE[M.offer.role][0]} ${s.name} 영입 타진`,d:'다음 레이스까지 팀 운영 탭에서 잔류 설득 여부를 정하세요'})}
+ Object.entries(M.old||{}).filter(([id])=>!B0.old.includes(id)).forEach(([id,o])=>iss.push({k:'warn',ic:'!',t:`${S.drivers[id].code} 구형 부품으로 출전 예정`,d:`스페어 부족 · ${[o.fw?'프론트 윙':'',o.fl?'플로어':''].filter(Boolean).join('·')} 새로 만들 때까지 랩타임 손해`}));
+ drv.filter(x=>x.pu&&x.pu.w>=.85).forEach(x=>iss.push({k:'warn',ic:'⚡',t:`${x.code} ${x.pu.n} 마모 ${Math.round(x.pu.w*100)}%`,d:x.pu.u>=x.pu.al?`할당 ${x.pu.u}/${x.pu.al} 소진 · 교체하면 그리드 페널티`:`할당 ${x.pu.u}/${x.pu.al} · 주말 시작 전 교체 검토`}));
+ const dc=M.bd.conf-B0.conf;if(Math.abs(dc)>=3)iss.push({k:dc>0?'good':'warn',ic:dc>0?'▲':'▼',t:`이사회 신뢰도 ${B0.conf} → ${M.bd.conf}`,d:dc>0?'성적에 만족하는 분위기':'목표 P'+M.bd.goal+' 대비 성적에 불만이 쌓이는 중'});
+ riv.forEach(x=>iss.push({k:x.d>0?'info':'good',ic:x.d>0?'↑':'↓',t:`${x.t.name} ${x.d>0?'업그레이드 투입':'개발 차질'}`,d:`라이벌 차량 성능 ${x.d>0?'+':''}${x.d.toFixed(2)}`}));
+ (M.tl||[]).filter(p=>p.y===S.year&&p.r===RR.round&&p.ph==='week').slice(0,2).forEach(p=>iss.push({k:'info',ic:'#',t:p.t,d:p.h[0]+' '+p.h[1]+(p.rum?' · 루머':'')}));
+ if(!iss.length)iss.push({k:'info',ic:'·',t:'조용한 한 주',d:'특별한 이슈 없이 다음 그랑프리를 준비합니다'});
+ return{y:S.year,r:RR.round,from:RR.track,to:nid||null,tp:tp+(tps||0),earn:RR.earn,dev,dp,perf:perf1,atrG,atr:S.atr||0,drv,iss:iss.slice(0,8)}}
+let brkT=[];
+function breakThen(fn){const B=S&&S.brk;if(!B||S.over||B.y!==S.year||B.r!==S.cur+1){fn();return}
+ document.querySelector('.brk')&&document.querySelector('.brk').remove();brkT.forEach(clearTimeout);brkT=[];
+ const ft=TR(B.from),nt=B.to?TR(B.to):null;const ut=userTeam();
+ const it=(x,i)=>`<div class="bi ${x.pd?'pend':''} ${x.pd?'':'res'} ${x.pd?'':x.k}" data-k="${x.k}">${x.pd?`<span class="ic">${esc(x.ic)}</span>`:`<span class="ic">${esc(x.ic)}</span>`}<div class="tx"><b>${esc(x.t)}</b>${x.pd?`<span class="pd">${esc(x.pd)}</span>`:''}<span class="rs">${esc(x.d)}</span>${x.w!=null?`<div class="bmeter"><i style="--w:${x.w}%"></i></div>`:''}</div></div>`;
+ const sg=v=>v>0.004?`<b class="up">+${v.toFixed(2)}</b>`:v<-0.004?`<b class="dn">${v.toFixed(2)}</b>`:`<b class="fl">±0</b>`;
+ const sgi=v=>v>0?`<span class="up">+${v}</span>`:v<0?`<span class="dn">${v}</span>`:`<span class="fl">±0</span>`;
+ const devH=(B.dev.length?B.dev.map(it).join(''):it({k:'info',ic:'·',t:'이번 주 판정할 개발 없음',d:'업그레이드 탭에서 새 설계를 시작할 수 있습니다'}))+
+  `<div class="brk-sum"><span>차량 종합 성능 <b>${B.perf.toFixed(1)}</b> ${sg(B.dp)}</span><span>풍동·CFD <b>+${B.atrG}h</b> → ${B.atr}h</span></div>`;
+ const drvH=B.drv.map(d=>`<div class="bdrv"><div class="h"><b>#${d.num} ${esc(d.code)}</b><span class="muted" style="font-size:12px">${esc(d.name)}</span><span class="r">지난 레이스 ${d.res}${d.why?' · '+esc(d.why):''}</span></div>
+  <div class="prog">🏋 <b>${esc(d.prog[0])}</b> — ${esc(d.prog[1])}</div>
+  <div class="kv"><div><span>기량</span><em>${d.sk.toFixed(1)}</em> <small>${d.grow?(d.capped?'<span class="fl">성장 한계</span>':(d.dsk>0.004?`<span class="up">+${d.dsk.toFixed(2)}</span>`:'<span class="fl">유지</span>')):'<span class="fl">완성형</span>'}</small></div>
+  <div><span>사기</span><em>${d.mor}</em> <small>${sgi(d.dm)}</small></div>
+  <div><span>PU 최대 마모</span><em style="color:${d.pu&&d.pu.w>=1?'var(--bad)':d.pu&&d.pu.w>=.8?'var(--warn)':'inherit'}">${d.pu?Math.round(d.pu.w*100)+'%':'—'}</em> <small class="fl">${d.pu?esc(d.pu.n):''}</small></div></div></div>`).join('');
+ const issH=B.iss.map(x=>it({...x,pd:''})).join('');
+ const segN=['팩토리','드라이버','패독 이슈',nt?'다음 그랑프리':'시즌 결산'];
+ const el=document.createElement('div');el.className='brk';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','라운드 사이 리포트');el.style.setProperty('--tc',ut.color);
+ el.innerHTML=`<div class="brk-bg"><i></i><i></i><i></i></div><div class="brk-grid"></div><div class="brk-w">
+  <div class="brk-top"><span class="brk-tag">BETWEEN ROUNDS</span><div class="brk-rt"><small>R${B.r}</small>${FLAG[ft.id]||''} ${esc(ft.n)} <span class="arr">→</span> ${nt?`<small>R${B.r+1}</small>${FLAG[nt.id]||''} ${esc(nt.n)}`:'시즌 결산'}</div><button class="brk-skip" data-b="skip">건너뛰기 ▸▸</button></div>
+  <div class="brk-cols">
+   <section class="bst" data-s="0"><header><span class="no">01</span>팩토리 · 개발<span class="stt">대기</span></header><div class="bd">${devH}</div></section>
+   <section class="bst" data-s="1"><header><span class="no">02</span>드라이버 프로그램<span class="stt">대기</span></header><div class="bd">${drvH}</div></section>
+   <section class="bst" data-s="2"><header><span class="no">03</span>패독 이슈<span class="stt">대기</span></header><div class="bd">${issH}</div></section>
+  </div>
+  <div class="brk-bot"><div class="brk-st"><span class="brk-wheel"></span><span id="brkmsg">공장으로 데이터 전송 중…</span><span class="brk-pct" id="brkpct">0%</span></div>
+   <div class="brk-bar"><i id="brkbar"></i></div><div class="brk-segs">${segN.map(n=>`<span>${n}</span>`).join('')}</div>
+   <div class="brk-next"><div><div class="rd">${nt?`NEXT · ROUND ${String(B.r+1).padStart(2,'0')}`:'SEASON COMPLETE'}</div><h3>${nt?`${FLAG[nt.id]||''} ${esc(nt.n)} 그랑프리`:`${S.year} 시즌 결산`}</h3><div class="muted">${nt?`${esc(nt.p)} · ${nt.laps}랩 · ${TTN[TTYPE[nt.id]||'bal']}`:'최종 순위와 시즌 리뷰를 확인하세요'} · 지난 라운드 +${B.tp}점 · 수입 +${B.earn}</div></div><button class="btn red big brk-go" data-b="go">${nt?'그랑프리 주말로 →':'시즌 마무리 →'}</button></div></div></div>`;
+ document.body.appendChild(el);document.body.style.overflow='hidden';
+ const fast=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const stEls=[...el.querySelectorAll('.bst')],bar=el.querySelector('#brkbar'),pct=el.querySelector('#brkpct'),msg=el.querySelector('#brkmsg'),segs=[...el.querySelectorAll('.brk-segs span')];
+ const MSG=[['공장으로 데이터 전송 중…','풍동 상관성 확인 중…','다이노 테스트 결과 수신 중…'],['시뮬레이터 세션 진행 중…','드라이버 데브리핑 중…','피지컬 트레이너 리포트 정리 중…'],['패독 소식 수집 중…','이사회·스폰서 미팅 중…','미디어 브리핑 정리 중…'],['화물 항공편 출발…','다음 서킷으로 이동 중…']];
+ let done=false,cur=-1,p=0;const setP=v=>{p=Math.max(p,v);bar.style.width=p+'%';pct.textContent=Math.round(p)+'%'};
+ const T=(f,ms)=>{const id=setTimeout(f,fast?Math.min(ms,60):ms);brkT.push(id);return id};
+ const finish=()=>{if(done)return;done=true;brkT.forEach(clearTimeout);brkT=[];
+  stEls.forEach(s=>{s.classList.remove('on');s.classList.add('ok');s.querySelector('.stt').textContent='완료';s.querySelectorAll('.bi,.bdrv').forEach(i=>{i.classList.add('in');if(i.classList.contains('pend')){i.classList.remove('pend');i.classList.add('res',i.dataset.k)}})});
+  segs.forEach(s=>{s.classList.remove('on');s.classList.add('ok')});setP(100);msg.textContent=nt?`${nt.n} 그랑프리 준비 완료`:'시즌 마지막 라운드 종료';el.classList.add('done');el.querySelector('.brk-skip').style.visibility='hidden';
+  setTimeout(()=>{const g=el.querySelector('.brk-go');g&&g.focus()},50)};
+ const close=()=>{brkT.forEach(clearTimeout);brkT=[];document.removeEventListener('keydown',key);el.remove();document.body.style.overflow='';fn()};
+ const key=e=>{if(!document.body.contains(el))return;if(e.key==='Escape'){e.preventDefault();finish()}else if(e.key==='Enter'||e.key===' '){if(done&&document.activeElement&&document.activeElement.closest('.brk-next'))return;e.preventDefault();done?close():finish()}};
+ document.addEventListener('keydown',key);
+ el.addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;if(b.dataset.b==='skip')finish();else if(b.dataset.b==='go')close()});
+ let t=900;
+ const stage=i=>{cur=i;const s=stEls[i];segs.forEach((x,j)=>{x.classList.toggle('on',j===i);x.classList.toggle('ok',j<i)});
+  if(s){s.classList.add('on');s.querySelector('.stt').textContent='진행 중';if(innerWidth<=900)s.scrollIntoView({behavior:'smooth',block:'start'})}
+  const ms=MSG[i];let mi=0;msg.textContent=ms[0];const rot=setInterval(()=>{if(done||cur!==i){clearInterval(rot);return}mi=(mi+1)%ms.length;msg.textContent=ms[mi]},1100);brkT.push(rot);
+  if(!s){T(()=>{setP(100);finish()},1100);return}
+  const items=[...s.querySelectorAll('.bi,.bdrv')];const base=i*25;let d=250;
+  items.forEach((x,k)=>{T(()=>{x.classList.add('in');setP(base+25*(k+.5)/items.length)},d);
+   if(x.classList.contains('pend')){d+=900;T(()=>{x.classList.remove('pend');x.classList.add('res',x.dataset.k)},d)}d+=i===1?700:450});
+  T(()=>{s.classList.remove('on');s.classList.add('ok');s.querySelector('.stt').textContent='완료';setP(base+25);stage(i+1)},d+500)};
+ T(()=>stage(0),t)}
 function nextRound(){S.cur++;S.wk=null;S.ui.introSeen=null;save();if(S.cur<S.cal.length)go('race');else render()}
 
 /* ============ 중계 · 팀 반응 · SNS ============ */
@@ -3242,7 +3417,7 @@ document.addEventListener('click',e=>{
   case 'gapmode':S.ui.gapMode=v;$$('[data-act="gapmode"]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===v));updateRace();break;
   case 'redty':R.redTyre=R.redTyre||{};R.redTyre[i]=v;updateRace();break;
   case 'redgo':applyRed();updateRace();break;
-  case 'next':nextRound();break;
+  case 'next':breakThen(nextRound);break;
   case 'newseason':newSeason();break;
   case 'propen':startProject(v);break;
   case 'puswap':puAct(i,v,b.dataset.m);break;
