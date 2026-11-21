@@ -814,12 +814,16 @@ table.setlog{font-size:12px}table.setlog td,table.setlog th{padding:2px 6px}
 <script>
 /* ============ data ============ */
 const PTS=[25,18,15,12,10,8,6,4,2,1];
-const COMP={S:{n:'소프트',off:0,lin:.09,cur:1.5,life:18},M:{n:'미디엄',off:.4,lin:.05,cur:1.5,life:28},H:{n:'하드',off:.75,lin:.024,cur:1.5,life:40},I:{n:'인터미디어트',off:0,lin:0,cur:0,life:30},W:{n:'웨트',off:0,lin:0,cur:0,life:34}};
-/* 타이어 손실 곡선 = 기본 오프셋 + 선형 마모(컴파운드마다 기울기가 다름) + 열화 가속(3제곱) + 100% 이후 절벽.
-   소프트는 빠르지만 기울기가 가파르고, 하드는 느리게 시작하지만 기울기가 완만하다 → 스틴트 중반에 순위가 뒤집힌다.
-   (서킷 마모 1.0 기준, 같은 나이의 타이어끼리 비교) 랩당 역전: 소프트→미디엄 약 8랩, 미디엄→하드 약 11랩.
-   스틴트 평균 역전: 소프트≈미디엄 약 15랩, 미디엄≈하드 약 22랩.
-   워밍업: 새 타이어 첫 두 랩 손실 [아웃랩, 다음 랩] — 하드일수록 크다. 출발 스틴트는 블랭킷·포메이션 랩 덕에 절반. */
+const COMP={S:{n:'소프트',off:0,lin:.066,cur:1.2,life:20},M:{n:'미디엄',off:.15,lin:.054,cur:1.2,life:30},H:{n:'하드',off:.29,lin:.042,cur:1.2,life:42},I:{n:'인터미디어트',off:0,lin:0,cur:0,life:30},W:{n:'웨트',off:0,lin:0,cur:0,life:34}};
+/* 타이어 손실 곡선 = 기본 오프셋 + 선형 마모 + 열화 가속(3제곱) + 100% 이후 절벽.
+   실제 F1 결승 데이터(OpenF1, 2024–2026 건조 레이스 55개)로 보정:
+   - 드라이버·연료 효과를 뺀 레이스 페이스 회귀 → 랩당 마모 미디엄 약 0.054초, 하드 약 0.042초,
+     하드−미디엄 기본 차이 중앙값 약 0.11초 (예선 원랩 차이보다 훨씬 작다)
+   - 같은 나이 타이어끼리 하드가 미디엄을 앞지르는 시점: 실제 중앙값 약 10랩 → 이 모델 약 10랩
+   - 소프트는 약 5~6랩부터 미디엄에 밀린다 */
+/* 실제 F1 전략 데이터 (OpenF1 결승 스틴트, 건조 레이스, 완주 차량 기준 · 의무 2스톱 모나코 2025·스틴트 상한 카타르 2025 제외)
+   n: 표본 드라이버 수, y: 시즌, o: 원스톱 비율, t: 투스톱 비율, s: 컴파운드 순서별 비율, nr: SC/VSC 발생 레이스 비율 */
+const REALSTRAT={"abu":{"n":36,"y":[2024,2025],"o":0.67,"t":0.31,"s":{"MH":0.53,"MHH":0.14,"HM":0.14,"MHM":0.08,"SHM":0.08},"nr":0.5},"aus":{"n":29,"y":[2024,2025,2026],"o":0.31,"t":0.66,"s":{"MHH":0.38,"MH":0.31,"HMH":0.1,"MHS":0.07,"SHH":0.07},"nr":0.67},"aut":{"n":42,"y":[2024,2025,2026],"o":0.05,"t":0.83,"s":{"MHM":0.33,"MHH":0.21,"MMH":0.12,"SMH":0.07,"SHM":0.05},"nr":0.67},"aze":{"n":50,"y":[2024,2025,2026],"o":0.9,"t":0.1,"s":{"MH":0.36,"HM":0.22,"MS":0.14,"SM":0.12,"HS":0.06},"nr":1.0},"bel":{"n":36,"y":[2024,2025,2026],"o":0.42,"t":0.5,"s":{"MH":0.36,"MHH":0.22,"MHM":0.14,"MHS":0.06,"MMH":0.06},"nr":0.33},"bhr":{"n":38,"y":[2024,2025],"o":0,"t":0.92,"s":{"SHH":0.37,"SMH":0.13,"SHS":0.1,"SMM":0.08,"MMH":0.08},"nr":0.5},"bra":{"n":17,"y":[2024,2025,2026],"o":0.12,"t":0.77,"s":{"SMM":0.29,"MSM":0.29,"HMM":0.18,"SM":0.06,"MS":0.06},"nr":0.67},"can":{"n":17,"y":[2024,2025,2026],"o":0.41,"t":0.47,"s":{"HM":0.29,"MHH":0.29,"MHS":0.12,"MH":0.12,"HHM":0.06},"nr":0.67},"chn":{"n":51,"y":[2024,2025,2026],"o":0.59,"t":0.31,"s":{"MH":0.49,"MHH":0.14,"HM":0.1,"MMH":0.06,"SMH":0.04},"nr":0.67},"esp":{"n":46,"y":[2024,2025,2026],"o":0,"t":0.59,"s":{"SMH":0.22,"SMS":0.15,"MHH":0.13},"nr":0.33},"gbr":{"n":19,"y":[2024,2025,2026],"o":0,"t":0.84,"s":{"MHS":0.74,"MHM":0.1},"nr":0.67},"hun":{"n":52,"y":[2024,2025,2026],"o":0.25,"t":0.64,"s":{"MHH":0.25,"MH":0.19,"MHM":0.1,"MHS":0.06,"SMH":0.06},"nr":0.0},"ita":{"n":55,"y":[2024,2025,2026],"o":0.67,"t":0.31,"s":{"MH":0.42,"MHH":0.13,"HM":0.09,"HS":0.06,"SH":0.04},"nr":0.33},"jpn":{"n":56,"y":[2024,2025,2026],"o":0.66,"t":0.2,"s":{"MH":0.54,"HM":0.07,"MMH":0.07,"MS":0.04,"SHH":0.04},"nr":0.33},"lvg":{"n":35,"y":[2024,2025],"o":0.43,"t":0.54,"s":{"MHH":0.37,"MH":0.31,"HMH":0.09,"HM":0.09},"nr":0.5},"mad":{"n":16,"y":[2026],"o":0.88,"t":0.12,"s":{"MH":0.38,"HS":0.19,"HM":0.19,"HMH":0.12,"SH":0.12},"nr":0.0},"mex":{"n":50,"y":[2024,2025,2026],"o":0.48,"t":0.4,"s":{"SMS":0.26,"MH":0.2,"MSS":0.1,"MS":0.1,"HM":0.08},"nr":1.0},"mia":{"n":52,"y":[2024,2025,2026],"o":0.85,"t":0.15,"s":{"MH":0.65,"HM":0.15,"MHM":0.08,"MS":0.04},"nr":1.0},"mon":{"n":25,"y":[2024,2025,2026],"o":0.32,"t":0.32,"s":{"MH":0.24,"MHS":0.16,"MSS":0.08,"HMH":0.08,"HM":0.08},"nr":0.67},"ned":{"n":48,"y":[2024,2025,2026],"o":0.35,"t":0.4,"s":{"MH":0.29,"MHS":0.12,"MHH":0.08,"SHS":0.06,"HM":0.06},"nr":0.33},"qat":{"n":15,"y":[2024,2025],"o":0.6,"t":0.4,"s":{"MH":0.6,"MHS":0.13,"MHM":0.13,"MHH":0.07,"MSS":0.07},"nr":1.0},"sau":{"n":36,"y":[2024,2025],"o":0.94,"t":0.06,"s":{"MH":0.72,"HM":0.11,"MS":0.08},"nr":1.0},"sgp":{"n":54,"y":[2024,2025,2026],"o":0.87,"t":0.11,"s":{"MH":0.35,"MS":0.2,"SM":0.18,"SH":0.07,"SMS":0.06},"nr":0.0},"usa":{"n":57,"y":[2024,2025,2026],"o":0.74,"t":0.26,"s":{"MH":0.26,"MS":0.23,"SH":0.1,"HM":0.09,"SMS":0.05},"nr":0.67}};
 const tyreLoss=(k,w)=>{const C=COMP[k];if(!C||k==='I'||k==='W')return 0;w=Math.max(0,w);return C.off+C.lin*C.life*w+C.cur*w*w*w+(w>1?(w-1)*C.life*.45:0)};
 const WARM={S:[.2,.05],M:[.35,.1],H:[.6,.2]};
 const warmOf=(k,age,first,tr)=>{const W=WARM[k];if(!W||age>1||age<0)return 0;return W[age]*(first?.5:1)*(tr&&tr.id==='lvg'?1.4:1)};
@@ -828,30 +832,30 @@ const dirtyAir=tr=>.22+.3*clamp(1.15-tr.ot,0,1);
 /* 피트 후 복귀 트래픽 예상 손실(스톱당): 계획 계산에 쓰는 기대값 */
 const trafCost=tr=>+(.8+5*Math.pow(clamp(1-tr.ot,0,1),1.5)).toFixed(2);
 const TRACKS=[
- {id:'aus',n:'오스트레일리아',p:'앨버트 파크',laps:58,base:80.5,ot:.8,deg:1,rain:.15,sc:.5,st:0,pit:20},
- {id:'chn',n:'중국',p:'상하이',laps:56,base:94.5,ot:1,deg:1.1,rain:.2,sc:.35,st:0,pit:22},
- {id:'jpn',n:'일본',p:'스즈카',laps:53,base:91,ot:.7,deg:1.1,rain:.25,sc:.3,st:0,pit:22},
- {id:'bhr',n:'바레인',p:'사키르',laps:57,base:92.5,ot:1.15,deg:1.3,rain:.02,sc:.3,st:0,pit:23},
- {id:'sau',n:'사우디아라비아',p:'제다',laps:50,base:89,ot:.9,deg:.8,rain:.02,sc:.6,st:1,pit:20},
- {id:'mia',n:'마이애미',p:'하드록 스타디움',laps:57,base:89.5,ot:.9,deg:1,rain:.25,sc:.45,st:1,pit:21},
- {id:'can',n:'캐나다',p:'질 빌뇌브',laps:70,base:73,ot:1,deg:.9,rain:.3,sc:.55,st:0,pit:19},
- {id:'mon',n:'모나코',p:'몬테카를로',laps:78,base:72.5,ot:.25,deg:.55,rain:.15,sc:.55,st:1,pit:19},
- {id:'esp',n:'스페인',p:'바르셀로나',laps:66,base:76.5,ot:.6,deg:1.2,rain:.12,sc:.25,st:0,pit:22},
- {id:'aut',n:'오스트리아',p:'레드불 링',laps:71,base:66.5,ot:1.1,deg:1,rain:.25,sc:.3,st:0,pit:20},
- {id:'gbr',n:'영국',p:'실버스톤',laps:52,base:88.5,ot:.95,deg:1.15,rain:.35,sc:.35,st:0,pit:21},
- {id:'bel',n:'벨기에',p:'스파-프랑코샹',laps:44,base:106,ot:1.15,deg:1,rain:.4,sc:.4,st:0,pit:21},
- {id:'hun',n:'헝가리',p:'헝가로링',laps:70,base:79,ot:.45,deg:1.1,rain:.15,sc:.25,st:0,pit:21},
- {id:'ned',n:'네덜란드',p:'잔드보르트',laps:72,base:72.5,ot:.4,deg:1,rain:.3,sc:.4,st:0,pit:20},
- {id:'ita',n:'이탈리아',p:'몬차',laps:53,base:82,ot:1.15,deg:.9,rain:.1,sc:.3,st:0,pit:24},
- {id:'mad',n:'마드리드',p:'마드링',laps:57,base:85,ot:.75,deg:1,rain:.15,sc:.5,st:1,pit:21},
- {id:'aze',n:'아제르바이잔',p:'바쿠',laps:51,base:104,ot:1.2,deg:.8,rain:.05,sc:.6,st:1,pit:20},
- {id:'sgp',n:'싱가포르',p:'마리나 베이',laps:62,base:93,ot:.55,deg:1,rain:.3,sc:.7,st:1,pit:27},
- {id:'usa',n:'미국',p:'서킷 오브 디 아메리카스',laps:56,base:96.5,ot:1,deg:1.1,rain:.15,sc:.35,st:0,pit:21},
- {id:'mex',n:'멕시코시티',p:'에르마노스 로드리게스',laps:71,base:78.5,ot:.85,deg:.9,rain:.1,sc:.4,st:0,pit:22},
- {id:'bra',n:'상파울루',p:'인테르라고스',laps:71,base:71.5,ot:1.1,deg:1,rain:.4,sc:.5,st:0,pit:21},
- {id:'lvg',n:'라스베이거스',p:'스트립 서킷',laps:50,base:94.5,ot:1.15,deg:.8,rain:.03,sc:.5,st:1,pit:21},
- {id:'qat',n:'카타르',p:'루사일',laps:57,base:83,ot:.85,deg:1.3,rain:.02,sc:.3,st:0,pit:25},
- {id:'abu',n:'아부다비',p:'야스 마리나',laps:58,base:85.5,ot:.85,deg:.95,rain:.02,sc:.3,st:0,pit:21},
+ {id:'aus',n:'오스트레일리아',p:'앨버트 파크',laps:58,base:80.5,ot:.8,deg:1.06,rain:.15,sc:.5,st:0,pit:21,nz:0.59,nr:0.62},
+ {id:'chn',n:'중국',p:'상하이',laps:56,base:94.5,ot:1,deg:1.08,rain:.2,sc:.35,st:0,pit:23,nz:0.67,nr:0.62},
+ {id:'jpn',n:'일본',p:'스즈카',laps:53,base:91,ot:.7,deg:1.16,rain:.25,sc:.3,st:0,pit:23,nz:0.52,nr:0.45},
+ {id:'bhr',n:'바레인',p:'사키르',laps:57,base:92.5,ot:1.15,deg:1.22,rain:.02,sc:.3,st:0,pit:24,nz:0.9,nr:0.53},
+ {id:'sau',n:'사우디아라비아',p:'제다',laps:50,base:89,ot:.9,deg:0.94,rain:.02,sc:.6,st:1,pit:20,nz:0.76,nr:0.78},
+ {id:'mia',n:'마이애미',p:'하드록 스타디움',laps:57,base:89.5,ot:.9,deg:0.84,rain:.25,sc:.45,st:1,pit:20,nz:0.69,nr:0.78},
+ {id:'can',n:'캐나다',p:'질 빌뇌브',laps:70,base:73,ot:1,deg:0.8,rain:.3,sc:.55,st:0,pit:24,nz:0.72,nr:0.62},
+ {id:'mon',n:'모나코',p:'몬테카를로',laps:78,base:72.5,ot:.25,deg:0.7,rain:.15,sc:.55,st:1,pit:20,nz:0.34,nr:0.62},
+ {id:'esp',n:'스페인',p:'바르셀로나',laps:66,base:76.5,ot:.6,deg:1.02,rain:.12,sc:.25,st:0,pit:23,nz:0.48,nr:0.45},
+ {id:'aut',n:'오스트리아',p:'레드불 링',laps:71,base:66.5,ot:1.1,deg:0.86,rain:.25,sc:.3,st:0,pit:21,nz:0.49,nr:0.62},
+ {id:'gbr',n:'영국',p:'실버스톤',laps:52,base:88.5,ot:.95,deg:1.32,rain:.35,sc:.35,st:0,pit:26,nz:0.63,nr:0.62},
+ {id:'bel',n:'벨기에',p:'스파-프랑코샹',laps:44,base:106,ot:1.15,deg:1.54,rain:.4,sc:.4,st:0,pit:21,nz:0.33,nr:0.45},
+ {id:'hun',n:'헝가리',p:'헝가로링',laps:70,base:79,ot:.45,deg:0.84,rain:.15,sc:.25,st:0,pit:21,nz:0.35,nr:0.28},
+ {id:'ned',n:'네덜란드',p:'잔드보르트',laps:72,base:72.5,ot:.4,deg:0.78,rain:.3,sc:.4,st:0,pit:21,nz:0.3,nr:0.45},
+ {id:'ita',n:'이탈리아',p:'몬차',laps:53,base:82,ot:1.15,deg:1.22,rain:.1,sc:.3,st:0,pit:26,nz:0.36,nr:0.45},
+ {id:'mad',n:'마드리드',p:'마드링',laps:57,base:85,ot:.75,deg:1.04,rain:.15,sc:.5,st:1,pit:27,nz:0.15,nr:0.28},
+ {id:'aze',n:'아제르바이잔',p:'바쿠',laps:51,base:104,ot:1.2,deg:1.02,rain:.05,sc:.6,st:1,pit:22,nz:0.71,nr:0.78},
+ {id:'sgp',n:'싱가포르',p:'마리나 베이',laps:62,base:93,ot:.55,deg:0.86,rain:.3,sc:.7,st:1,pit:24,nz:0.17,nr:0.28},
+ {id:'usa',n:'미국',p:'서킷 오브 디 아메리카스',laps:56,base:96.5,ot:1,deg:1,rain:.15,sc:.35,st:0,pit:22,nz:0.58,nr:0.62},
+ {id:'mex',n:'멕시코시티',p:'에르마노스 로드리게스',laps:71,base:78.5,ot:.85,deg:0.76,rain:.1,sc:.4,st:0,pit:23,nz:0.97,nr:0.78},
+ {id:'bra',n:'상파울루',p:'인테르라고스',laps:71,base:71.5,ot:1.1,deg:0.9,rain:.4,sc:.5,st:0,pit:26,nz:0.83,nr:0.62},
+ {id:'lvg',n:'라스베이거스',p:'스트립 서킷',laps:50,base:94.5,ot:1.15,deg:1.34,rain:.03,sc:.5,st:1,pit:23,nz:0.32,nr:0.53},
+ {id:'qat',n:'카타르',p:'루사일',laps:57,base:83,ot:.85,deg:1.14,rain:.02,sc:.3,st:0,pit:27,nz:0.82,nr:0.78},
+ {id:'abu',n:'아부다비',p:'야스 마리나',laps:58,base:85.5,ot:.85,deg:1,rain:.02,sc:.3,st:0,pit:23,nz:0.42,nr:0.53},
 ];
 const LEN={6:['aus','mon','gbr','ita','sgp','abu'],12:['aus','jpn','mia','mon','esp','gbr','hun','ita','aze','usa','bra','abu'],24:TRACKS.map(t=>t.id)};
 /* 트랙 성격 · 팀 성향 (주말마다 강세 팀이 바뀜) */
@@ -1608,6 +1612,9 @@ function optsOf(x){const K=['S','M','H'];const seqs=[];
 function setStrat(id,o){S.wk.strat=S.wk.strat||{};if(!o)return;S.wk.strat[id]={seq:o.seq.slice(),laps:o.laps.slice()};S.wk.startTyre[id]=o.seq[0]}
 function ensureStrat(){const wk=S.wk;wk.strat=wk.strat||{};userDrivers().forEach(d=>{if(!wk.strat[d.id]){const o=stratOptions(d.id);setStrat(d.id,o.find(x=>x.seq[0]===wk.startTyre[d.id])||o[0])}})}
 const seqHTML=seq=>seq.map(k=>tyreHTML(k)).join('<span class="arr">▸</span>');
+/* 실제 F1 참고 데이터 (같은 서킷 최근 시즌 결승) */
+function realStratHTML(tid){const R=REALSTRAT[tid];if(!R)return '';const top=Object.entries(R.s).slice(0,3).map(([q,f])=>`${[...q].map(k=>tyreHTML(k)).join('<span class="arr">▸</span>')} <b class="num">${Math.round(f*100)}%</b>`).join(' · ');
+ return `<div class="muted" style="font-size:12px;margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="lbl">실제 F1 ${R.y.join('·')}</span>원스톱 <b class="num">${Math.round(R.o*100)}%</b> · 투스톱 <b class="num">${Math.round(R.t*100)}%</b> · ${top}<small>(완주 ${R.n}명 기준)</small></div>`}
 function stratPanelHTML(d){
  const wk=S.wk,x=stratCtx(d.id),opts=stratOptions(d.id),cur=wk.strat[d.id],st=wk.startTyre[d.id];
  const top=opts.length?opts[0].t:0;const sets=x.sets;
@@ -1632,7 +1639,7 @@ function briefingHTML(){
  const base=best?`<b>${best.seq.length-1}스톱</b> ${seqHTML(best.seq)} <span class="muted">박스 L${best.laps.join(' · L')}</span>`:'—';
  const cmp=b1&&b2?(b1.t<=b2.t?`2스톱 최선은 ${(b2.t-b1.t).toFixed(1)}초 느림`:`1스톱 최선은 ${(b1.t-b2.t).toFixed(1)}초 느림`):'';
  return `<div class="brief"><div class="lbl">전략 브리핑 · 엔지니어</div>
-  <div class="lifes">${['S','M','H'].map(k=>`<div>${tyreHTML(k,'lg')}<span><b class="num">${tyreLife(k,x)}랩</b><small class="muted">${k==='S'?'예선·짧은 스틴트':k==='M'?'균형':'롱런'} · 한계 약 ${Math.floor(tyreLife(k,x)*1.08)}랩</small></span></div>`).join('')}</div>
+  <div class="lifes">${['S','M','H'].map(k=>`<div>${tyreHTML(k,'lg')}<span><b class="num">${tyreLife(k,x)}랩</b><small class="muted">${k==='S'?'예선·짧은 스틴트':k==='M'?'균형':'롱런'} · 한계 약 ${Math.floor(tyreLife(k,x)*1.08)}랩</small></span></div>`).join('')}</div>${realStratHTML(x.tr.id)}
   <div class="bl">기본 계획 ${base}</div>
   <div class="muted" style="font-size:12px">${cmp}${cmp?' · ':''}스톱 1회 비용 = 피트레인 ${(x.tr.pit-2.5).toFixed(1)}초 + 정지 기대 ${x.stop.toFixed(1)}초 + 복귀 트래픽 예상 ${x.traf.toFixed(1)}초 · SC 중 피트 약 10초. 새 타이어 워밍업: 미디엄 첫 두 랩 약 ${(WARM.M[0]+WARM.M[1]).toFixed(1)}초, 하드 약 ${(WARM.H[0]+WARM.H[1]).toFixed(1)}초 손해. 추월 ${x.tr.ot<.6?'어려움 → 트랙 포지션 우선':x.tr.ot<1?'보통':'쉬움 → 2스톱도 고려'} · 앞차 1초 이내 더티 에어 랩당 약 ${dirtyAir(x.tr).toFixed(2)}초.</div>
   ${b1&&b2?(()=>{const r1=planBreak(b1.seq,b1.laps,x),r2=planBreak(b2.seq,b2.laps,x);const row=(n,r)=>`<tr><td>${n}</td><td class="num">${r.tyre.toFixed(1)}</td><td class="num">${r.warm.toFixed(1)}</td><td class="num">${r.pit.toFixed(1)}</td><td class="num">${r.traf.toFixed(1)}</td><td class="num"><b>${r.total.toFixed(1)}</b></td></tr>`;return `<div class="tscroll"><table class="setlog"><thead><tr><th>최선안</th><th>마모</th><th>워밍업</th><th>피트</th><th>트래픽</th><th>합계(초)</th></tr></thead><tbody>${row('1스톱',r1)}${row('2스톱',r2)}</tbody></table></div>`})():''}</div>`;
@@ -2185,13 +2192,15 @@ function aiOpts(c,tr){const k0=S.year+'|'+S.wk.round+'|'+tr.id;if(AIC.k!==k0)AIC
  const tm=Math.round(c.tm*RWM*50)/50,key=tm+'|'+(c.crew||2);
  if(!AIC.m.has(key)){const stop=expStop(c);AIC.m.set(key,optsOf({tr,tm,laps:tr.laps,sets:{S:2,M:3,H:2},pit:tr.pit-2.5+stop,stop,traf:trafCost(tr),cum:stintCum(tr,tm,tr.laps)}))}
  return AIC.m.get(key)}
-function aiPlan(c,tr,mate){const o=aiOpts(c,tr);if(!o.length)return null;const st=c.sty;const nS=x=>x.seq.length-1;
+function aiPlan(c,tr,mate){const o=aiOpts(c,tr);if(!o.length)return null;const st=c.sty;const RS=REALSTRAT[tr.id];const nS=x=>x.seq.length-1;
  const minStop=nS(o[0]);const cand=o.filter(x=>x.d<=5+8*st.agg).slice(0,12);const split=!!mate&&rnd()<st.split;
  const w=cand.map(x=>{let v=Math.exp(-x.d/(1.5+2.5*st.agg));const n=nS(x);
   v*=n>minStop?.5+1.3*st.agg:n<minStop?1.3-.8*st.agg:1;      // 공격형: 스톱 많은 안 / 보수형: 스톱 적은 안
   if(x.seq[0]==='S')v*=c.grid<=10?.6+.9*st.agg:.9;
   if(x.seq[0]==='H')v*=c.grid>10?1.7:c.grid<=6?.45:1;         // 후방 출발은 긴 첫 스틴트로 오프셋 노림
   if(mate){const same=n===nS(mate)&&x.seq[0]===mate.seq[0];v*=split?(same?.2:2.2):(same?1.4:1)}
+  // 실제 F1 데이터 사전확률: 이 서킷에서 실제 팀들이 많이 쓴 컴파운드 순서·스톱 수일수록 가중
+  if(RS){const f=RS.s[x.seq.join('')]||0;const ps=n===1?RS.o:n===2?RS.t:Math.max(.02,1-RS.o-RS.t);v*=(.25+5*f)*(.3+ps)}
   return v});
  let r=rnd()*w.reduce((a,b)=>a+b,0),pk=cand[0];for(let i=0;i<cand.length;i++){r-=w[i];if(r<=0){pk=cand[i];break}}
  const laps=pk.laps.map(l=>clamp(l+Math.round(gauss()*1.6),3,tr.laps-3));for(let i=1;i<laps.length;i++)laps[i]=Math.max(laps[i],laps[i-1]+5);
@@ -2308,7 +2317,7 @@ function lapTime(c,R,tr){
  else if(c.tyre==='W'){t+=5+(w<.55?(.55-w)*9+c.age*.12:0)}
  else{t+=tyreLoss(c.tyre,c.wear)+warmOf(c.tyre,c.age,!c.stops,tr)+12*Math.pow(w,1.3)*(1-.1*(c.wet||0));if(R.restart&&WARM[c.tyre])t+=WARM[c.tyre][1]*.8}
  if(w>.2)t-=w*.45*(c.wet||0);
- t+=(R.laps-R.lap)*.035;
+ t+=(R.laps-R.lap)*.055;
  if(c.mode==='push')t-=.22;else if(c.mode==='save')t+=.28;
  if(c.boost>0)t-=.06;
  if(c.en==='full'&&c.bat>1.2){t-=.08;c.bat-=.35}
@@ -2422,10 +2431,10 @@ function stepLap(){
   if(rnd()<mech){const k=puBreak(c);retire(c,'mech',R);broke=c;if(c.user)log('radio',`${cd(c)} 원인: ${PUEL.find(x=>x[0]===k)[1]} 파손 · 다음 주말 교체 필요`,1)}else if(rnd()<crash){retire(c,'crash',R);crashed=c;crashDamage(c)}});
  if(crashed&&!R.red){const r=rnd();const redP=(tr.st?.18:.1)*(R.redUsed?.3:1);
   if(r<redP&&L<R.laps-2)trigger('RED',0,R,`${nm(crashed)} 대형 사고`);
-  else if(r<redP+.5)trigger('SC',3+Math.floor(rnd()*3),R,`${nm(crashed)} 사고`);
-  else if(r<redP+.78)trigger('VSC',2+Math.floor(rnd()*2),R,`${nm(crashed)} 차량 회수`)}
- else if(broke&&!R.flag&&rnd()<.45)trigger('VSC',2,R,`${nm(broke)} 차량 정지`);
- else if(!R.flag&&!R.red&&L>2&&L<R.laps-1&&rnd()<tr.sc/R.laps*.45){rnd()<.5?trigger('SC',3+Math.floor(rnd()*2),R,'트랙 위 파편'):trigger('VSC',2,R,'트랙 위 파편')}
+  else if(r<redP+.5*(tr.nz||1))trigger('SC',3+Math.floor(rnd()*3),R,`${nm(crashed)} 사고`);
+  else if(r<redP+.78*(tr.nz||1))trigger('VSC',2+Math.floor(rnd()*2),R,`${nm(crashed)} 차량 회수`)}
+ else if(broke&&!R.flag&&rnd()<.45*(tr.nz||1))trigger('VSC',2,R,`${nm(broke)} 차량 정지`);
+ else if(!R.flag&&!R.red&&L>2&&L<R.laps-1&&rnd()<tr.sc*(tr.nz||1)/R.laps*.45){rnd()<.5?trigger('SC',3+Math.floor(rnd()*2),R,'트랙 위 파편'):trigger('VSC',2,R,'트랙 위 파편')}
  // pits
  if(!R.red){
   const ordNow=run.filter(c=>c.st==='run').sort((a,b)=>a.T-b.T);R.uc=R.uc||{};
@@ -2992,7 +3001,7 @@ function introHTML(){const tr=TR(S.cal[S.cur]);const n=S.cal.length,rd=S.cur+1;c
       <div><span class="lbl">추월</span><b>${ot}</b></div>
       <div><span class="lbl">타이어 마모</span><b>${deg}</b></div>
       <div><span class="lbl">피트 손실</span><b class="num">${tr.pit}초</b></div>
-      <div><span class="lbl">SC·VSC</span><b class="num">${Math.round(clamp(tr.sc+.3,0,.95)*100)}%</b></div>
+      <div><span class="lbl">SC·VSC</span><b class="num">${Math.round((tr.nr!=null?tr.nr:clamp(tr.sc+.3,0,.95))*100)}%</b></div>
       <div><span class="lbl">비 확률</span><b class="num">${Math.round(tr.rain*100)}%</b></div>
       <div><span class="lbl">레드 플래그</span><b class="num">${tr.st?15:9}%</b></div>
      </div>
@@ -3096,7 +3105,7 @@ function qualiPlanHTML(){
   <div class="muted" style="font-size:12px">${n}대 · Q1 하위 7대 탈락 · Q2 하위 7대 탈락 · Q3 10대 · 예상치는 200회 시뮬레이션</div>
   <button class="btn red big" data-act="runq">예선 시작</button></div></div>
   <div class="card"><header>주말 정보</header><div class="body"><div class="fc">
-   <div><span class="lbl">결승 비</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round(clamp(tr.sc+.3,0,.95)*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${tr.st?15:9}%</b></div></div>
+   <div><span class="lbl">결승 비</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round((tr.nr!=null?tr.nr:clamp(tr.sc+.3,0,.95))*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${tr.st?15:9}%</b></div></div>
    <p class="muted" style="font-size:12px;margin:10px 0 0">추월 난이도 ${tr.ot<.6?'높음 → 예선 순위 비중 큼':tr.ot<1?'보통':'낮음'} · 타이어 마모 ${tr.deg>=1.2?'높음':tr.deg<.9?'낮음':'보통'} · 피트 손실 약 ${tr.pit}초</p></div></div></div>`;
 }
 function gridHTML(){
@@ -3107,7 +3116,7 @@ function gridHTML(){
  return `<div class="qgrid wide"><div style="display:grid;gap:16px;min-width:0">${qReactHTML()}<div class="card"><header>예선 결과 · 결승 그리드</header><div class="tscroll"><table><thead><tr><th>P</th><th>드라이버</th><th>Q1</th><th>Q2</th><th>Q3</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>
   ${ql?`<div class="card"><header>예선 무전 · 세션 노트</header><ol class="feed qlog">${ql}</ol></div>`:''}</div>
  <div class="card"><header>결승 전략</header><div class="body plan">
-  <div class="fc"><div><span class="lbl">비 (레이더)</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round(clamp(tr.sc+.3,0,.95)*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${tr.st?15:9}%</b></div></div>
+  <div class="fc"><div><span class="lbl">비 (레이더)</span><b class="num">${wk.weather.forecast}%</b></div><div><span class="lbl">SC·VSC</span><b class="num">${Math.round((tr.nr!=null?tr.nr:clamp(tr.sc+.3,0,.95))*100)}%</b></div><div><span class="lbl">레드</span><b class="num">${tr.st?15:9}%</b></div></div>
   ${briefingHTML()}
   ${userDrivers().map(d=>stratPanelHTML(d)).join('')}
   <div class="muted" style="font-size:12px">건조 레이스는 두 컴파운드 사용 의무. 인터·웨트를 쓰면 면제. 레이스 중 계획 랩이 오면 엔지니어가 박스를 준비합니다(취소 시 2랩 연장).</div>
