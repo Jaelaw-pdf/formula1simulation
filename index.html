@@ -814,11 +814,14 @@ table.setlog{font-size:12px}table.setlog td,table.setlog th{padding:2px 6px}
 <script>
 /* ============ data ============ */
 const PTS=[25,18,15,12,10,8,6,4,2,1];
-const COMP={S:{n:'소프트',off:0,deg:.13,life:16},M:{n:'미디엄',off:.35,deg:.081,life:26},H:{n:'하드',off:.65,deg:.053,life:38},I:{n:'인터미디어트',off:0,deg:0,life:30},W:{n:'웨트',off:0,deg:0,life:34}};
-/* 타이어 손실 곡선: 초반은 완만, 후반으로 갈수록 가파르게 (비선형), 100% 이후 절벽.
+const COMP={S:{n:'소프트',off:0,lin:.09,cur:1.5,life:18},M:{n:'미디엄',off:.4,lin:.05,cur:1.5,life:28},H:{n:'하드',off:.75,lin:.024,cur:1.5,life:40},I:{n:'인터미디어트',off:0,lin:0,cur:0,life:30},W:{n:'웨트',off:0,lin:0,cur:0,life:34}};
+/* 타이어 손실 곡선 = 기본 오프셋 + 선형 마모(컴파운드마다 기울기가 다름) + 열화 가속(3제곱) + 100% 이후 절벽.
+   소프트는 빠르지만 기울기가 가파르고, 하드는 느리게 시작하지만 기울기가 완만하다 → 스틴트 중반에 순위가 뒤집힌다.
+   (서킷 마모 1.0 기준, 같은 나이의 타이어끼리 비교) 랩당 역전: 소프트→미디엄 약 8랩, 미디엄→하드 약 11랩.
+   스틴트 평균 역전: 소프트≈미디엄 약 15랩, 미디엄≈하드 약 22랩.
    워밍업: 새 타이어 첫 두 랩 손실 [아웃랩, 다음 랩] — 하드일수록 크다. 출발 스틴트는 블랭킷·포메이션 랩 덕에 절반. */
-const tyreLoss=(k,w)=>{const C=COMP[k];if(!C||k==='I'||k==='W')return 0;return C.off+C.deg*C.life*(.15*w+.85*Math.pow(Math.max(0,w),2.5))+(w>1?(w-1)*C.life*.4:0)};
-const WARM={S:[.25,.05],M:[.45,.1],H:[.8,.2]};
+const tyreLoss=(k,w)=>{const C=COMP[k];if(!C||k==='I'||k==='W')return 0;w=Math.max(0,w);return C.off+C.lin*C.life*w+C.cur*w*w*w+(w>1?(w-1)*C.life*.45:0)};
+const WARM={S:[.2,.05],M:[.35,.1],H:[.6,.2]};
 const warmOf=(k,age,first,tr)=>{const W=WARM[k];if(!W||age>1||age<0)return 0;return W[age]*(first?.5:1)*(tr&&tr.id==='lvg'?1.4:1)};
 /* 더티 에어: 앞차 1초 이내면 랩당 손실 + 마모 증가. 추월이 어려운 서킷일수록 크다 */
 const dirtyAir=tr=>.22+.3*clamp(1.15-tr.ot,0,1);
@@ -878,7 +881,7 @@ function setIdeal(d,tid){const w=TW[tid]||[.25,.25,.25,.25],tr=TR(tid);const c=v
  const pf=k=>Math.round((hsh(d.code+'set'+k)-.5)*3),nz=()=>Math.round(gauss()*.8);
  return{fw:c(rw+pf('fw')+nz()),rw:c(rw+nz()),su:c(su+pf('su')+nz()),rh:c(rh+nz())}}
 function setQ(s,ideal){let a=0,b=0;SETK.forEach(([k])=>{const e=(s[k]-ideal[k]);a+=SETW[k]*e*e;b+=SETW[k]});return clamp(1-Math.sqrt(a/b)/5,0,1)}
-function setFeedback(d,s,ideal){const e={};SETK.forEach(([k])=>e[k]=s[k]-ideal[k]);const sd=clamp((92-d.skill)*.06,.15,.7)*engNoise(d.id);const nz=()=>gauss()*sd;
+function setFeedback(d,s,ideal){const e={};SETK.forEach(([k])=>e[k]=s[k]-ideal[k]);const sd=clamp(.35+(92-d.skill)*.05,.35,.95)*engNoise(d.id);const nz=()=>gauss()*sd;
  const F=[['밸런스',e.fw-.5*e.rw+nz(),'오버스티어 · 프론트가 너무 셉니다','언더스티어 · 앞이 안 돌아갑니다'],
   ['코너 vs 직선',e.rw+nz(),'드래그 과다 · 직선에서 느립니다','다운포스 부족 · 코너에서 불안합니다'],
   ['연석·노면',e.su+nz(),'너무 딱딱함 · 연석에서 튑니다','너무 무름 · 차가 굼뜹니다'],
@@ -1041,12 +1044,12 @@ function fpHas(k){const f=S.wk&&S.wk.fp;if(!f)return false;const L=f.progs&&f.pr
 const fpNm=i=>S.wk.sprint?'FP1':'FP'+(i+1);
 function fpPer(i,p){return (S.wk.sprint?2:1)+(p==='setup'?1:0)+(i===0?simRuns():0)}
 const runsOf=()=>{const f=fpS();let n=0;for(let i=0;i<=Math.min(f.ses,FPN()-1);i++)n+=fpPer(i,i<f.ses?f.progs[i]:f.prog);return n};
-function runsLeft(id){const f=fpS();if(f.done||f.ses>=FPN())return 0;const x=S.wk.set[id];return Math.max(0,runsOf()-x.runs.filter(r=>!r.ses).length)}
+function runsLeft(id){const f=fpS();if(f.done||f.ses>=FPN())return 0;const x=S.wk.set[id];return Math.max(0,runsOf()-x.runs.length)}
 function setAdj(id,k,d){ensureSet();const x=S.wk.set[id];if(!x||S.wk.fp.done)return;x.s[k]=clamp(x.s[k]+d,1,9);save();render()}
 /* 셋업 런: 현재 값으로 한 번 달리고 드라이버 피드백을 받는다 */
 function setRun(id){ensureSet();const wk=S.wk,x=wk.set[id],d=S.drivers[id],tr=TR(wk.track),t=teamById(d.team);if(!x||wk.fp.done||runsLeft(id)<=0)return;
- const q=setQ(x.s,x.ideal);const lap=+(tr.base-.9+(100-wkPerf(t,'q'))*.06+(100-d.skill)*.035-(q-.7)*5*.06+gauss()*.12).toFixed(3);
- const conf=clamp(Math.round((q*100+gauss()*4)/5)*5,0,100);
+ const q=setQ(x.s,x.ideal);const lap=+(tr.base-.9+(100-wkPerf(t,'q'))*.06+(100-d.skill)*.035-(q-.7)*5*.06+gauss()*.2).toFixed(3);
+ const conf=clamp(Math.round((q*100+gauss()*8)/5)*5,0,100);
  x.runs.push({s:{...x.s},fb:setFeedback(d,x.s,x.ideal),lap,conf});save();render()}
 const FBK={'밸런스':'fw','코너 vs 직선':'rw','연석·노면':'su','차고·플로어':'rh'};
 /* 피드백 → 조정할 값·방향 (v>0이면 값이 높다 → 낮추기) */
@@ -1070,14 +1073,24 @@ function fpSim(){const wk=S.wk,tr=TR(wk.track),f=fpS();if(f.done||f.ses>=FPN())r
   return[id,+(tr.base-1.1+evo+(100-pf-drvBonus(id,'q'))*.06+(100-d.skill)*.035+gauss()*.18+off).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
  const acc=prog==='long'?.08:.3;
  const lr=S.teams.map(t=>{const db=t.drivers.reduce((s,id)=>s+drvBonus(id,'r'),0)/Math.max(1,t.drivers.length);const pf=wkPerf(t,'r')+(t.user?(f.corr||0):0);return[t.id,+(tr.base+1.2+evo*.6+(100-pf-db)*.06+gauss()*acc).toFixed(3)]}).sort((a,b)=>a[1]-b[1]);
- const prevH=f.hist[f.hist.length-1];
- userDrivers().forEach(d=>{const x=wk.set[d.id],q=setQ(x.s,x.ideal),a=affOf(d,tr.id);const fb=setFeedback(d,x.s,x.ideal);
-  const lap=one.find(o=>o[0]===d.id)[1];const conf=clamp(Math.round((q*100+gauss()*4)/5)*5,0,100);
-  x.runs.push({s:{...x.s},fb,lap,conf,ses:nm});
-  const pq=prevH&&prevH.q&&prevH.q[d.id];const dq=pq!=null?Math.round((q-pq)*100):null;
-  N.push(`${d.code} 원랩 P${one.findIndex(o=>o[0]===d.id)+1} · 셋업 완성도 ${Math.round(q*100)}%${dq!=null?` (${dq>=0?'+':''}${dq}%p)`:''} · ${q>=.9?'최적 창 안':q>=.75?'좋음':q>=.55?'타협안':'창 밖 — 페이스 손실'} · 랩당 ${((q-.7)*5*.06)>=0?'−':'+'}${Math.abs((q-.7)*5*.06).toFixed(3)}초`);
-  N.push(`${d.code} ${fpSuggest(fb)}`);
+ const prevH=f.hist[f.hist.length-1];const est={};
+ userDrivers().forEach(d=>{const x=wk.set[d.id],q=setQ(x.s,x.ideal),a=affOf(d,tr.id);
+  const lap=one.find(o=>o[0]===d.id)[1];
+  // 엔지니어 추정치: 실제 완성도에 데이터 잡음이 섞인다 (드라이버 피드백 능력·엔지니어 역량에 따라)
+  const esd=clamp(.04+(92-d.skill)*.003,.04,.1)*engNoise(d.id);const e=clamp(q+gauss()*esd,0,1);est[d.id]=e;const pm=Math.max(3,Math.round(esd*100));
+  if(runsLeft(d.id)>0){const fb=setFeedback(d,x.s,x.ideal);const conf=clamp(Math.round((q*100+gauss()*8)/5)*5,0,100);x.runs.push({s:{...x.s},fb,lap,conf,ses:nm});N.push(`${d.code} 남은 런 1회는 엔지니어가 세션 막판에 사용 · ${fpSuggest(fb)}`)}
+  else N.push(`${d.code} 런을 모두 사용 · 세션 막판 추가 피드백 없음`);
+  const pq=prevH&&prevH.q&&prevH.q[d.id];const dq=pq!=null?Math.round((e-pq)*100):null;
+  N.push(`${d.code} 원랩 P${one.findIndex(o=>o[0]===d.id)+1} · 셋업 완성도 추정 ${Math.round(e*100)}% (±${pm})${dq!=null?` · 지난 세션 대비 ${dq>=0?'+':''}${dq}%p`:''} · ${e>=.9?'최적 창 근처':e>=.75?'좋음':e>=.55?'타협안':'창 밖으로 보임 — 페이스 손실'}`);
   if(i===0)N.push(`${d.code} 서킷 궁합 ${affWord(a)} (${a>=0?'+':''}${(a*.06).toFixed(3)}초 상당)${dtrOf(d).tr.includes(tr.id)?' · 이 서킷에서 강한 드라이버':''}`)});
+ // 레이스 데이 타이어 마모 추정 (롱런 프로그램이면 정확, 아니면 오차 큼)
+ if(wk.degF!=null){const sd=prog==='long'?.025:.08;const m=wk.degF+gauss()*sd;
+  if(wk.degEst==null||wk.degSd==null){wk.degEst=m;wk.degSd=sd}else{const w1=1/(wk.degSd*wk.degSd),w2=1/(sd*sd);wk.degEst=(wk.degEst*w1+m*w2)/(w1+w2);wk.degSd=Math.sqrt(1/(w1+w2))}
+  wk.degEst=+clamp(wk.degEst,.75,1.3).toFixed(3);const pc=Math.round((wk.degEst-1)*100);
+  N.push(`타이어 마모 추정: 평소 대비 ${pc>=0?'+':''}${pc}% (오차 ±${Math.round(wk.degSd*100)}%)${prog==='long'?' · 롱런 데이터':' · 숏런 기반 추정'} · 결승 전략 계산에 반영`)}
+ // 트랙 진화: 노면 고무·온도가 바뀌며 최적 셋업이 한 칸 움직일 수 있다
+ if(i<FPN()-1){const moved=rnd()<.4;if(moved){const k=SETK[Math.floor(rnd()*SETK.length)][0],dir=rnd()<.5?-1:1;userDrivers().forEach(d=>{const I=wk.set[d.id].ideal;I[k]=clamp(I[k]+dir,1,9)})}
+  if(moved?rnd()<.75:rnd()<.15)N.push('노면 온도·고무 변화가 큽니다 · 다음 세션엔 최적값이 조금 달라졌을 수 있습니다')}
  const ur=lr.findIndex(x=>teamById(x[0]).user)+1;N.push(`롱런 페이스 팀 ${ur}위${prog==='long'?' · 신뢰도 높음':' · 추정치 (오차 큼)'}`);
  if(prog==='quali')N.push('예선 시뮬레이션 완료 · 원랩 페이스 향상 (예선 적용)');
  if(prog==='long')N.push('롱런 데이터 확보 · 결승 타이어 마모 −6%');
@@ -1085,7 +1098,7 @@ function fpSim(){const wk=S.wk,tr=TR(wk.track),f=fpS();if(f.done||f.ses>=FPN())r
  if(prog==='parts'&&pend)N.push(`신규 파츠 ${pend}개 상관성 확인 완료`);
  else if(f.corr)N.push('신규 파츠 상관성 문제 발견 · 이번 주말 성능 −0.3'+(f.ses<FPN()-1?' · 다음 세션에서 상관성 테스트를 하면 해결됩니다':''));
  if(i===0){const ut=userTeam(),p=profOf(ut),w=TW[tr.id];if(w){const best=PK.map((k,j)=>[k,w[j]]).sort((a,b)=>b[1]-a[1])[0][0];const rk=S.teams.map(t=>profOf(t)[best]||0).sort((a,b)=>b-a).indexOf(p[best])+1;N.push(`이 서킷의 핵심 구간: ${PKN[best]} (${Math.round(w[PK.indexOf(best)]*100)}%) · 우리 차 이 항목 그리드 ${rk}위`)}}
- f.hist.push({nm,prog,one,lr,notes:N,q:Object.fromEntries(userDrivers().map(d=>[d.id,setQ(wk.set[d.id].s,wk.set[d.id].ideal)]))});
+ f.hist.push({nm,prog,one,lr,notes:N,q:est});
  f.progs.push(prog);f.ses++;
  if(f.ses<FPN()){const nx=f.ses===2?'quali':'long';f.prog=nx==='parts'&&!pend?'setup':nx}}
 function fpSesEnd(){fpSim();save();render()}
@@ -1098,10 +1111,10 @@ function fpRun(){fpLock();render()}
 function fpAuto(){ensureSet();userDrivers().forEach(d=>{const x=S.wk.set[d.id];SETK.forEach(([k])=>{const e=x.s[k]-x.ideal[k];if(Math.abs(e)>1)x.s[k]-=Math.sign(e)*(Math.abs(e)-1)})})}
 function setPanelHTML(d){const x=S.wk.set[d.id],left=runsLeft(d.id),last=x.runs[x.runs.length-1];
  const dirty=last&&SETK.some(([k])=>last.s[k]!==x.s[k]);
- return `<div class="pc setp"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:15px">#${d.num} ${esc(d.code)}</b><span class="muted" style="font-size:12px">${fpS().ses>=FPN()?'연습 종료 · 값 조정만 가능':`이번 세션 남은 런 ${left}`}</span></div>
+ return `<div class="pc setp"><div class="row-flex" style="justify-content:space-between"><b style="font-family:var(--f-disp);font-size:15px">#${d.num} ${esc(d.code)}</b><span class="muted" style="font-size:12px">${fpS().ses>=FPN()?'연습 종료 · 값 조정만 가능':`이번 세션 남은 런 ${left}${left?' · 안 쓰면 막판 1회는 엔지니어가 사용':''}`}</span></div>
   ${SETK.map(([k,n])=>`<div class="setr"><span>${n}</span><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="-1" aria-label="${n} 낮추기">−</button><span class="setbar" aria-hidden="true">${Array.from({length:9},(_,i)=>`<i class="${i<x.s[k]?'on':''}"></i>`).join('')}</span><b class="num">${x.s[k]}</b><button class="btn sm" data-act="setadj" data-i="${d.id}" data-k="${k}" data-d="1" aria-label="${n} 높이기">+</button></div>`).join('')}
   ${setGuideHTML()}
-  <button class="btn primary" data-act="setrun" data-i="${d.id}" ${left?'':'disabled'}>${left?'런 실행 · 피드백 받기':fpS().ses>=FPN()?'남은 세션 없음':'런 소진 · 세션 종료 때 자동 피드백'}</button>
+  <button class="btn primary" data-act="setrun" data-i="${d.id}" ${left?'':'disabled'}>${left?'런 실행 · 피드백 받기':fpS().ses>=FPN()?'남은 세션 없음':'런 소진 · 세션을 종료하세요'}</button>
   ${last?`<div class="fb">${last.fb.map(f=>{const x2=FBFIX(f);return `<div data-g="${f.g}"><span class="lbl">${f.n}</span><b>${SETG[f.g]}</b><span>${esc(f.t)}${f.g?`<small class="fbto">조정할 값: ${x2.nm} ${x2.d>0?'↑ 높이기':'↓ 낮추기'}</small>`:`<small class="fbto ok">조정할 값: ${x2.nm} · 그대로 두기</small>`}</span>${f.g?`<button class="btn sm fbfix" data-act="setadj" data-i="${d.id}" data-k="${x2.k}" data-d="${x2.d}" title="${x2.nm} 한 단 ${x2.d>0?'높이기':'낮추기'}">${x2.nm.replace(' 강성','')} ${x2.d>0?'▲':'▼'}</button>`:'<span></span>'}</div>`}).join('')}<small class="muted">드라이버 자신감 약 ${last.conf}% · 랩 ${fmtLap(last.lap)}${dirty?' · 지금 값은 아직 안 달려봤습니다':''}</small></div>`:'<small class="muted">엔지니어 시뮬레이터 기본값입니다. 런을 돌려 보세요.</small>'}
   ${x.runs.length>1?`<div class="tscroll"><table class="setlog"><thead><tr><th>런</th>${SETK.map(([k,n])=>`<th>${n.split(' ')[0].slice(0,2)}</th>`).join('')}<th>자신감</th><th>랩</th></tr></thead><tbody>${x.runs.map((r,i)=>`<tr><td class="num">${r.ses||i+1}</td>${SETK.map(([k])=>`<td class="num">${r.s[k]}</td>`).join('')}<td class="num">${r.conf}%</td><td class="num">${fmtLap(r.lap)}</td></tr>`).join('')}</tbody></table></div>`:''}</div>`}
 function fpResHTML(h,last){const row=(id,t,i,b)=>{const d=S.drivers[id],tm=teamById(d.team);return `<tr class="${tm.user?'me':''}"><td class="num">${i+1}</td><td><span class="stripe" style="background:${tm.color}"></span><b style="font-family:var(--f-disp)">${d.code}</b> <span class="muted">${esc(tm.name)}</span></td><td class="num">${fmtLap(t)}</td><td class="num muted">${i?'+'+(t-b).toFixed(3):''}</td></tr>`};
@@ -1113,7 +1126,7 @@ function fpHTML(){const wk=S.wk,f=fpS(),tr=TR(wk.track),ty=TTYPE[tr.id]||'bal';c
  const n=FPN(),ttl=wk.sprint?'FP1 · 스프린트 주말 유일한 연습 세션':'프리 프랙티스 · FP1–FP3';
  if(f.done){const h=f.hist[f.hist.length-1]||{nm:'FP',prog:f.prog,one:f.one,lr:f.lr,notes:f.notes||[]};return fpResHTML(h,`<button class="btn red big" data-act="fpdone">${wk.sprint?'스프린트 예선으로':'예선으로'}</button>`)}
  const steps=Array.from({length:n},(_,i)=>`<span style="padding:2px 8px;border:1px solid var(--line-2);border-radius:3px;font-family:var(--f-disp);font-size:12px;${i===f.ses?'border-color:var(--team);color:var(--fg)':i<f.ses?'opacity:.6':'opacity:.4'}">${fpNm(i)}${i<f.ses?' ✓':i===f.ses?' · 다음':''}</span>`).join('');
- const hist=f.hist.length>1?`<div class="tscroll" style="margin-top:4px"><table class="setlog"><thead><tr><th>세션</th><th>프로그램</th>${userDrivers().map(d=>`<th>${d.code} 원랩</th><th>${d.code} 셋업</th>`).join('')}<th>롱런 팀</th></tr></thead><tbody>${f.hist.map(h=>`<tr><td>${h.nm}</td><td>${esc(FPPROG[h.prog]?FPPROG[h.prog].n:'')}</td>${userDrivers().map(d=>`<td class="num">P${h.one.findIndex(o=>o[0]===d.id)+1}</td><td class="num">${h.q&&h.q[d.id]!=null?Math.round(h.q[d.id]*100)+'%':'—'}</td>`).join('')}<td class="num">${h.lr.findIndex(x=>teamById(x[0]).user)+1}위</td></tr>`).join('')}</tbody></table></div>`:'';
+ const hist=f.hist.length>1?`<div class="tscroll" style="margin-top:4px"><table class="setlog"><thead><tr><th>세션</th><th>프로그램</th>${userDrivers().map(d=>`<th>${d.code} 원랩</th><th>${d.code} 셋업 추정</th>`).join('')}<th>롱런 팀</th></tr></thead><tbody>${f.hist.map(h=>`<tr><td>${h.nm}</td><td>${esc(FPPROG[h.prog]?FPPROG[h.prog].n:'')}</td>${userDrivers().map(d=>`<td class="num">P${h.one.findIndex(o=>o[0]===d.id)+1}</td><td class="num">${h.q&&h.q[d.id]!=null?Math.round(h.q[d.id]*100)+'%':'—'}</td>`).join('')}<td class="num">${h.lr.findIndex(x=>teamById(x[0]).user)+1}위</td></tr>`).join('')}</tbody></table></div>`:'';
  const last=f.hist[f.hist.length-1];const fin=f.ses>=n;
  const plan=fin?`<div class="card"><header>${ttl} · 예선 전 최종 조정</header><div class="body plan">
    <div class="row-flex" style="gap:6px">${steps}</div>${hist}
@@ -1524,7 +1537,7 @@ function makeWeather(tr){
 }
 function startWeekend(){
  const tr=TR(S.cal[S.cur]);
- S.wk={round:S.cur+1,track:tr.id,phase:'fp',fp:{prog:'setup',done:false,ses:0,hist:[],progs:[]},sprint:S.cal.length>=12&&SPRINT.includes(tr.id),qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.8).toFixed(2)]))};
+ S.wk={round:S.cur+1,track:tr.id,phase:'fp',fp:{prog:'setup',done:false,ses:0,hist:[],progs:[]},sprint:S.cal.length>=12&&SPRINT.includes(tr.id),qs:{},tow:'none',quali:null,grid:null,startTyre:{},strat:{},race:null,weather:makeWeather(tr),form:Object.fromEntries(S.teams.map(t=>[t.id,+(gauss()*.8).toFixed(2)])),degF:+clamp(1+gauss()*.09,.82,1.22).toFixed(3)};
  userDrivers().forEach(d=>{qsOf(d.id);S.wk.startTyre[d.id]='M'});ensureSet();initMgmt();puWeekend();
  save();go('race');
 }
@@ -1574,7 +1587,7 @@ function qualiLine(p,n){
 
 /* ============ 결승 전략 (기본 계획) ============ */
 function stintCum(tr,tm,laps){const T={};['S','M','H'].forEach(k=>{const C=COMP[k],w=tr.deg*tm/C.life;T[k]=[0,1].map(u=>{const a=[0];let s=0,we=u?.12:0;for(let n=0;n<=laps;n++){s+=tyreLoss(k,we);we+=w;a.push(s)}return a})});return T}
-function stratCtx(id){const wk=S.wk,tr=TR(wk.track),ut=userTeam();const tm=userTm(id);const sets=(wk.sets&&wk.sets[id])||{S:2,M:3,H:2};
+function stratCtx(id){const wk=S.wk,tr=TR(wk.track),ut=userTeam();const tm=userTm(id)*degEstOf()*RWM;const sets=(wk.sets&&wk.sets[id])||{S:2,M:3,H:2};
  return{tr,tm,laps:tr.laps,sets,pit:tr.pit-2.5+expStop({user:true,crew:ut.crew+crewBonus()}),stop:expStop({user:true,crew:ut.crew+crewBonus()}),traf:trafCost(tr),cum:stintCum(tr,tm,tr.laps)}}
 const tyreLife=(k,x)=>Math.floor(COMP[k].life/(x.tr.deg*x.tm));
 function usedFlags(seq,sets){const c={S:0,M:0,H:0};return seq.map(k=>{c[k]++;return c[k]>sets[k]?1:0})}
@@ -1628,7 +1641,7 @@ function briefingHTML(){
 /* ============ 계획 실행 ============ */
 function planPit(c,R,tr){const P=c.plan;if(!P||P.off||R.wet>.3||c.tyre==='I'||c.tyre==='W'||P.idx>=P.laps.length)return aiPit(c,R,tr);
  const L=R.lap,nx=P.laps[P.idx],ty=P.seq[P.idx+1];const f=R.flag&&R.flag.type;
- if(L>=nx)return ty;if((f==='SC'||f==='VSC')&&nx-L<=8&&c.wear>.3)return ty;if(c.wear>1.05)return ty;return null}
+ if(L>=nx)return ty;if((f==='SC'||f==='VSC')&&nx-L<=8&&c.wear>.3)return ty;if(c.wear>1.05&&pitWorth(c,R,tr,ty))return ty;return null}
 function planText(c,R){const P=c.plan;if(!P)return '';if(P.off)return '<span class="muted">기본 계획 해제 · 젖은 노면</span>';
  const s=seqHTML(P.seq);if(P.idx>=P.laps.length)return `${s} <span class="muted">· 계획 완료</span>`;
  const nx=P.laps[P.idx];return `${s} <span class="muted">· 다음 박스</span> <b class="num">L${nx}</b> <span class="muted">(${Math.max(0,nx-R.lap)}랩 뒤)</span>`}
@@ -1800,7 +1813,7 @@ function ucGain(a,k,n,c,tr){let g=0;const wa=tr.deg*(a.tm||1)/COMP[a.tyre].life,
 const coverP=a=>a.user?0:(a.wear>.38?(.15+.6*(a.sty?a.sty.react:.5))*(.6+.4*clamp((a.perf-82)/10,0,1)):0);
 function remBest(c,R,tr,first,w0,boxNow,o){
  o=o||{};const mxS=o.max==null?9:o.max;
- const rem=R.laps-R.lap;const wpl=k=>tr.deg*c.tm/COMP[k].life;const pit=tr.pit-2.5+expStop(c)+trafCost(tr);
+ const rem=R.laps-R.lap;const wpl=k=>tr.deg*c.tm*RWM/COMP[k].life;const pit=tr.pit-2.5+expStop(c)+trafCost(tr);
  // cap: 타이어 수명 한계(마모 108%)를 넘는 스틴트는 후보에서 제외
  const capF=o.cap?Math.floor((1.08-w0)/wpl(first)):1e9;const cap=k=>o.cap?Math.floor(1.08/wpl(k)):1e9;
  const used=new Set(c.used);if(boxNow)used.add(first);const wet=c.used.includes('I')||c.used.includes('W');
@@ -1817,7 +1830,7 @@ const STOPN=n=>['노스톱','원스톱','투스톱','스리스톱'][n]||n+'스�
 function pitNowCheck(c,R,tr,k){
  const P=c.plan;const base=P&&!P.off?Math.max(0,P.laps.length-P.idx):remBest(c,R,tr,c.tyre,c.wear,false,{cap:true}).laps.length;
  const sets=c.sets||{S:9,M:9,H:9};const w0=sets[k]>0?0:.12;const now=pitLoss(R,tr)-2.5+expStop(c)+trafCost(tr)*(R.flag?.3:1);
- const life=Math.floor((1.08-w0)*COMP[k].life/(tr.deg*c.tm));
+ const life=Math.floor((1.08-w0)*COMP[k].life/(tr.deg*c.tm*RWM));
  if(base>=1){const same=remBest(c,R,tr,k,w0,true,{cap:true,max:base-1});if(same.t<Infinity)return{k,extra:false,base,np:same,life}}
  let stay=remBest(c,R,tr,c.tyre,c.wear,false,{cap:true,max:base});if(stay.t===Infinity)stay=remBest(c,R,tr,c.tyre,c.wear,false,{cap:true});
  const any=remBest(c,R,tr,k,w0,true,{cap:true});
@@ -2169,7 +2182,7 @@ function tStyle(t,d){const b=TSTYLE[t.id]||{agg:.3+.5*hsh(t.id+'agg'),split:.35,
  return{agg:clamp(j('agg')+(d?PAGG[personaOf(d)]||0:0),0,1),split:b.split,react:j('react')}}
 let AIC={k:null,m:new Map()};
 function aiOpts(c,tr){const k0=S.year+'|'+S.wk.round+'|'+tr.id;if(AIC.k!==k0)AIC={k:k0,m:new Map()};
- const tm=Math.round(c.tm*50)/50,key=tm+'|'+(c.crew||2);
+ const tm=Math.round(c.tm*RWM*50)/50,key=tm+'|'+(c.crew||2);
  if(!AIC.m.has(key)){const stop=expStop(c);AIC.m.set(key,optsOf({tr,tm,laps:tr.laps,sets:{S:2,M:3,H:2},pit:tr.pit-2.5+stop,stop,traf:trafCost(tr),cum:stintCum(tr,tm,tr.laps)}))}
  return AIC.m.get(key)}
 function aiPlan(c,tr,mate){const o=aiOpts(c,tr);if(!o.length)return null;const st=c.sty;const nS=x=>x.seq.length-1;
@@ -2194,7 +2207,7 @@ function aiStartNote(cars){const g={S:[],M:[],H:[]};cars.filter(c=>!c.user&&g[c.
  const maj=Object.keys(g).sort((a,b)=>g[b].length-g[a].length)[0];const oth=Object.keys(g).filter(k=>k!==maj&&g[k].length);
  log('room',`출발 타이어 · 다수 ${COMP[maj].n}${oth.map(k=>` · ${COMP[k].n}: ${g[k].slice(0,6).join(' ')}${g[k].length>6?' 외 '+(g[k].length-6)+'대':''}`).join('')}`,0,'전략실 · 상대 동향')}
 /* 남은 랩을 기준으로 버틸 수 있는 가장 부드러운 컴파운드 */
-function aiPickK(c,R,tr){const rem=R.laps-R.lap;const lf=k=>COMP[k].life/(tr.deg*(c.tm||1));const all=['S','M','H'];
+function aiPickK(c,R,tr){const rem=R.laps-R.lap;const lf=k=>COMP[k].life/(tr.deg*(c.tm||1)*RWM);const all=['S','M','H'];
  let o=all.filter(k=>lf(k)*1.04>=rem);if(!o.length)o=rem>28?['H','M','S']:['M','H','S'];
  if(needsSecond(c)){const x=o.filter(k=>!c.used.includes(k));o=x.length?x:all.filter(k=>!c.used.includes(k))}
  const s=o.filter(k=>!c.sets||c.sets[k]>0);return (s.length?s:o)[0]}
@@ -2219,8 +2232,9 @@ function aiDecide(c,R,tr,ord){
   return null}
  if(f)return null;
  // 3) 계획 랩 / 타이어 한계
- if(L>=nx||c.wear>1.02)return nextK();
- if(!left&&c.wear+rem*wearPerLap(c,tr)>1.2&&c.wear>.8)return aiPickK(c,R,tr);
+ if(L>=nx&&(rem>3||pitWorth(c,R,tr,nextK())))return nextK();
+ if(c.wear>1.02&&pitWorth(c,R,tr,nextK()))return nextK();
+ if(!left&&c.wear+rem*wearPerLap(c,tr)>1.2&&c.wear>.8&&pitWorth(c,R,tr))return aiPickK(c,R,tr);
  // 4) 먼저 거는 언더컷: 앞차와 가깝고 계획 박스가 멀지 않으면 앞당긴다
  const a=ord[pos-2];
  if(a&&left&&nx-L<=1+Math.round(4*st.agg)&&rem>8&&a.tyre!=='I'&&a.tyre!=='W'&&!a.pitNow&&a.wear>.35){const gap=c.T-a.T;
@@ -2242,7 +2256,7 @@ function aiReplan(c,R,tr,left){const P=c.plan;if(!P||P.off)return;if(left==null)
 function aiPace(c,R,tr,ord){if(c.st!=='run')return;const st=c.sty||{agg:.5};c.en='auto';
  if(R.flag||c.tyre==='I'||c.tyre==='W'){c.mode='std';return}
  const i=ord.indexOf(c),a=ord[i-1],b=ord[i+1],rem=R.laps-R.lap;const P=c.plan;const left=P&&!P.off?Math.max(0,P.laps.length-P.idx):0;
- const end=left?P.laps[P.idx]:R.laps;const proj=c.wear+(end-R.lap)*tr.deg*c.tm/COMP[c.tyre].life;
+ const end=left?P.laps[P.idx]:R.laps;const proj=c.wear+(end-R.lap)*tr.deg*c.tm*RWM/COMP[c.tyre].life;
  const ga=a?c.T-a.T:99,gb=b?b.T-c.T:99;
  let m='std';
  if(c.stops&&c.age<=2&&rnd()<.45+.45*st.agg)m='push';                                    // 아웃랩 직후 언더컷 완성
@@ -2261,7 +2275,7 @@ function initRace(sp){
   return{id,team:t.id,user:u,grid:i+1,T:i*.22,tyre:ty,wear:0,age:0,used:[ty],stints:[{c:ty,from:0}],stops:0,st:'run',reason:'',outLap:0,
    mode:'std',en:'auto',bat:3,frm:gauss()*.1,pitReq:null,auto:false,pitAt:.78+rnd()*.2,last:null,best:Infinity,hist:[i+1],w85:false,
    perf:wkPerf(t,'r')+drvBonus(id,'r'),skill:d.skill,sigma:d.sigma,rel:t.rel,wet:dtrOf(d).wet,...(u?{crew:ut.crew+crewBonus(),tm:userTm(id,sp),batR:1+.2*ut.energy}:rivTech(t))}});
- cars.forEach(c=>{if(!c.user)c.tm*=drvTm(c.id)});
+ cars.forEach(c=>{if(!c.user)c.tm*=drvTm(c.id);c.tm*=wk.degF||1;c.setF=setVar()});
  aiSetup(cars,tr,sp);
  cars.filter(c=>c.user).forEach(c=>{if(sp){c.plan=null;return}const p=wk.strat&&wk.strat[c.id];c.plan=p&&p.seq[0]===c.tyre?{seq:p.seq.slice(),laps:p.laps.slice(),idx:0,off:false}:null;c.sets=Object.assign({S:2,M:3,H:2},wk.sets&&wk.sets[c.id]);if(c.sets[c.tyre]>0)c.sets[c.tyre]--;else c.wear=.12});
  if(!sp&&wk.pls)cars.forEach(c=>{if(wk.pls[c.id]){c.T+=5;c.pls=1}});
@@ -2280,7 +2294,13 @@ function initRace(sp){
 function log(kind,text,imp,who){const R=S.wk.race;R.feed.unshift({l:R.lap,k:kind,t:text,w:who});if(R.feed.length>80)R.feed.length=80;if(imp)R.events.push('L'+R.lap+' '+text)}
 const nm=c=>S.drivers[c.id].name.split(' ').slice(-1)[0];
 const cd=c=>S.drivers[c.id].code;
-function wearPerLap(c,tr){if(c.tyre==='I'||c.tyre==='W')return 1/COMP[c.tyre].life;return tr.deg*c.tm*(c.mode==='push'?1.35:c.mode==='save'?.75:1)/COMP[c.tyre].life}
+/* 레이스 데이 마모 배율(노면 온도·아스팔트)은 숨겨진 값. 팀은 연습 주행 데이터로 추정만 한다.
+   타이어 세트마다도 ±5% 정도 편차가 있다 (같은 컴파운드라도 세트마다 조금씩 다름). */
+/* 레이스 실제 마모는 푸시 랩·더티 에어·세트 편차 때문에 명목값보다 평균 약 10% 높다 → 전략 계산에 반영 */
+const RWM=1.1;
+const setVar=()=>+clamp(1+gauss()*.05,.88,1.12).toFixed(3);
+const degEstOf=()=>{const wk=S.wk;return wk&&wk.degEst!=null?wk.degEst:1};
+function wearPerLap(c,tr){if(c.tyre==='I'||c.tyre==='W')return 1/COMP[c.tyre].life;return tr.deg*c.tm*(c.setF||1)*(c.mode==='push'?1.35:c.mode==='save'?.75:1)/COMP[c.tyre].life}
 function lapTime(c,R,tr){
  const C=COMP[c.tyre];let t=tr.base+(100-c.perf)*.06+(100-c.skill)*.035;
  const w=R.wet;
@@ -2299,6 +2319,10 @@ function pitLoss(R,tr){const f=R.flag&&R.flag.type;return f==='SC'?10.5:f==='VSC
 function stopTime(c){let s=2.45-.12*c.crew+Math.abs(gauss())*.18;const slowP=c.user?.06-.01*c.crew:.05;if(rnd()<slowP)s+=2+rnd()*4;return s}
 /* 정지 시간 기대값 = 기본 + |정규분포| 평균(0.144) + 느린 스톱 확률 × 평균 지연 4초 */
 function expStop(c){const crew=c.crew||0;const slowP=Math.max(0,c.user?.06-.01*crew:.05);return 2.45-.12*crew+.144+slowP*4}
+/* 막판 피트 가치: 남은 랩을 헌 타이어로 버티는 손실 vs 피트 손실 + 새 타이어. 레이스 막판 무의미한 피트를 막는다 */
+function pitWorth(c,R,tr,k){const rem=R.laps-R.lap;if(rem>10||needsSecond(c))return true;k=k||(c.tyre==='S'?'M':'S');
+ const wpl=wearPerLap(c,tr),nw=tr.deg*c.tm/COMP[k].life;let stay=0,go=pitLoss(R,tr)-2.5+expStop(c)+trafCost(tr)*(R.flag?.3:1);
+ for(let j=0;j<rem;j++){stay+=tyreLoss(c.tyre,c.wear+j*wpl);go+=tyreLoss(k,j*nw)+warmOf(k,j,false,tr)}return go<stay}
 function needsSecond(c){if(S.wk&&S.wk.race&&S.wk.race.sprint)return false;if(c.used.includes('I')||c.used.includes('W'))return false;return new Set(c.used).size<2}
 function aiPit(c,R,tr){
  const rem=R.laps-R.lap;if(rem<1)return null;const f=R.flag&&R.flag.type;const w=R.wet;
@@ -2313,7 +2337,7 @@ function aiPit(c,R,tr){
  if(uc&&!f&&!R.sprint){delete R.uc[c.id];if(R.lap-uc.lap<=1&&c.wear>.38&&rem>8&&c.stops<3&&rnd()<coverP(c)){const by=S.drivers[uc.by];if(by&&by.team==='usr')log('room',`${nm(c)} 커버 피트 — ${by.code}의 언더컷에 바로 반응했습니다`,1,'전략실');return pick()}}
  if(!f&&!R.sprint&&(c.stuck||0)>=3&&c.wear>.5&&rem>10&&rnd()<.2)return pick();
  if(!R.sprint&&(f==='SC'||f==='VSC')&&c.wear>.35&&rem>6&&rnd()<.75)return pick();
- if(c.wear>=c.pitAt){if(!need&&c.wear+rem*wearPerLap(c,tr)<1.12)return null;return pick()}
+ if(c.wear>=c.pitAt){if(!need&&c.wear+rem*wearPerLap(c,tr)<1.12)return null;if(!pitWorth(c,R,tr,pick()))return null;return pick()}
  if(need&&rem<=2)return pick();
  return null;
 }
@@ -2322,7 +2346,7 @@ function doPit(c,ty,R,tr){
  if(c.pen){c.T+=c.pen;c.penS=(c.penS||0)+c.pen;log(c.user?'radio':'rc',`${nm(c)} ${c.pen}초 페널티 소화 (피트 스톱)`,c.user);c.pen=0}
  if(rnd()<.006){penalize(c,5,'피트레인 과속',R)}
  else if(rnd()<(c.user?(st<2.3?.02:.008):.006)&&R.cars.some(x=>x!==c&&x.pitNow===2))penalize(c,5,'언세이프 릴리스',R);
- c.tyre=ty;c.wear=0;c.age=0;c.stops++;if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap});c.pitReq=null;c.w85=false;c.w100=false;c.pv={lap:R.lap,loss,stop:st};if(c.user)c.lastStop={t:st,lap:R.lap};c.pitAt=.78+rnd()*.2;c.pitNow=2;
+ c.tyre=ty;c.wear=0;c.age=0;c.setF=setVar();c.stops++;if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap});c.pitReq=null;c.w85=false;c.w100=false;c.pv={lap:R.lap,loss,stop:st};if(c.user)c.lastStop={t:st,lap:R.lap};c.pitAt=.78+rnd()*.2;c.pitNow=2;
  if(c.user){log('radio',`${cd(c)} 박스 완료 · ${st.toFixed(1)}초 · ${COMP[ty].n}${st>4?' · 휠건 지연':''}`,1);
   if(c.sets&&'SMH'.includes(ty)){if(c.sets[ty]>0)c.sets[ty]--;else{c.wear=.12;log('radio',`${cd(c)} 새 ${COMP[ty].n} 세트가 없어 중고 세트 장착`)}}
   if(st>4)dr(c,'slowpit',{},1);
@@ -2462,7 +2486,7 @@ function applyRed(){
  run.forEach((c,i)=>{let ty;
   if(c.user){ty=R.redTyre&&R.redTyre[c.id]||c.tyre}
   else{if(R.wet>.8)ty='W';else if(R.wet>.4)ty='I';else{const o=rem>28?'H':rem>12?'M':'S';ty=needsSecond(c)&&c.used.includes(o)?(o==='S'?'M':'S'):o}}
-  if(ty!==c.tyre||c.wear>.05){c.tyre=ty;c.wear=0;c.age=0;if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap});
+  if(ty!==c.tyre||c.wear>.05){c.tyre=ty;c.wear=0;c.age=0;c.setF=setVar();if(!c.used.includes(ty))c.used.push(ty);c.stints.push({c:ty,from:R.lap});
    const P=c.user&&c.plan;if(P&&!P.off){if(ty==='I'||ty==='W')P.off=true;else if(P.idx<P.laps.length&&P.laps[P.idx]-R.lap<=12){const dl=R.lap-P.laps[P.idx];P.idx++;for(let j=P.idx;j<P.laps.length;j++)P.laps[j]=clamp(P.laps[j]+dl,R.lap+2,R.laps-1);if(P.idx<P.seq.length)P.seq[P.idx]=ty;log('radio',`${cd(c)} 레드 플래그 중 교체를 계획 박스로 처리`)}}c.pitReq=null;c.planPend=false}
   if(!c.user&&c.plan&&!c.plan.off&&c.stints.length&&c.stints[c.stints.length-1].from===R.lap)aiReplan(c,R,tr,1);
   c.T=run[0].T+i*.8;c.bat=4;c.w85=false});
